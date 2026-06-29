@@ -1,10 +1,28 @@
 window.REBORN_STATE = {
-  selectedPath: "print",
-  selectedProvider: "Bologna 3D Lab",
+  selectedPath: 'print',
+  selectedProvider: 'Bologna 3D Lab',
   uploaded: false,
-  role: "customer",
+  role: 'customer',
+  busy: false,
+  api: {
+    status: 'checking',
+    mode: 'unknown',
+    message: 'Checking backend API...',
+    lastError: null,
+    repairCase: null,
+    repairCases: [],
+    diagnosis: null,
+    repairPaths: [],
+    providers: [],
+    knowledgeNodes: [],
+    lastSyncAt: null
+  },
   set(key, value) {
     this[key] = value;
-    window.dispatchEvent(new CustomEvent("reborn:state", { detail: { key, value } }));
+    window.dispatchEvent(new CustomEvent('reborn:state', { detail: { key, value } }));
+  },
+  setApi(patch) {
+    this.api = { ...this.api, ...patch };
+    window.dispatchEvent(new CustomEvent('reborn:state', { detail: { key: 'api', value: this.api } }));
   }
 };

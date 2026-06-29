@@ -1,61 +1,61 @@
-# Re-born MVP Static Prototype v0.1
+# Re-born Prototype
 
-This folder contains the first navigable static prototype for Re-born.
+This is the MVP prototype for Re-born, the Repair Intelligence Platform.
 
-## How to open
+## Runtime modes
 
-Open this file in a browser:
+### Live API mode
+
+Run the PHP backend:
+
+```powershell
+cd C:\REBORN\REBORN
+php scripts/doctor.php
+php scripts/setup-dev.php
+php -S 127.0.0.1:8080 -t public public/index.php
+```
+
+Open:
+
+```text
+http://127.0.0.1:8080/prototype/index.html
+```
+
+In this mode, the prototype calls the PHP API and SQLite development database.
+
+### Mock mode
+
+Open directly:
 
 ```text
 public/prototype/index.html
 ```
 
-No server is required. The prototype uses only:
-
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- Mock data
-- Hash routes
-
-## Prototype routes
+In this mode, the prototype uses local mock data from:
 
 ```text
-#/                         Overview
-#/start                    Repair intake
-#/capture                  Photos and dimensions
-#/diagnosis                Recognition result
-#/repair-paths             Decision Engine repair paths
-#/part-detail              Verified repair model
-#/ai-generation            AI fallback path
-#/provider-network         Distributed provider selection
-#/checkout                 Repair order confirmation
-#/account                  User dashboard
-#/provider                 Provider PRO view
-#/maker                    Maker upload and royalty view
-#/enterprise               Enterprise portal preview
-#/admin-ops                Internal operations console
+public/prototype/assets/js/prototype-data.js
 ```
 
-## Design constraints
+## Main integrated flow
 
-The prototype intentionally avoids Bootstrap, purchased templates, heavy glassmorphism and generic SaaS visual language.
+```text
+Repair intake
+→ POST /api/v1/repair-cases
+→ Capture placeholder
+→ POST /api/v1/repair-cases/{id}/diagnose
+→ Repair paths
+→ Provider network
+→ Checkout preview
+```
 
-It follows the Re-born visual principles:
+## Files
 
-- Graphite / Off White base
-- Repair Green for positive repair actions
-- Electric Blue for intelligence and systems
-- Safety Orange for warnings, AI and validation
-- Max border radius: 4 px
-- Dense, functional, industrial interface
-- Every screen must reinforce: the user is repairing an object, not browsing a marketplace
-
-## Important note
-
-This is not production code. It is a product and UX alignment artefact used to:
-
-1. validate the MVP journey;
-2. align future agents and developers;
-3. turn PRD and UX Bible into visible screens;
-4. prepare backend and frontend implementation without ambiguity.
+```text
+index.html
+assets/css/reborn.css
+assets/js/prototype-data.js
+assets/js/state.js
+assets/js/api-client.js
+assets/js/app.js
+```

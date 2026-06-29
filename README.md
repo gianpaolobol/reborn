@@ -206,3 +206,21 @@ POST /api/v1/repair-cases/{id}/diagnose
 GET  /api/v1/providers
 GET  /api/v1/knowledge/nodes
 ```
+
+## Step 6 — Prototype API Integration
+
+The MVP prototype is now API-aware. Run the backend with:
+
+```powershell
+php scripts/setup-dev.php
+php -S 127.0.0.1:8080 -t public public/index.php
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8080/prototype/index.html
+```
+
+If the prototype is opened directly from disk, it automatically uses mock data.
+

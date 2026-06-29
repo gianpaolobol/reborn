@@ -341,3 +341,59 @@ textarea { min-height: 108px; resize: vertical; }
   .timeline-row { grid-template-columns: 1fr; }
   .footer { flex-direction: column; }
 }
+
+.api-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left-width: 5px;
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.api-banner strong { display: block; margin-bottom: 2px; }
+.api-banner span { color: var(--graphite-500); font-size: .88rem; }
+.api-banner.live { border-left-color: var(--repair-green); }
+.api-banner.mock { border-left-color: var(--safety-orange); }
+.api-banner.error { border-left-color: var(--danger); }
+.api-banner.checking { border-left-color: var(--electric-blue); }
+.api-banner-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.mini-button {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  color: var(--graphite-950);
+  padding: 7px 9px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.mini-button:disabled, .btn:disabled { opacity: .55; cursor: wait; }
+.api-snapshot { display: grid; gap: 14px; }
+code {
+  background: rgba(17, 19, 21, .06);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 2px 5px;
+  font-size: .9em;
+}
+body.is-busy::after {
+  content: "Syncing Re-born API…";
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 29;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  color: var(--graphite-700);
+  font-weight: 700;
+}
+@media (max-width: 920px) {
+  .api-banner { align-items: flex-start; flex-direction: column; }
+  .api-banner-actions { justify-content: flex-start; }
+}
