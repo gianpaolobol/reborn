@@ -18,6 +18,7 @@ Implemented:
 - PHP built-in server startup;
 - API health wait loop;
 - full smoke suite runner;
+- demo credentials seed verification before API smoke tests;
 - GitHub error annotation for the exact failed smoke script;
 - failure diagnostics JSON;
 - failure log artifacts;
@@ -31,6 +32,7 @@ Implemented:
 .github/workflows/smoke-tests.yml
 .env.ci.example
 scripts/ci-smoke-tests.ps1
+scripts/verify-demo-credentials.php
 docs/13-testing/CI_SMOKE_TEST_PIPELINE.md
 docs/09-operations/STEP_38_CONTINUOUS_INTEGRATION_SMOKE_PIPELINE.md
 ```
@@ -40,6 +42,7 @@ docs/09-operations/STEP_38_CONTINUOUS_INTEGRATION_SMOKE_PIPELINE.md
 ```text
 .github/PULL_REQUEST_TEMPLATE.md
 README.md
+database/seeds/002_identity_seed.sql
 ```
 
 ## Workflow triggers
@@ -70,6 +73,7 @@ SQLite local database
 cp .env.ci.example .env
 mkdir -p storage/database storage/logs storage/uploads storage/backups
 php scripts/setup-dev.php
+php scripts/verify-demo-credentials.php
 php -S 127.0.0.1:8080 -t public public/index.php
 pwsh ./scripts/ci-smoke-tests.ps1 -BaseUrl http://127.0.0.1:8080
 ```
@@ -94,6 +98,8 @@ The workflow calls:
 ```text
 scripts/ci-smoke-tests.ps1
 ```
+
+`verify-demo-credentials.php` runs before server startup as a seed guard, but `ci-smoke-tests.ps1` remains the canonical smoke list.
 
 This prevents the workflow YAML from becoming the canonical list of smoke tests. Future steps must update the script, not duplicate long command lists in multiple places. The script also emits GitHub Actions annotations and writes `storage/logs/ci-failure-diagnostics.json` when a smoke test fails.
 
@@ -127,6 +133,7 @@ The step is acceptable when:
 - CI uses PHP 8.4;
 - CI requests `pdo_sqlite` and `sqlite3`;
 - `php scripts/setup-dev.php` runs in CI;
+- `php scripts/verify-demo-credentials.php` confirms the demo login seed;
 - PHP built-in server starts in CI;
 - `/api/health` responds before smoke tests start;
 - `scripts/ci-smoke-tests.ps1` runs all current regression smoke scripts;

@@ -54,6 +54,14 @@ json
 
 The workflow copies `.env.ci.example` to `.env` before running setup.
 
+After `php scripts/setup-dev.php`, CI runs:
+
+```text
+scripts/verify-demo-credentials.php
+```
+
+This verifies that all demo accounts exist, are active, have the expected roles and that the shared demo password `password` is accepted by `password_verify()`. This catches broken seed hashes before the API smoke tests start.
+
 The CI environment intentionally sets a high local rate limit:
 
 ```text

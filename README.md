@@ -204,6 +204,7 @@ The repository now includes a first PHP 8.3 backend skeleton for the MVP API.
 ```powershell
 php scripts/doctor.php
 php scripts/setup-dev.php
+php scripts/verify-demo-credentials.php # optional CI/local check for demo accounts
 php -S 127.0.0.1:8080 -t public public/index.php
 ```
 

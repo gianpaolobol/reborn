@@ -64,6 +64,9 @@ jobs:
       - name: Set up development database
         run: php scripts/setup-dev.php
 
+      - name: Verify demo credentials seed
+        run: php scripts/verify-demo-credentials.php
+
       - name: Start PHP built-in server
         shell: bash
         run: |
