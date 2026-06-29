@@ -1,6 +1,6 @@
 name: Re-born Smoke Tests
 
-"on":
+on:
   push:
     branches:
       - main
@@ -19,12 +19,15 @@ concurrency:
 jobs:
   smoke-tests:
     name: PHP 8.4 SQLite smoke suite
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      CI: true
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up PHP 8.4 with SQLite
         uses: shivammathur/setup-php@v2
@@ -32,32 +35,51 @@ jobs:
           php-version: '8.4'
           extensions: pdo, pdo_sqlite, sqlite3, fileinfo, json
           coverage: none
-          ini-values: memory_limit=512M, max_execution_time=120
+          tools: none
+          ini-values: memory_limit=512M, max_execution_time=180
+        env:
+          fail-fast: true
 
       - name: Verify PHP runtime
         run: |
           php -v
           php -m | grep -Ei 'PDO|pdo_sqlite|sqlite3|fileinfo|json'
+          php -r "foreach (['pdo','pdo_sqlite','sqlite3','fileinfo','json'] as $ext) { if (!extension_loaded($ext)) { fwrite(STDERR, 'Missing extension: '.$ext.PHP_EOL); exit(1); } } echo 'Required PHP extensions loaded'.PHP_EOL;"
+          php -r "$pdo = new PDO('sqlite::memory:'); $pdo->exec('CREATE TABLE smoke_test (id INTEGER PRIMARY KEY, name TEXT)'); echo 'SQLite PDO memory database ok'.PHP_EOL;"
 
       - name: Verify PowerShell runtime
-        run: pwsh -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion'
+        shell: pwsh
+        run: |
+          $PSVersionTable.PSVersion
+          if ($PSVersionTable.PSEdition -ne 'Core') { throw 'CI requires PowerShell Core on Linux.' }
 
       - name: Prepare CI environment
+        shell: bash
         run: |
           cp .env.ci.example .env
           mkdir -p storage/database storage/logs storage/uploads storage/backups
+          rm -f storage/database/reborn.sqlite
+          rm -f storage/logs/*.log storage/logs/ci-smoke-results.json || true
 
       - name: Set up development database
         run: php scripts/setup-dev.php
 
       - name: Start PHP built-in server
+        shell: bash
         run: |
           nohup php -S 127.0.0.1:8080 -t public public/index.php > storage/logs/ci-php-server.log 2>&1 &
           echo $! > storage/logs/ci-php-server.pid
+          sleep 1
+          if ! kill -0 "$(cat storage/logs/ci-php-server.pid)" 2>/dev/null; then
+            echo "PHP built-in server exited early. Server log follows:"
+            cat storage/logs/ci-php-server.log || true
+            exit 1
+          fi
 
       - name: Wait for API health
+        shell: bash
         run: |
-          for attempt in {1..30}; do
+          for attempt in {1..45}; do
             if curl -fsS http://127.0.0.1:8080/api/health > /tmp/reborn-health.json; then
               cat /tmp/reborn-health.json
               exit 0
@@ -68,15 +90,21 @@ jobs:
           cat storage/logs/ci-php-server.log || true
           exit 1
 
+      - name: Capture pre-smoke readiness snapshot
+        shell: bash
+        run: |
+          curl -fsS http://127.0.0.1:8080/api/ready | tee storage/logs/ci-ready-before-smoke.json
+
       - name: Run full smoke test suite
-        run: pwsh ./scripts/ci-smoke-tests.ps1 -BaseUrl http://127.0.0.1:8080
+        shell: pwsh
+        run: ./scripts/ci-smoke-tests.ps1 -BaseUrl http://127.0.0.1:8080
 
       - name: Upload runtime logs on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: reborn-ci-runtime-logs
           path: |
             storage/logs/*.log
-            storage/logs/ci-smoke-results.json
+            storage/logs/*.json
           if-no-files-found: ignore

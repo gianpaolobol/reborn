@@ -35,10 +35,11 @@ It runs on:
 The workflow uses:
 
 ```text
-ubuntu-latest
+ubuntu-24.04
 PHP 8.4
 shivammathur/setup-php@v2
-actions/upload-artifact@v4
+actions/checkout@v5
+actions/upload-artifact@v6
 ```
 
 Required PHP extensions:
@@ -147,11 +148,11 @@ If a smoke test should not run in CI, document why in the step handoff and in th
 
 ## Failure artifacts
 
-On failure, the workflow uploads runtime logs from:
+On failure, the workflow writes a GitHub error annotation naming the failed smoke script, writes a step summary, and uploads runtime diagnostics from:
 
 ```text
 storage/logs/*.log
-storage/logs/ci-smoke-results.json
+storage/logs/*.json
 ```
 
 Do not upload `.env`, SQLite databases, uploads, backups or other runtime data that may contain tokens or user data.

@@ -18,7 +18,10 @@ Implemented:
 - PHP built-in server startup;
 - API health wait loop;
 - full smoke suite runner;
+- GitHub error annotation for the exact failed smoke script;
+- failure diagnostics JSON;
 - failure log artifacts;
+- Node 24 compatible official GitHub actions;
 - testing documentation;
 - pull request checklist update.
 
@@ -50,7 +53,7 @@ workflow_dispatch
 ## CI runtime
 
 ```text
-ubuntu-latest
+ubuntu-24.04
 PHP 8.4
 pdo
 pdo_sqlite
@@ -92,7 +95,7 @@ The workflow calls:
 scripts/ci-smoke-tests.ps1
 ```
 
-This prevents the workflow YAML from becoming the canonical list of smoke tests. Future steps must update the script, not duplicate long command lists in multiple places.
+This prevents the workflow YAML from becoming the canonical list of smoke tests. Future steps must update the script, not duplicate long command lists in multiple places. The script also emits GitHub Actions annotations and writes `storage/logs/ci-failure-diagnostics.json` when a smoke test fails.
 
 ### No deployment
 
@@ -127,7 +130,8 @@ The step is acceptable when:
 - PHP built-in server starts in CI;
 - `/api/health` responds before smoke tests start;
 - `scripts/ci-smoke-tests.ps1` runs all current regression smoke scripts;
-- failure logs are uploaded without uploading databases or secrets.
+- failure logs and JSON diagnostics are uploaded without uploading databases or secrets;
+- the workflow uses Node 24 compatible official actions for checkout and artifact upload.
 
 ## Commit suggestion
 
