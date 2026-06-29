@@ -23,9 +23,20 @@ use Reborn\Marketplace\Application\GetRepairPathDecisionService;
 use Reborn\Marketplace\Application\ListRepairPathDecisionsService;
 use Reborn\Marketplace\Application\RepairPathDecisionEngine;
 use Reborn\Marketplace\Application\RepairPathDecisionService;
+use Reborn\Marketplace\Application\ConfirmMockPaymentIntentService;
+use Reborn\Marketplace\Application\CreatePaymentIntentService;
+use Reborn\Marketplace\Application\CreateRepairOrderService;
+use Reborn\Marketplace\Application\GetPaymentIntentService;
+use Reborn\Marketplace\Application\GetRepairOrderService;
+use Reborn\Marketplace\Application\ListPaymentIntentsService;
+use Reborn\Marketplace\Application\ListRepairOrdersService;
+use Reborn\Marketplace\Application\RepairOrderAssembler;
 use Reborn\Marketplace\Application\RequestRepairPathDecisionService;
 use Reborn\Marketplace\Infrastructure\SqliteRepairPathDecisionRepository;
+use Reborn\Marketplace\Infrastructure\SqlitePaymentIntentRepository;
+use Reborn\Marketplace\Infrastructure\SqliteRepairOrderRepository;
 use Reborn\Marketplace\Presentation\RepairPathDecisionController;
+use Reborn\Marketplace\Presentation\RepairOrderController;
 use Reborn\Provider\Application\ProviderMatchingService;
 use Reborn\Provider\Application\GetProviderMatchService;
 use Reborn\Provider\Application\GetProviderQuoteRequestService;
@@ -90,6 +101,8 @@ $recognitionJobRepository = new SqliteRecognitionJobRepository($pdo);
 $repairPathDecisionRepository = new SqliteRepairPathDecisionRepository($pdo);
 $providerMatchRepository = new SqliteProviderMatchRepository($pdo);
 $providerQuoteRequestRepository = new SqliteProviderQuoteRequestRepository($pdo);
+$repairOrderRepository = new SqliteRepairOrderRepository($pdo);
+$paymentIntentRepository = new SqlitePaymentIntentRepository($pdo);
 $knowledgeEngine = new KnowledgeEngine($pdo);
 $recognitionEngine = new RecognitionEngine($knowledgeEngine);
 $decisionService = new RepairPathDecisionService($pdo);
@@ -162,8 +175,27 @@ $providerMatchController = new ProviderMatchController(
     new RepairCaseAccessPolicy()
 );
 
+$repairOrderController = new RepairOrderController(
+    new CreateRepairOrderService(
+        $providerQuoteRequestRepository,
+        $repairOrderRepository,
+        new RepairOrderAssembler(),
+        $eventBus
+    ),
+    new ListRepairOrdersService($repairRepository, $repairOrderRepository),
+    new GetRepairOrderService($repairOrderRepository),
+    new CreatePaymentIntentService($repairOrderRepository, $paymentIntentRepository, $eventBus),
+    new GetProviderQuoteRequestService($providerQuoteRequestRepository),
+    new ListPaymentIntentsService($repairOrderRepository, $paymentIntentRepository),
+    new GetPaymentIntentService($paymentIntentRepository),
+    new ConfirmMockPaymentIntentService($paymentIntentRepository, $eventBus),
+    new GetRepairCaseService($repairRepository),
+    $authContext,
+    new RepairCaseAccessPolicy()
+);
+
 $router = new Router();
-(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $authContext, $pdo);
+(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $authContext, $pdo);
 
 return [
     'router' => $router,

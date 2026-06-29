@@ -425,6 +425,22 @@ function activeQuoteRequest() {
   return S.api.quoteRequest || activeQuoteRequests()[0] || null;
 }
 
+function activeRepairOrders() {
+  return Array.isArray(S.api.repairOrders) ? S.api.repairOrders : [];
+}
+
+function activeRepairOrder() {
+  return S.api.repairOrder || activeRepairOrders()[0] || null;
+}
+
+function activePaymentIntents() {
+  return Array.isArray(S.api.paymentIntents) ? S.api.paymentIntents : [];
+}
+
+function activePaymentIntent() {
+  return S.api.paymentIntent || activePaymentIntents()[0] || null;
+}
+
 function mockRecognitionResult() {
   return {
     object_guess: { label: 'appliance knob / plastic cover / hinge / wearable case', confidence: 0.72 },
@@ -477,6 +493,59 @@ function mockQuoteRequest(providerId = 'provider-bologna-lab') {
     created_at: new Date().toISOString(),
     expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     accepted_at: null
+  };
+}
+
+function mockRepairOrder() {
+  const quote = activeQuoteRequest() || mockQuoteRequest();
+  const q = quote.quote_json || {};
+  return {
+    id: 'mock-repair-order',
+    quote_request_id: quote.id,
+    provider_match_id: quote.provider_match_id,
+    repair_case_id: quote.repair_case_id,
+    provider_id: quote.provider_id,
+    ordered_by: S.auth.user?.id || 'mock-user',
+    status: 'created',
+    currency: q.currency || 'EUR',
+    subtotal_cents: Number(q.subtotal_cents || 0),
+    platform_fee_cents: Number(q.platform_fee_cents || 0),
+    provider_payout_cents: Number(q.provider_payout_cents || 0),
+    total_cents: Number(q.total_cents || 0),
+    order_json: {
+      source: 'mock_quote_request',
+      provider: q.provider || { id: quote.provider_id, name: 'Mock repair provider' },
+      repair_scope: q.repair_scope || { selected_path_title: 'Provider-assisted repair validation' },
+      line_items: q.line_items || [],
+      fulfilment: { estimated_days: Number(q.estimated_days || 4), provider_validation_required: true, repair_success_definition: 'The object returns to function.' },
+      quality_gate: ['confirm_dimensions_before_production', 'validate_material_and_tolerance', 'close order only after repair outcome is confirmed'],
+      payment: { provider: 'mock', real_money_movement: false }
+    },
+    created_at: new Date().toISOString(),
+    confirmed_at: null,
+    cancelled_at: null
+  };
+}
+
+function mockPaymentIntent() {
+  const order = activeRepairOrder() || mockRepairOrder();
+  return {
+    id: 'mock-payment-intent',
+    repair_order_id: order.id,
+    quote_request_id: order.quote_request_id,
+    repair_case_id: order.repair_case_id,
+    requested_by: S.auth.user?.id || 'mock-user',
+    provider: 'mock',
+    status: 'requires_mock_confirmation',
+    currency: order.currency || 'EUR',
+    amount_cents: Number(order.total_cents || 0),
+    client_secret: 'rbn_pi_mock_client_secret',
+    payment_url: '/prototype/index.html#/checkout?payment_intent=mock-payment-intent',
+    metadata_json: { mvp_note: 'Mock payment intent only. No real money movement occurs in Step 14.', platform_fee_cents: Number(order.platform_fee_cents || 0), provider_payout_cents: Number(order.provider_payout_cents || 0) },
+    created_at: new Date().toISOString(),
+    expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+    confirmed_at: null,
+    cancelled_at: null
   };
 }
 
@@ -702,11 +771,29 @@ function providerNetwork() {
 
 function checkout() {
   const p = getActiveProduct();
+  const quote = activeQuoteRequest();
+  const order = activeRepairOrder();
+  const intent = activePaymentIntent();
+  const quoteJson = quote?.quote_json || {};
+  const orderJson = order?.order_json || {};
+  const providerName = orderJson.provider?.name || quoteJson.provider?.name || quote?.provider_id || S.selectedProvider;
+  const total = Number(order?.total_cents || quoteJson.total_cents || 0);
+  const platformFee = Number(order?.platform_fee_cents || quoteJson.platform_fee_cents || 0);
+  const payout = Number(order?.provider_payout_cents || quoteJson.provider_payout_cents || 0);
+  const paymentStatus = intent ? intent.status : 'not_created';
+
   return layout('Checkout', html`
+    <section class="section-head"><div><p class="eyebrow">Step 14 · Repair Order & Payment Intent MVP</p><h2>Confirm the repair, not just the purchase.</h2></div><p class="muted">A repair order is created from a validated quote. Payment intent is mock-only: no real money movement happens in this MVP.</p></section>
     <section class="grid two">
-      <div class="panel stack"><p class="eyebrow">Repair order</p><h2>Confirm the repair, not just the purchase.</h2><table class="table"><tr><th>Object</th><td>${safe(p.detectedName)}</td></tr><tr><th>Path</th><td>${safe(S.selectedPath)}</td></tr><tr><th>Provider</th><td>${safe(S.selectedProvider)}</td></tr><tr><th>Material</th><td>PETG-CF / PA12 equivalent</td></tr><tr><th>Platform fee</th><td>Included</td></tr><tr><th>Maker royalty</th><td>Included</td></tr></table><div class="actions"><button class="btn green" onclick="toast('Prototype order created. Production will create RepairOrder + Wallet events.')">Confirm repair order</button><a class="btn secondary" href="#/provider-network">Back</a></div></div>
-      <aside class="panel dark-panel stack"><h3>Wallet and impact</h3><div class="grid two">${metric(D.wallet.credits, 'Repair Credits')}${metric(D.wallet.savedObjects, 'Objects saved')}${metric(D.wallet.co2, 'CO₂ avoided')}${metric('€2.10', 'Platform fee')}</div><p class="muted">After completion, the repair updates provider trust, maker royalty, model reliability and Knowledge Graph confidence.</p></aside>
+      <div class="panel stack">
+        <p class="eyebrow">Repair order</p>
+        <h2>${order ? `Order ${safe(String(order.id).slice(0, 8))}` : 'Create an order from the quote'}</h2>
+        <table class="table"><tr><th>Object</th><td>${safe(p.detectedName)}</td></tr><tr><th>Provider</th><td>${safe(providerName)}</td></tr><tr><th>Quote status</th><td>${safe(quote?.status || 'missing')}</td></tr><tr><th>Order status</th><td>${safe(order?.status || 'not_created')}</td></tr><tr><th>Total</th><td>${formatEuro(total)}</td></tr><tr><th>Platform fee</th><td>${formatEuro(platformFee)}</td></tr><tr><th>Provider payout</th><td>${formatEuro(payout)}</td></tr></table>
+        <div class="actions"><button class="btn green" onclick="createRepairOrder()" ${S.busy || !quote || order ? 'disabled' : ''}>Create repair order</button><button class="btn orange" onclick="createPaymentIntent()" ${S.busy || !order || intent ? 'disabled' : ''}>Create payment intent</button><button class="btn green" onclick="confirmMockPaymentIntent()" ${S.busy || !intent || intent.status !== 'requires_mock_confirmation' ? 'disabled' : ''}>Mock authorize</button><a class="btn secondary" href="#/provider-network">Back</a></div>
+      </div>
+      <aside class="panel dark-panel stack"><h3>Payment intent</h3>${intent ? `<div class="price">${formatEuro(Number(intent.amount_cents || 0))}</div><p class="muted">${safe(intent.provider)} · ${safe(paymentStatus)} · expires ${safe(new Date(intent.expires_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }))}</p>${badges([[intent.status, intent.status === 'mock_authorized' ? 'green' : 'orange'], ['mock only', 'blue'], ['no real charge', '']])}<p class="muted small">Client secret: <code>${safe(String(intent.client_secret || '').slice(0, 18))}…</code></p>` : '<p class="muted">Create a payment intent after the repair order. This prepares checkout and audit trail without connecting a payment provider yet.</p>'}<div class="grid two">${metric(D.wallet.credits, 'Repair Credits')}${metric(D.wallet.savedObjects, 'Objects saved')}${metric(D.wallet.co2, 'CO₂ avoided')}${metric(formatEuro(platformFee), 'Platform fee')}</div><p class="muted">After completion, the repair updates provider trust, maker royalty, model reliability and Knowledge Graph confidence.</p></aside>
     </section>
+    <section class="section panel stack"><h3>Order quality gates</h3><div class="timeline"><div class="timeline-row"><div class="timeline-time">1</div><div class="timeline-content"><strong>Quote estimated</strong><p class="muted small">Provider reviewed repair fit and platform fee is explicit.</p></div></div><div class="timeline-row"><div class="timeline-time">2</div><div class="timeline-content"><strong>Repair order created</strong><p class="muted small">The quote becomes a fulfilment contract for a real repair outcome.</p></div></div><div class="timeline-row"><div class="timeline-time">3</div><div class="timeline-content"><strong>Payment intent prepared</strong><p class="muted small">Mock checkout is auditable; real Stripe/PayPal adapter can be added later.</p></div></div><div class="timeline-row"><div class="timeline-time">4</div><div class="timeline-content"><strong>Repair outcome pending</strong><p class="muted small">Order should close only when the object returns to function.</p></div></div></div></section>
   `, { currentStep: 'checkout' });
 }
 
@@ -814,6 +901,10 @@ async function refreshApiData(options = {}) {
       providerMatch: (bootstrap.provider_matches || [])[0] || S.api.providerMatch,
       quoteRequests: bootstrap.quote_requests || [],
       quoteRequest: (bootstrap.quote_requests || [])[0] || S.api.quoteRequest,
+      repairOrders: bootstrap.repair_orders || [],
+      repairOrder: (bootstrap.repair_orders || [])[0] || S.api.repairOrder,
+      paymentIntents: bootstrap.payment_intents || [],
+      paymentIntent: (bootstrap.payment_intents || [])[0] || S.api.paymentIntent,
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
@@ -872,7 +963,7 @@ async function createRepairCaseFromValues(payload) {
   try {
     const result = await window.REBORN_API.createRepairCase(payload);
     const repairCase = result.repair_case;
-    S.setApi({ repairCase, repairCases: [repairCase, ...S.api.repairCases], repairPaths: [], repairAttachments: [], recognitionJobs: [], recognitionJob: null, repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, diagnosis: null, lastSyncAt: new Date().toISOString() });
+    S.setApi({ repairCase, repairCases: [repairCase, ...S.api.repairCases], repairPaths: [], repairAttachments: [], recognitionJobs: [], recognitionJob: null, repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, repairOrders: [], repairOrder: null, paymentIntents: [], paymentIntent: null, diagnosis: null, lastSyncAt: new Date().toISOString() });
     toast('Live repair case created.');
     location.hash = '#/capture';
     return repairCase;
@@ -1146,6 +1237,10 @@ async function runProviderMatch() {
       providerMatches: matches.provider_matches || [payload.provider_match],
       quoteRequests: [],
       quoteRequest: null,
+      repairOrders: [],
+      repairOrder: null,
+      paymentIntents: [],
+      paymentIntent: null,
       message: 'Provider Match Engine ranked fulfilment options for the repair.',
       status: 'live',
       lastError: null,
@@ -1222,6 +1317,129 @@ function runMockProviderQuote(providerId) {
   render();
 }
 
+async function createRepairOrder() {
+  if (S.api.status !== 'live') {
+    runMockRepairOrder();
+    return;
+  }
+
+  const quote = activeQuoteRequest();
+  if (!quote) {
+    toast('Request a quote before creating a repair order.');
+    location.hash = '#/provider-network';
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.createRepairOrder(quote.id);
+    const repairCase = S.api.repairCase;
+    const orders = repairCase ? await window.REBORN_API.getRepairOrders(repairCase.id).catch(() => ({ repair_orders: [payload.repair_order] })) : { repair_orders: [payload.repair_order] };
+    S.setApi({
+      repairOrder: payload.repair_order,
+      repairOrders: orders.repair_orders || [payload.repair_order],
+      paymentIntent: null,
+      paymentIntents: [],
+      message: 'Repair Order Engine created an order from the quote.',
+      status: 'live',
+      lastError: null,
+      lastSyncAt: new Date().toISOString()
+    });
+    toast('Repair order created.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Repair order failed: ${error.message}`, lastError: error.message });
+    toast(`Order failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+function runMockRepairOrder() {
+  const order = mockRepairOrder();
+  S.setApi({ repairOrder: order, repairOrders: [order], paymentIntent: null, paymentIntents: [] });
+  toast('Mock repair order created.');
+  render();
+}
+
+async function createPaymentIntent() {
+  if (S.api.status !== 'live') {
+    runMockPaymentIntent();
+    return;
+  }
+
+  const order = activeRepairOrder();
+  if (!order) {
+    toast('Create a repair order before preparing payment.');
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.createPaymentIntent(order.id);
+    const intents = await window.REBORN_API.getPaymentIntents(order.id).catch(() => ({ payment_intents: [payload.payment_intent] }));
+    S.setApi({
+      paymentIntent: payload.payment_intent,
+      paymentIntents: intents.payment_intents || [payload.payment_intent],
+      message: 'Mock payment intent created. No real money movement occurred.',
+      status: 'live',
+      lastError: null,
+      lastSyncAt: new Date().toISOString()
+    });
+    toast('Payment intent created.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Payment intent failed: ${error.message}`, lastError: error.message });
+    toast(`Payment intent failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+function runMockPaymentIntent() {
+  const intent = mockPaymentIntent();
+  S.setApi({ paymentIntent: intent, paymentIntents: [intent] });
+  toast('Mock payment intent created.');
+  render();
+}
+
+async function confirmMockPaymentIntent() {
+  if (S.api.status !== 'live') {
+    const intent = activePaymentIntent() || mockPaymentIntent();
+    const updated = { ...intent, status: 'mock_authorized', confirmed_at: new Date().toISOString() };
+    S.setApi({ paymentIntent: updated, paymentIntents: [updated] });
+    toast('Mock payment authorized.');
+    render();
+    return;
+  }
+
+  const intent = activePaymentIntent();
+  if (!intent) {
+    toast('Create a payment intent first.');
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.confirmMockPaymentIntent(intent.id);
+    S.setApi({
+      paymentIntent: payload.payment_intent,
+      paymentIntents: [payload.payment_intent, ...activePaymentIntents().filter(item => item.id !== payload.payment_intent.id)],
+      message: 'Mock payment intent authorized. No real charge occurred.',
+      status: 'live',
+      lastError: null,
+      lastSyncAt: new Date().toISOString()
+    });
+    toast('Mock payment authorized.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Mock payment confirmation failed: ${error.message}`, lastError: error.message });
+    toast(`Mock authorization failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 async function bootAuthSession() {
   if (!window.REBORN_API?.getToken()) {
     S.setAuth({ status: 'guest', user: null, tokenStored: false });
@@ -1277,7 +1495,7 @@ async function handleLogout() {
     if (S.auth.status === 'authenticated') await window.REBORN_API.logout();
     else window.REBORN_API.setToken(null);
     S.setAuth({ status: 'guest', user: null, tokenStored: false, lastLoginAt: null });
-    S.setApi({ dashboard: null, roleDashboards: {}, repairCases: [], repairCase: null, repairPaths: [], repairPathDecisions: [], repairPathDecision: null });
+    S.setApi({ dashboard: null, roleDashboards: {}, repairCases: [], repairCase: null, repairPaths: [], repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, repairOrders: [], repairOrder: null, paymentIntents: [], paymentIntent: null });
     toast('Logged out.');
     location.hash = '#/login';
   } catch (error) {
@@ -1348,6 +1566,13 @@ window.runAIRecognition = runAIRecognition;
 window.runMockRecognition = runMockRecognition;
 window.runRepairPathDecision = runRepairPathDecision;
 window.runMockRepairPathDecision = runMockRepairPathDecision;
+window.runProviderMatch = runProviderMatch;
+window.requestProviderQuote = requestProviderQuote;
+window.createRepairOrder = createRepairOrder;
+window.runMockRepairOrder = runMockRepairOrder;
+window.createPaymentIntent = createPaymentIntent;
+window.runMockPaymentIntent = runMockPaymentIntent;
+window.confirmMockPaymentIntent = confirmMockPaymentIntent;
 window.handleLogin = handleLogin;
 window.loginAsDemo = loginAsDemo;
 window.handleLogout = handleLogout;

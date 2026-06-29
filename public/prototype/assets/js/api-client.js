@@ -227,6 +227,40 @@
       return this.request(`/api/v1/quote-requests/${encodeURIComponent(quoteRequestId)}`);
     }
 
+    async createRepairOrder(quoteRequestId) {
+      return this.request(`/api/v1/quote-requests/${encodeURIComponent(quoteRequestId)}/repair-orders`, {
+        method: 'POST'
+      });
+    }
+
+    async getRepairOrders(caseId) {
+      return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/repair-orders`);
+    }
+
+    async getRepairOrder(orderId) {
+      return this.request(`/api/v1/repair-orders/${encodeURIComponent(orderId)}`);
+    }
+
+    async createPaymentIntent(orderId) {
+      return this.request(`/api/v1/repair-orders/${encodeURIComponent(orderId)}/payment-intents`, {
+        method: 'POST'
+      });
+    }
+
+    async getPaymentIntents(orderId) {
+      return this.request(`/api/v1/repair-orders/${encodeURIComponent(orderId)}/payment-intents`);
+    }
+
+    async getPaymentIntent(paymentIntentId) {
+      return this.request(`/api/v1/payment-intents/${encodeURIComponent(paymentIntentId)}`);
+    }
+
+    async confirmMockPaymentIntent(paymentIntentId) {
+      return this.request(`/api/v1/payment-intents/${encodeURIComponent(paymentIntentId)}/confirm-mock`, {
+        method: 'POST'
+      });
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -261,7 +295,9 @@
           recognition_jobs: [],
           repair_path_decisions: [],
           provider_matches: [],
-          quote_requests: []
+          quote_requests: [],
+          repair_orders: [],
+          payment_intents: []
         };
       }
 
@@ -282,6 +318,8 @@
       let repairPathDecisions = { repair_path_decisions: [] };
       let providerMatches = { provider_matches: [] };
       let quoteRequests = { quote_requests: [] };
+      let repairOrders = { repair_orders: [] };
+      let paymentIntents = { payment_intents: [] };
 
       if (latestCase && this.getToken()) {
         try {
@@ -314,6 +352,19 @@
         } catch (_error) {
           quoteRequests = { quote_requests: [] };
         }
+        try {
+          repairOrders = await this.getRepairOrders(latestCase.id);
+        } catch (_error) {
+          repairOrders = { repair_orders: [] };
+        }
+        const latestOrder = (repairOrders.repair_orders || [])[0] || null;
+        if (latestOrder) {
+          try {
+            paymentIntents = await this.getPaymentIntents(latestOrder.id);
+          } catch (_error) {
+            paymentIntents = { payment_intents: [] };
+          }
+        }
       }
 
       return {
@@ -327,7 +378,9 @@
         recognition_jobs: recognitionJobs.recognition_jobs || [],
         repair_path_decisions: repairPathDecisions.repair_path_decisions || [],
         provider_matches: providerMatches.provider_matches || [],
-        quote_requests: quoteRequests.quote_requests || []
+        quote_requests: quoteRequests.quote_requests || [],
+        repair_orders: repairOrders.repair_orders || [],
+        payment_intents: paymentIntents.payment_intents || []
       };
     }
   }
