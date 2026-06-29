@@ -10,6 +10,7 @@ use Reborn\Platform\Application\BackupService;
 use Reborn\Platform\Application\IncidentResponseService;
 use Reborn\Platform\Application\OperationalTelemetryService;
 use Reborn\Platform\Application\NotificationCenterService;
+use Reborn\Platform\Application\OperationalGovernanceService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -22,6 +23,7 @@ final class PlatformController
         private readonly BackupService $backups,
         private readonly IncidentResponseService $incidents,
         private readonly NotificationCenterService $notifications,
+        private readonly OperationalGovernanceService $governance,
         private readonly AuthContext $auth,
     ) {
     }
@@ -275,6 +277,70 @@ final class PlatformController
     {
         $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         return JsonResponse::created(['incident_escalation' => $this->notifications->escalateIncident((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+
+
+    public function serviceGovernance(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['service_governance' => $this->governance->dashboard()], $request->requestId());
+    }
+
+    public function slaPolicies(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['sla_policies' => $this->governance->slaPolicies()], $request->requestId());
+    }
+
+    public function evaluateSlas(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['sla_evaluation_run' => $this->governance->evaluateSlas($user->id)], $request->requestId());
+    }
+
+    public function slaEvaluations(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['sla_evaluations' => $this->governance->slaEvaluations($status, $limit)], $request->requestId());
+    }
+
+    public function markSlaResponse(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $body = $request->body();
+        $note = trim((string) ($body['note'] ?? 'First response recorded from Step 24 console.'));
+        return JsonResponse::ok(['sla_evaluation' => $this->governance->markSlaResponse((string) $request->param('id'), $user->id, $note)], $request->requestId());
+    }
+
+    public function markSlaResolved(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $body = $request->body();
+        $note = trim((string) ($body['note'] ?? 'SLA resolution recorded from Step 24 console.'));
+        return JsonResponse::ok(['sla_evaluation' => $this->governance->markSlaResolved((string) $request->param('id'), $user->id, $note)], $request->requestId());
+    }
+
+    public function operationalPolicies(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        return JsonResponse::ok(['operational_policies' => $this->governance->operationalPolicies($status)], $request->requestId());
+    }
+
+    public function policyAttestations(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['policy_attestations' => $this->governance->policyAttestations($limit)], $request->requestId());
+    }
+
+    public function attestOperationalPolicy(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['policy_attestation' => $this->governance->attestPolicy((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
     }
 
 }

@@ -621,6 +621,53 @@
       });
     }
 
+
+
+    async getServiceGovernance() {
+      return this.request('/api/v1/platform/service-governance');
+    }
+
+    async getSlaPolicies() {
+      return this.request('/api/v1/platform/sla-policies');
+    }
+
+    async evaluateSlas() {
+      return this.request('/api/v1/platform/slas/evaluate', { method: 'POST' });
+    }
+
+    async getSlaEvaluations(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/sla-evaluations?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async markSlaResponse(id, note = 'First response recorded from prototype console.') {
+      return this.request(`/api/v1/platform/sla-evaluations/${encodeURIComponent(id)}/response`, {
+        method: 'POST',
+        body: { note }
+      });
+    }
+
+    async markSlaResolved(id, note = 'SLA resolved from prototype console.') {
+      return this.request(`/api/v1/platform/sla-evaluations/${encodeURIComponent(id)}/resolve`, {
+        method: 'POST',
+        body: { note }
+      });
+    }
+
+    async getOperationalPolicies(status = 'all') {
+      return this.request(`/api/v1/platform/operational-policies?status=${encodeURIComponent(status)}`);
+    }
+
+    async getPolicyAttestations(limit = 50) {
+      return this.request(`/api/v1/platform/policy-attestations?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async attestOperationalPolicy(id, payload = {}) {
+      return this.request(`/api/v1/platform/operational-policies/${encodeURIComponent(id)}/attest`, {
+        method: 'POST',
+        body: payload
+      });
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -699,7 +746,12 @@
           notification_rules: [],
           notification_deliveries: [],
           escalation_policies: [],
-          escalation_runs: []
+          escalation_runs: [],
+          service_governance: null,
+          sla_policies: [],
+          sla_evaluations: [],
+          operational_policies: [],
+          policy_attestations: []
         };
       }
 
@@ -733,6 +785,11 @@
       let notificationDeliveries = { notification_deliveries: [] };
       let escalationPolicies = { escalation_policies: [] };
       let escalationRuns = { escalation_runs: [] };
+      let serviceGovernance = { service_governance: null };
+      let slaPolicies = { sla_policies: [] };
+      let slaEvaluations = { sla_evaluations: [] };
+      let operationalPolicies = { operational_policies: [] };
+      let policyAttestations = { policy_attestations: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -917,6 +974,31 @@
         } catch (_error) {
           escalationRuns = { escalation_runs: [] };
         }
+        try {
+          serviceGovernance = await this.getServiceGovernance();
+        } catch (_error) {
+          serviceGovernance = { service_governance: null };
+        }
+        try {
+          slaPolicies = await this.getSlaPolicies();
+        } catch (_error) {
+          slaPolicies = { sla_policies: [] };
+        }
+        try {
+          slaEvaluations = await this.getSlaEvaluations();
+        } catch (_error) {
+          slaEvaluations = { sla_evaluations: [] };
+        }
+        try {
+          operationalPolicies = await this.getOperationalPolicies();
+        } catch (_error) {
+          operationalPolicies = { operational_policies: [] };
+        }
+        try {
+          policyAttestations = await this.getPolicyAttestations(25);
+        } catch (_error) {
+          policyAttestations = { policy_attestations: [] };
+        }
 
       }
 
@@ -1057,7 +1139,12 @@
         notification_rules: notificationRules.notification_rules || [],
         notification_deliveries: notificationDeliveries.notification_deliveries || [],
         escalation_policies: escalationPolicies.escalation_policies || [],
-        escalation_runs: escalationRuns.escalation_runs || []
+        escalation_runs: escalationRuns.escalation_runs || [],
+        service_governance: serviceGovernance.service_governance || null,
+        sla_policies: slaPolicies.sla_policies || [],
+        sla_evaluations: slaEvaluations.sla_evaluations || [],
+        operational_policies: operationalPolicies.operational_policies || [],
+        policy_attestations: policyAttestations.policy_attestations || []
       };
     }
   }

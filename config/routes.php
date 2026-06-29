@@ -82,6 +82,11 @@ return static function (Router $router, RepairController $repairController, Auth
                 'notification_dispatch',
                 'escalation_policies',
                 'escalation_runs',
+                'service_governance',
+                'sla_policies',
+                'sla_evaluations',
+                'operational_policies',
+                'policy_attestations',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -127,6 +132,15 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/platform/escalation-policies', [$platformController, 'escalationPolicies']);
     $router->get('/api/v1/platform/escalation-runs', [$platformController, 'escalationRuns']);
     $router->post('/api/v1/platform/incidents/{id}/escalate', [$platformController, 'escalateIncident']);
+    $router->get('/api/v1/platform/service-governance', [$platformController, 'serviceGovernance']);
+    $router->get('/api/v1/platform/sla-policies', [$platformController, 'slaPolicies']);
+    $router->post('/api/v1/platform/slas/evaluate', [$platformController, 'evaluateSlas']);
+    $router->get('/api/v1/platform/sla-evaluations', [$platformController, 'slaEvaluations']);
+    $router->post('/api/v1/platform/sla-evaluations/{id}/response', [$platformController, 'markSlaResponse']);
+    $router->post('/api/v1/platform/sla-evaluations/{id}/resolve', [$platformController, 'markSlaResolved']);
+    $router->get('/api/v1/platform/operational-policies', [$platformController, 'operationalPolicies']);
+    $router->get('/api/v1/platform/policy-attestations', [$platformController, 'policyAttestations']);
+    $router->post('/api/v1/platform/operational-policies/{id}/attest', [$platformController, 'attestOperationalPolicy']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

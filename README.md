@@ -389,3 +389,31 @@ Open the admin console:
 ```text
 http://127.0.0.1:8080/prototype/index.html#/notifications
 ```
+
+## Step 24 — Service Level & Operational Governance v1
+
+Step 24 connects operations to measurable commitments and pilot governance.
+
+It adds:
+
+- SQLite-backed SLA policies for alerts and incidents;
+- SLA evaluations with response and resolution due dates;
+- manual response and resolution evidence for SLA records;
+- operational policies for pilot readiness, incident comms, backup/restore, provider quality and upload-data handling;
+- policy attestations;
+- admin prototype console at `#/service-governance`;
+- smoke test `scripts/smoke-service-governance-sla.ps1`.
+
+This is not a legal SLA contract yet. It is a local/pilot governance layer to prove Re-born can be operated responsibly before onboarding real users/providers.
+
+Run after Step 20/21/22/23 checks:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-service-governance-sla.ps1
+```
+
+Open the admin console:
+
+```text
+http://127.0.0.1:8080/prototype/index.html#/service-governance
+```

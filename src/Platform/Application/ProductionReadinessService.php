@@ -34,6 +34,7 @@ final class ProductionReadinessService
             'backup' => $this->backupCheck(),
             'incident_response' => $this->incidentResponseCheck(),
             'notification_center' => $this->notificationCenterCheck(),
+            'service_governance' => $this->serviceGovernanceCheck(),
         ];
 
         $status = 'ready';
@@ -85,7 +86,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v4_step23',
+            'checklist_version' => 'production_readiness_v5_step24',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -93,11 +94,13 @@ final class ProductionReadinessService
                 'backup and restore procedure has been tested',
                 'alert evaluation and status page workflow are verified',
                 'notification dispatch and escalation workflow are verified',
+                'SLA evaluation and operational policy attestations are reviewed',
                 'privacy/legal liability terms for repair outcomes are approved',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
             'step_23_status' => 'Notification center, mock delivery records and escalation workflow v1 implemented.',
+            'step_24_status' => 'Service level objectives, SLA evaluations and operational policy governance v1 implemented.',
         ];
     }
 
@@ -168,10 +171,10 @@ final class ProductionReadinessService
             $count = (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn();
             $latest = $this->pdo->query('SELECT filename FROM migrations ORDER BY executed_at DESC, id DESC LIMIT 1')->fetchColumn();
             return [
-                'status' => $count >= 17 ? 'ok' : 'warn',
+                'status' => $count >= 18 ? 'ok' : 'warn',
                 'executed_count' => $count,
                 'latest' => $latest ?: null,
-                'message' => $count >= 17 ? 'All MVP hardening, observability, incident-response and notification migrations are present.' : 'Some migrations may still need to run.',
+                'message' => $count >= 18 ? 'All MVP hardening, observability, incident-response, notification and service-governance migrations are present.' : 'Some migrations may still need to run.',
             ];
         } catch (Throwable $exception) {
             return ['status' => 'fail', 'message' => 'Migration metadata is unavailable.', 'error' => $exception->getMessage()];
@@ -352,6 +355,40 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Notification center checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function serviceGovernanceCheck(): array
+    {
+        try {
+            $tables = ['platform_sla_policies', 'platform_sla_evaluations', 'platform_operational_policies', 'platform_policy_attestations'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $slaPolicies = 0;
+            $operationalPolicies = 0;
+            if ($missing === []) {
+                $slaPolicies = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_sla_policies WHERE enabled = 1')->fetchColumn();
+                $operationalPolicies = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_operational_policies WHERE status IN ('active', 'draft')")->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? (($slaPolicies > 0 && $operationalPolicies > 0) ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Service governance tables are available.' : 'Service governance tables are not fully migrated yet.',
+                'enabled_sla_policies' => $slaPolicies,
+                'operational_policies' => $operationalPolicies,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Service governance checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 

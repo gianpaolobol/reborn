@@ -98,7 +98,8 @@ function stepper(active) {
     ['readiness', '11', 'Ready'],
     ['observability', '12', 'Observe'],
     ['incidents', '13', 'Respond'],
-    ['notifications', '14', 'Notify']
+    ['notifications', '14', 'Notify'],
+    ['service-governance', '15', 'SLA']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -1654,6 +1655,128 @@ async function escalateFirstIncident() {
   }
 }
 
+
+function serviceGovernanceDashboard() {
+  setActiveNav('service-governance');
+  if (S.auth.user?.role !== 'admin') {
+    return layout('Service Governance', authRequiredPanel('the Step 24 service governance console'), { currentStep: 'service-governance' });
+  }
+
+  const governance = S.api.serviceGovernance || {};
+  const summary = governance.sla_summary || {};
+  const policySummary = governance.policy_summary || {};
+  const evaluations = S.api.slaEvaluations || governance.active_sla_evaluations || [];
+  const slaPolicies = S.api.slaPolicies || governance.sla_policies || [];
+  const operationalPolicies = S.api.operationalPolicies || governance.operational_policies || [];
+  const attestations = S.api.policyAttestations || governance.recent_attestations || [];
+  const operatorActions = governance.operator_actions || [];
+
+  const evaluationRows = evaluations.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'breached' ? 'danger' : item.status === 'at_risk' ? 'orange' : item.status === 'met' ? 'green' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.source_type)}</td><td>${safe(item.context?.source_title || item.source_id)}</td><td>${safe(item.severity)}</td><td>${safe(item.response_due_at)}</td><td>${safe(item.resolution_due_at)}</td><td><button class="mini-button" onclick="markSlaResponded('${safe(item.id)}')">Respond</button> <button class="mini-button" onclick="markSlaResolved('${safe(item.id)}')">Resolve</button></td></tr>`).join('') || '<tr><td colspan="7">No active SLA evaluations yet. Run SLA evaluation after creating an alert or incident.</td></tr>';
+  const slaPolicyRows = slaPolicies.slice(0, 8).map(policy => `<div class="timeline-row"><div class="timeline-time">${safe(policy.severity)}</div><div class="timeline-content"><strong>${safe(policy.name)}</strong><p class="muted small">${safe(policy.source_type)} · response ${safe(policy.response_minutes)} min · resolution ${safe(policy.resolution_minutes)} min · ${policy.enabled ? 'enabled' : 'disabled'}</p></div></div>`).join('') || '<p class="muted small">No SLA policies configured.</p>';
+  const operationalPolicyRows = operationalPolicies.slice(0, 8).map(policy => `<tr><td><span class="badge ${policy.status === 'active' ? 'green' : policy.status === 'draft' ? 'orange' : 'blue'}">${safe(policy.status)}</span></td><td>${safe(policy.policy_code)}</td><td>${safe(policy.title)}</td><td>${safe(policy.scope)}</td><td>${safe(policy.review_due_at || 'not scheduled')}</td><td><button class="mini-button" onclick="attestOperationalPolicy('${safe(policy.id)}')">Attest</button></td></tr>`).join('') || '<tr><td colspan="6">No operational policies available.</td></tr>';
+  const attestationRows = attestations.slice(0, 8).map(row => `<div class="timeline-row"><div class="timeline-time">${safe(row.status)}</div><div class="timeline-content"><strong>${safe(row.policy_code)}</strong><p class="muted small">${safe(row.policy_title)} · ${safe(row.attested_at)}</p></div></div>`).join('') || '<p class="muted small">No policy attestations recorded yet.</p>';
+  const actionRows = operatorActions.map(action => `<li>${safe(action)}</li>`).join('') || '<li>Run SLA evaluation and review active policies before pilot/demo.</li>';
+
+  return layout('Service Governance', html`
+    <section class="section-head"><div><p class="eyebrow">Step 24 · Service Level & Operational Governance</p><h2>Turn operations into measurable commitments.</h2></div><p class="muted">Step 24 connects alerts, incidents, readiness and policies to explicit response targets, SLA evidence and pilot operating rules.</p></section>
+    <section class="grid four">
+      ${metric(summary.total || 0, 'SLA evaluations')}
+      ${metric(summary.open_breaches || 0, 'Open breaches')}
+      ${metric(summary.at_risk || 0, 'At risk')}
+      ${metric(policySummary.total || operationalPolicies.length, 'Policies')}
+    </section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="evaluateServiceSlas()" ${S.busy ? 'disabled' : ''}>Evaluate SLAs</button><button class="btn secondary" onclick="createGovernanceIncident()" ${S.busy ? 'disabled' : ''}>Create SLA test incident</button><button class="btn secondary" onclick="attestFirstOperationalPolicy()" ${S.busy || operationalPolicies.length === 0 ? 'disabled' : ''}>Attest first policy</button><a class="btn secondary" href="#/notifications">Open notifications</a></div><ul class="muted small">${actionRows}</ul></section>
+    <section class="section panel stack"><h3>Active SLA evaluations</h3><table class="table"><tr><th>Status</th><th>Source</th><th>Title</th><th>Severity</th><th>Response due</th><th>Resolution due</th><th>Action</th></tr>${evaluationRows}</table></section>
+    <section class="section grid two"><div class="panel stack"><h3>SLA policies</h3><div class="timeline">${slaPolicyRows}</div></div><div class="panel stack"><h3>Recent attestations</h3><div class="timeline">${attestationRows}</div></div></section>
+    <section class="section panel stack"><h3>Operational policies</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Title</th><th>Scope</th><th>Review due</th><th>Action</th></tr>${operationalPolicyRows}</table><p class="muted small">These are governance records for pilot readiness. They are not legal terms yet; legal/privacy production documents remain a separate future step.</p></section>
+  `, { currentStep: 'service-governance' });
+}
+
+async function evaluateServiceSlas() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate SLAs.');
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.evaluateSlas();
+    toast(`SLA evaluation completed for ${payload.sla_evaluation_run.evaluated_count} source(s).`);
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`SLA evaluation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function createGovernanceIncident() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create incidents.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.createIncident({
+      title: 'Step 24 SLA governance validation',
+      severity: 'medium',
+      summary: 'Prototype-created incident used to validate SLA evaluation and operational governance workflow.',
+      impact: 'No real user impact; local pilot governance validation.'
+    });
+    await window.REBORN_API.evaluateSlas();
+    toast('SLA test incident created and evaluated.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Incident creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function markSlaResponded(id) {
+  setBusy(true);
+  try {
+    await window.REBORN_API.markSlaResponse(id, 'First response recorded from Step 24 prototype console.');
+    toast('SLA response recorded.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`SLA response failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function markSlaResolved(id) {
+  setBusy(true);
+  try {
+    await window.REBORN_API.markSlaResolved(id, 'SLA resolved from Step 24 prototype console.');
+    toast('SLA resolution recorded.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`SLA resolve failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function attestOperationalPolicy(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to attest policies.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.attestOperationalPolicy(id, { status: 'acknowledged', notes: 'Attested from Step 24 prototype console.' });
+    toast('Operational policy attested.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Policy attestation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function attestFirstOperationalPolicy() {
+  const first = (S.api.operationalPolicies || [])[0];
+  if (!first) return toast('No operational policy available to attest.');
+  return attestOperationalPolicy(first.id);
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -1672,6 +1795,7 @@ const routes = {
   '/observability': observabilityDashboard,
   '/incidents': incidentResponseDashboard,
   '/notifications': notificationCenterDashboard,
+  '/service-governance': serviceGovernanceDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -1782,6 +1906,11 @@ async function refreshApiData(options = {}) {
       notificationDeliveries: bootstrap.notification_deliveries || S.api.notificationDeliveries || [],
       escalationPolicies: bootstrap.escalation_policies || S.api.escalationPolicies || [],
       escalationRuns: bootstrap.escalation_runs || S.api.escalationRuns || [],
+      serviceGovernance: bootstrap.service_governance || S.api.serviceGovernance,
+      slaPolicies: bootstrap.sla_policies || S.api.slaPolicies || [],
+      slaEvaluations: bootstrap.sla_evaluations || S.api.slaEvaluations || [],
+      operationalPolicies: bootstrap.operational_policies || S.api.operationalPolicies || [],
+      policyAttestations: bootstrap.policy_attestations || S.api.policyAttestations || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
