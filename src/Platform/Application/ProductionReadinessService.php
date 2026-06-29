@@ -45,6 +45,7 @@ final class ProductionReadinessService
             'geometry_printability' => $this->geometryPrintabilityCheck(),
             'provider_routing' => $this->providerRoutingCheck(),
             'dispatch_governance' => $this->dispatchGovernanceCheck(),
+            'customer_care_governance' => $this->customerCareGovernanceCheck(),
         ];
 
         $status = 'ready';
@@ -96,7 +97,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v15_step34',
+            'checklist_version' => 'production_readiness_v16_step35',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -115,6 +116,7 @@ final class ProductionReadinessService
                 'AI provider adapters, job orchestration, provider costs, retry rules and artifact stubs are reviewed before any live external AI call',
                 'CAD/geometry validation, printability findings and human review decisions are completed before provider routing or maker publication',
                 'provider routing, dispatch tracking and proof-of-repair governance are reviewed before real fulfilment operations',
+                'customer acceptance, warranty placeholders and post-repair support workflows are reviewed before beta customer commitments',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
@@ -130,6 +132,7 @@ final class ProductionReadinessService
             'step_32_status' => 'CAD/geometry validation, printability governance and human review workflow v1 implemented.',
             'step_33_status' => 'Provider capability, machine profile and fulfilment routing governance v1 implemented.',
             'step_34_status' => 'Fulfilment dispatch, shipment tracking and proof-of-repair governance v1 implemented.',
+            'step_35_status' => 'Customer acceptance, warranty placeholder and post-repair support governance v1 implemented.',
         ];
     }
 
@@ -200,10 +203,10 @@ final class ProductionReadinessService
             $count = (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn();
             $latest = $this->pdo->query('SELECT filename FROM migrations ORDER BY executed_at DESC, id DESC LIMIT 1')->fetchColumn();
             return [
-                'status' => $count >= 28 ? 'ok' : 'warn',
+                'status' => $count >= 29 ? 'ok' : 'warn',
                 'executed_count' => $count,
                 'latest' => $latest ?: null,
-                'message' => $count >= 28 ? 'All MVP hardening, governance, marketplace, maker economy, AI governance, geometry, routing and dispatch migrations are present.' : 'Some migrations may still need to run.',
+                'message' => $count >= 29 ? 'All MVP hardening, governance, marketplace, maker economy, AI governance, geometry, routing, dispatch and post-repair customer care migrations are present.' : 'Some migrations may still need to run.',
             ];
         } catch (Throwable $exception) {
             return ['status' => 'fail', 'message' => 'Migration metadata is unavailable.', 'error' => $exception->getMessage()];
@@ -831,6 +834,46 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Dispatch governance checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function customerCareGovernanceCheck(): array
+    {
+        try {
+            $tables = ['platform_customer_acceptance_policies', 'platform_customer_acceptance_records', 'platform_warranty_policies', 'platform_warranty_cases', 'platform_post_repair_support_tickets', 'platform_customer_feedback_records', 'platform_post_repair_review_items', 'platform_post_repair_audit_log'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $acceptancePolicies = 0;
+            $warrantyPolicies = 0;
+            $acceptanceRecords = 0;
+            $supportTickets = 0;
+            if ($missing === []) {
+                $acceptancePolicies = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_customer_acceptance_policies WHERE status = 'active'")->fetchColumn();
+                $warrantyPolicies = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_warranty_policies WHERE status = 'active'")->fetchColumn();
+                $acceptanceRecords = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_customer_acceptance_records')->fetchColumn();
+                $supportTickets = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_post_repair_support_tickets')->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? (($acceptancePolicies > 0 && $warrantyPolicies > 0) ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Customer acceptance, warranty placeholder and post-repair support governance tables are available. Legal warranty terms, refunds and CRM integrations remain out of scope for the local pilot.' : 'Customer care governance tables are not fully migrated yet.',
+                'acceptance_policies' => $acceptancePolicies,
+                'warranty_policies' => $warrantyPolicies,
+                'acceptance_records' => $acceptanceRecords,
+                'support_tickets' => $supportTickets,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Customer care governance checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 

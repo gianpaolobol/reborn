@@ -1262,6 +1262,75 @@
       return this.request(`/api/v1/platform/dispatch-audit-log?limit=${encodeURIComponent(limit)}`);
     }
 
+
+    async getCustomerCareGovernance() {
+      return this.request('/api/v1/platform/customer-care-governance');
+    }
+
+    async getCustomerAcceptancePolicies(status = 'active') {
+      return this.request(`/api/v1/platform/customer-acceptance-policies?status=${encodeURIComponent(status)}`);
+    }
+
+    async getCustomerAcceptanceRecords(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/customer-acceptance-records?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createCustomerAcceptanceRecord(payload = {}) {
+      return this.request('/api/v1/platform/customer-acceptance-records', { method: 'POST', body: payload });
+    }
+
+    async recordCustomerAcceptanceDecision(id, payload = {}) {
+      return this.request(`/api/v1/platform/customer-acceptance-records/${encodeURIComponent(id)}/decision`, { method: 'POST', body: payload });
+    }
+
+    async getWarrantyPolicies(status = 'active') {
+      return this.request(`/api/v1/platform/warranty-policies?status=${encodeURIComponent(status)}`);
+    }
+
+    async getWarrantyCases(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/warranty-cases?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createWarrantyCase(payload = {}) {
+      return this.request('/api/v1/platform/warranty-cases', { method: 'POST', body: payload });
+    }
+
+    async updateWarrantyCaseStatus(id, payload = {}) {
+      return this.request(`/api/v1/platform/warranty-cases/${encodeURIComponent(id)}/status`, { method: 'POST', body: payload });
+    }
+
+    async getPostRepairSupportTickets(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/post-repair-support-tickets?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createPostRepairSupportTicket(payload = {}) {
+      return this.request('/api/v1/platform/post-repair-support-tickets', { method: 'POST', body: payload });
+    }
+
+    async updatePostRepairSupportTicketStatus(id, payload = {}) {
+      return this.request(`/api/v1/platform/post-repair-support-tickets/${encodeURIComponent(id)}/status`, { method: 'POST', body: payload });
+    }
+
+    async getCustomerFeedbackRecords(limit = 50) {
+      return this.request(`/api/v1/platform/customer-feedback-records?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async recordCustomerFeedback(payload = {}) {
+      return this.request('/api/v1/platform/customer-feedback-records', { method: 'POST', body: payload });
+    }
+
+    async getPostRepairReviewItems(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/post-repair-review-items?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async reviewPostRepairItem(id, payload = {}) {
+      return this.request(`/api/v1/platform/post-repair-review-items/${encodeURIComponent(id)}/review`, { method: 'POST', body: payload });
+    }
+
+    async getPostRepairAuditLog(limit = 50) {
+      return this.request(`/api/v1/platform/post-repair-audit-log?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -1442,7 +1511,16 @@
           shipment_events: [],
           proof_of_repair_records: [],
           dispatch_review_items: [],
-          dispatch_audit_log: []
+          dispatch_audit_log: [],
+          customer_care_governance: null,
+          customer_acceptance_policies: [],
+          customer_acceptance_records: [],
+          warranty_policies: [],
+          warranty_cases: [],
+          post_repair_support_tickets: [],
+          customer_feedback_records: [],
+          post_repair_review_items: [],
+          post_repair_audit_log: []
         };
       }
 
@@ -1558,6 +1636,15 @@
       let proofOfRepairRecords = { proof_of_repair_records: [] };
       let dispatchReviewItems = { dispatch_review_items: [] };
       let dispatchAuditLog = { dispatch_audit_log: [] };
+      let customerCareGovernance = { customer_care_governance: null };
+      let customerAcceptancePolicies = { customer_acceptance_policies: [] };
+      let customerAcceptanceRecords = { customer_acceptance_records: [] };
+      let warrantyPolicies = { warranty_policies: [] };
+      let warrantyCases = { warranty_cases: [] };
+      let postRepairSupportTickets = { post_repair_support_tickets: [] };
+      let customerFeedbackRecords = { customer_feedback_records: [] };
+      let postRepairReviewItems = { post_repair_review_items: [] };
+      let postRepairAuditLog = { post_repair_audit_log: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -2161,6 +2248,52 @@
           dispatchAuditLog = { dispatch_audit_log: [] };
         }
 
+        try {
+          customerCareGovernance = await this.getCustomerCareGovernance();
+        } catch (_error) {
+          customerCareGovernance = { customer_care_governance: null };
+        }
+        try {
+          customerAcceptancePolicies = await this.getCustomerAcceptancePolicies('active');
+        } catch (_error) {
+          customerAcceptancePolicies = { customer_acceptance_policies: [] };
+        }
+        try {
+          customerAcceptanceRecords = await this.getCustomerAcceptanceRecords('all', 30);
+        } catch (_error) {
+          customerAcceptanceRecords = { customer_acceptance_records: [] };
+        }
+        try {
+          warrantyPolicies = await this.getWarrantyPolicies('active');
+        } catch (_error) {
+          warrantyPolicies = { warranty_policies: [] };
+        }
+        try {
+          warrantyCases = await this.getWarrantyCases('all', 30);
+        } catch (_error) {
+          warrantyCases = { warranty_cases: [] };
+        }
+        try {
+          postRepairSupportTickets = await this.getPostRepairSupportTickets('all', 30);
+        } catch (_error) {
+          postRepairSupportTickets = { post_repair_support_tickets: [] };
+        }
+        try {
+          customerFeedbackRecords = await this.getCustomerFeedbackRecords(30);
+        } catch (_error) {
+          customerFeedbackRecords = { customer_feedback_records: [] };
+        }
+        try {
+          postRepairReviewItems = await this.getPostRepairReviewItems('active', 30);
+        } catch (_error) {
+          postRepairReviewItems = { post_repair_review_items: [] };
+        }
+        try {
+          postRepairAuditLog = await this.getPostRepairAuditLog(30);
+        } catch (_error) {
+          postRepairAuditLog = { post_repair_audit_log: [] };
+        }
+
       }
 
       if (latestCase && this.getToken()) {
@@ -2382,7 +2515,16 @@
         shipment_events: shipmentEvents.shipment_events || [],
         proof_of_repair_records: proofOfRepairRecords.proof_of_repair_records || [],
         dispatch_review_items: dispatchReviewItems.dispatch_review_items || [],
-        dispatch_audit_log: dispatchAuditLog.dispatch_audit_log || []
+        dispatch_audit_log: dispatchAuditLog.dispatch_audit_log || [],
+        customer_care_governance: customerCareGovernance.customer_care_governance || null,
+        customer_acceptance_policies: customerAcceptancePolicies.customer_acceptance_policies || [],
+        customer_acceptance_records: customerAcceptanceRecords.customer_acceptance_records || [],
+        warranty_policies: warrantyPolicies.warranty_policies || [],
+        warranty_cases: warrantyCases.warranty_cases || [],
+        post_repair_support_tickets: postRepairSupportTickets.post_repair_support_tickets || [],
+        customer_feedback_records: customerFeedbackRecords.customer_feedback_records || [],
+        post_repair_review_items: postRepairReviewItems.post_repair_review_items || [],
+        post_repair_audit_log: postRepairAuditLog.post_repair_audit_log || []
       };
     }
   }

@@ -630,3 +630,22 @@ Prototype route:
 ```
 
 This step does not book real couriers or create real shipment labels. It records the governance workflow needed before routed repair fulfilments can be operated in a pilot or beta environment.
+
+
+### Step 35 — Customer Acceptance, Warranty & Post-Repair Support Governance v1
+
+Step 35 closes the post-repair loop after proof-of-repair. It adds customer acceptance records, customer decision workflow, warranty policy placeholders, warranty cases, post-repair support tickets, customer feedback records, post-repair review items and customer care audit logging.
+
+Smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-customer-care-warranty-support.ps1
+```
+
+Prototype route:
+
+```text
+/prototype/index.html#/customer-care
+```
+
+This step does not create legal warranty terms, refunds, real CRM tickets or external customer notifications. It records the governance workflow needed before beta customer commitments can be handled safely.

@@ -109,7 +109,8 @@ function stepper(active) {
     ['ai-provider-sandbox', '22', 'AI Ops'],
     ['geometry-printability', '23', 'Geometry'],
     ['provider-routing', '24', 'Routing'],
-    ['dispatch-governance', '25', 'Dispatch']
+    ['dispatch-governance', '25', 'Dispatch'],
+    ['customer-care', '26', 'Care']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -2986,6 +2987,166 @@ async function approveDispatchReview(id) {
   }
 }
 
+
+function customerCareDashboard() {
+  setActiveNav('customer-care');
+  if (!S.auth.user) {
+    return layout('Customer Care Governance', authRequiredPanel('the Step 35 customer care governance console'), { currentStep: 'customer-care' });
+  }
+
+  const dashboard = S.api.customerCareGovernance || {};
+  const summary = dashboard.summary || {};
+  const policies = S.api.customerAcceptancePolicies || dashboard.policies || [];
+  const warrantyPolicies = S.api.warrantyPolicies || dashboard.warranty_policies || [];
+  const acceptances = S.api.customerAcceptanceRecords || dashboard.latest_acceptance_records || [];
+  const warrantyCases = S.api.warrantyCases || dashboard.open_warranty_cases || [];
+  const tickets = S.api.postRepairSupportTickets || dashboard.open_support_tickets || [];
+  const feedback = S.api.customerFeedbackRecords || dashboard.latest_feedback || [];
+  const reviews = S.api.postRepairReviewItems || dashboard.open_reviews || [];
+  const audit = S.api.postRepairAuditLog || [];
+
+  const acceptanceRows = acceptances.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'accepted' ? 'green' : item.status === 'issue_reported' || item.status === 'disputed' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.acceptance_code)}</td><td>${safe(item.customer_email)}</td><td>${safe(item.dispatch_code || 'pilot override')}</td><td>${safe(item.satisfaction_score ?? 'pending')}</td><td><button class="mini-button" onclick="acceptCustomerRepair('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Accept</button><button class="mini-button" onclick="flagCustomerIssue('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Issue</button></td></tr>`).join('') || '<tr><td colspan="6">No acceptance records yet.</td></tr>';
+  const warrantyRows = warrantyCases.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'resolved' || item.status === 'closed' ? 'green' : item.severity === 'high' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.warranty_code)}</td><td>${safe(item.severity)}</td><td>${safe(item.claim_type)}</td><td>${safe(item.claim_summary)}</td><td><button class="mini-button" onclick="resolveWarrantyCase('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Resolve</button></td></tr>`).join('') || '<tr><td colspan="6">No warranty cases yet.</td></tr>';
+  const ticketRows = tickets.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'resolved' || item.status === 'closed' ? 'green' : item.priority === 'high' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.ticket_code)}</td><td>${safe(item.priority)}</td><td>${safe(item.category)}</td><td>${safe(item.subject)}</td><td><button class="mini-button" onclick="resolveSupportTicket('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Resolve</button></td></tr>`).join('') || '<tr><td colspan="6">No support tickets yet.</td></tr>';
+  const feedbackRows = feedback.slice(0, 8).map(item => `<tr><td>${safe(item.rating)}/5</td><td>${safe(item.nps_score ?? 'n/a')}</td><td>${safe(item.sentiment)}</td><td>${safe(item.customer_email)}</td><td>${safe(item.feedback_text)}</td></tr>`).join('') || '<tr><td colspan="5">No feedback yet.</td></tr>';
+  const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.priority === 'high' ? 'orange' : 'blue'}">${safe(item.priority)}</span></td><td>${safe(item.status)}</td><td>${safe(item.related_entity_type)}</td><td>${safe(item.review_reason)}</td><td><button class="mini-button" onclick="resolvePostRepairReview('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Resolve</button></td></tr>`).join('') || '<tr><td colspan="5">No post-repair review items.</td></tr>';
+  const policyRows = policies.concat(warrantyPolicies).slice(0, 8).map(item => `<li><strong>${safe(item.policy_key)}</strong> — ${safe(item.description || item.coverage_scope)}</li>`).join('') || '<li>No active policies.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No post-repair audit records yet.</li>';
+
+  return layout('Customer Care Governance', `
+    <section class="section-head"><div><p class="eyebrow">Step 35 · Customer Acceptance, Warranty & Post-Repair Support Governance</p><h2>Close the repair loop with customer acceptance, support, warranty placeholders and feedback.</h2></div><p class="muted">Step 35 is a pilot governance layer. It does not create legal warranty terms, refunds, real CRM tickets or external customer notifications.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.acceptance_records ?? 0)}</strong><span>Acceptance records</span></div><div class="metric"><strong>${safe(summary.pending_acceptance ?? 0)}</strong><span>Pending acceptance</span></div><div class="metric"><strong>${safe(summary.warranty_cases_open ?? 0)}</strong><span>Open warranty</span></div><div class="metric"><strong>${safe(summary.support_tickets_open ?? 0)}</strong><span>Support tickets</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="requestCustomerAcceptance()" ${S.busy ? 'disabled' : ''}>Request customer acceptance</button><button class="btn secondary" onclick="recordHappyFeedback()" ${S.busy ? 'disabled' : ''}>Record positive feedback</button><button class="btn secondary" onclick="openSupportTicket()" ${S.busy ? 'disabled' : ''}>Open support ticket</button><a class="btn secondary" href="#/dispatch-governance">Dispatch governance</a></div><p class="muted small">Acceptance can reference the latest proof-of-repair when available; otherwise it is stored as a pilot override for demo governance.</p></section>
+    <section class="section grid two"><div class="panel stack"><h3>Customer acceptance</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Customer</th><th>Dispatch</th><th>Score</th><th>Action</th></tr>${acceptanceRows}</table></div><div class="panel stack"><h3>Policies</h3><ul class="muted small">${policyRows}</ul></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Warranty cases</h3><table class="table"><tr><th>Status</th><th>Case</th><th>Severity</th><th>Type</th><th>Summary</th><th>Action</th></tr>${warrantyRows}</table></div><div class="panel stack"><h3>Support tickets</h3><table class="table"><tr><th>Status</th><th>Ticket</th><th>Priority</th><th>Category</th><th>Subject</th><th>Action</th></tr>${ticketRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Feedback</h3><table class="table"><tr><th>Rating</th><th>NPS</th><th>Sentiment</th><th>Customer</th><th>Text</th></tr>${feedbackRows}</table></div><div class="panel stack"><h3>Post-repair reviews</h3><table class="table"><tr><th>Priority</th><th>Status</th><th>Entity</th><th>Reason</th><th>Action</th></tr>${reviewRows}</table></div></section>
+    <section class="section panel stack"><h3>Customer care audit</h3><ul class="muted small">${auditRows}</ul></section>
+  `, { currentStep: 'customer-care' });
+}
+
+async function requestCustomerAcceptance() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to request customer acceptance.');
+  setBusy(true);
+  try {
+    const proof = (S.api.proofOfRepairRecords || [])[0];
+    await window.REBORN_API.createCustomerAcceptanceRecord({ proof_of_repair_id: proof?.id || null, customer_email: 'pilot.customer@reborn.local', evidence: { channel: 'prototype', step: 35 } });
+    toast('Customer acceptance requested.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Acceptance request failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function acceptCustomerRepair(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to record acceptance.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.recordCustomerAcceptanceDecision(id, { decision: 'accepted_with_notes', satisfaction_score: 5, issue_summary: '', evidence: { accepted_from: 'prototype' } });
+    toast('Customer acceptance recorded.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Customer decision failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function flagCustomerIssue(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to record issues.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.recordCustomerAcceptanceDecision(id, { decision: 'rejected_with_issue', satisfaction_score: 2, issue_summary: 'Pilot customer reports the repaired part needs rework before final acceptance.', evidence: { source: 'prototype_issue_button' } });
+    toast('Customer issue recorded and follow-up created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Customer issue failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function openSupportTicket() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to open support tickets.');
+  setBusy(true);
+  try {
+    const acceptance = (S.api.customerAcceptanceRecords || [])[0];
+    await window.REBORN_API.createPostRepairSupportTicket({ acceptance_record_id: acceptance?.id || null, customer_email: acceptance?.customer_email || 'pilot.customer@reborn.local', priority: 'medium', category: 'post_repair_question', subject: 'Pilot post-repair support request', message: 'Customer asks for usage and fitting instructions after repair.' });
+    toast('Support ticket created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Support ticket failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function resolveSupportTicket(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to resolve tickets.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.updatePostRepairSupportTicketStatus(id, { status: 'resolved', response_summary: 'Resolved in local pilot governance console.' });
+    toast('Support ticket resolved.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Ticket resolution failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function resolveWarrantyCase(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to resolve warranty cases.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.updateWarrantyCaseStatus(id, { status: 'resolved', resolution_summary: 'Resolved as pilot rework/credit governance placeholder.' });
+    toast('Warranty case resolved.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Warranty update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function recordHappyFeedback() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to record feedback.');
+  setBusy(true);
+  try {
+    const acceptance = (S.api.customerAcceptanceRecords || [])[0];
+    await window.REBORN_API.recordCustomerFeedback({ acceptance_record_id: acceptance?.id || null, customer_email: acceptance?.customer_email || 'pilot.customer@reborn.local', rating: 5, nps_score: 9, feedback_text: 'Pilot customer says the object is functional again and the repair journey was clear.' });
+    toast('Customer feedback recorded.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Feedback failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function resolvePostRepairReview(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to resolve reviews.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.reviewPostRepairItem(id, { decision: 'resolved_with_notes', notes: 'Resolved from Step 35 prototype console.' });
+    toast('Post-repair review resolved.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Review resolution failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -3015,6 +3176,7 @@ const routes = {
   '/geometry-printability': geometryPrintabilityDashboard,
   '/provider-routing': providerRoutingDashboard,
   '/dispatch-governance': dispatchGovernanceDashboard,
+  '/customer-care': customerCareDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -3207,6 +3369,15 @@ async function refreshApiData(options = {}) {
       proofOfRepairRecords: bootstrap.proof_of_repair_records || S.api.proofOfRepairRecords || [],
       dispatchReviewItems: bootstrap.dispatch_review_items || S.api.dispatchReviewItems || [],
       dispatchAuditLog: bootstrap.dispatch_audit_log || S.api.dispatchAuditLog || [],
+      customerCareGovernance: bootstrap.customer_care_governance || S.api.customerCareGovernance || null,
+      customerAcceptancePolicies: bootstrap.customer_acceptance_policies || S.api.customerAcceptancePolicies || [],
+      customerAcceptanceRecords: bootstrap.customer_acceptance_records || S.api.customerAcceptanceRecords || [],
+      warrantyPolicies: bootstrap.warranty_policies || S.api.warrantyPolicies || [],
+      warrantyCases: bootstrap.warranty_cases || S.api.warrantyCases || [],
+      postRepairSupportTickets: bootstrap.post_repair_support_tickets || S.api.postRepairSupportTickets || [],
+      customerFeedbackRecords: bootstrap.customer_feedback_records || S.api.customerFeedbackRecords || [],
+      postRepairReviewItems: bootstrap.post_repair_review_items || S.api.postRepairReviewItems || [],
+      postRepairAuditLog: bootstrap.post_repair_audit_log || S.api.postRepairAuditLog || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {

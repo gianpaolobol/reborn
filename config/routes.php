@@ -137,6 +137,11 @@ return static function (Router $router, RepairController $repairController, Auth
                 'shipment_tracking_governance',
                 'proof_of_repair_governance',
                 'dispatch_human_review',
+                'customer_acceptance_governance',
+                'warranty_governance',
+                'post_repair_support',
+                'customer_feedback_loop',
+                'post_repair_human_review',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -333,6 +338,25 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/platform/dispatch-review-items', [$platformController, 'dispatchReviewItems']);
     $router->post('/api/v1/platform/dispatch-review-items/{id}/review', [$platformController, 'reviewDispatchItem']);
     $router->get('/api/v1/platform/dispatch-audit-log', [$platformController, 'dispatchAuditLog']);
+
+
+    $router->get('/api/v1/platform/customer-care-governance', [$platformController, 'customerCareGovernance']);
+    $router->get('/api/v1/platform/customer-acceptance-policies', [$platformController, 'customerAcceptancePolicies']);
+    $router->get('/api/v1/platform/customer-acceptance-records', [$platformController, 'customerAcceptanceRecords']);
+    $router->post('/api/v1/platform/customer-acceptance-records', [$platformController, 'createCustomerAcceptanceRecord']);
+    $router->post('/api/v1/platform/customer-acceptance-records/{id}/decision', [$platformController, 'recordCustomerAcceptanceDecision']);
+    $router->get('/api/v1/platform/warranty-policies', [$platformController, 'warrantyPolicies']);
+    $router->get('/api/v1/platform/warranty-cases', [$platformController, 'warrantyCases']);
+    $router->post('/api/v1/platform/warranty-cases', [$platformController, 'createWarrantyCase']);
+    $router->post('/api/v1/platform/warranty-cases/{id}/status', [$platformController, 'updateWarrantyCaseStatus']);
+    $router->get('/api/v1/platform/post-repair-support-tickets', [$platformController, 'postRepairSupportTickets']);
+    $router->post('/api/v1/platform/post-repair-support-tickets', [$platformController, 'createPostRepairSupportTicket']);
+    $router->post('/api/v1/platform/post-repair-support-tickets/{id}/status', [$platformController, 'updatePostRepairSupportTicketStatus']);
+    $router->get('/api/v1/platform/customer-feedback-records', [$platformController, 'customerFeedbackRecords']);
+    $router->post('/api/v1/platform/customer-feedback-records', [$platformController, 'recordCustomerFeedback']);
+    $router->get('/api/v1/platform/post-repair-review-items', [$platformController, 'postRepairReviewItems']);
+    $router->post('/api/v1/platform/post-repair-review-items/{id}/review', [$platformController, 'reviewPostRepairItem']);
+    $router->get('/api/v1/platform/post-repair-audit-log', [$platformController, 'postRepairAuditLog']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

@@ -21,6 +21,7 @@ use Reborn\Platform\Application\AiProviderSandboxService;
 use Reborn\Platform\Application\GeometryPrintabilityService;
 use Reborn\Platform\Application\ProviderRoutingGovernanceService;
 use Reborn\Platform\Application\FulfilmentDispatchGovernanceService;
+use Reborn\Platform\Application\CustomerCareGovernanceService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -44,6 +45,7 @@ final class PlatformController
         private readonly GeometryPrintabilityService $geometry,
         private readonly ProviderRoutingGovernanceService $routing,
         private readonly FulfilmentDispatchGovernanceService $dispatch,
+        private readonly CustomerCareGovernanceService $customerCare,
         private readonly AuthContext $auth,
     ) {
     }
@@ -1271,6 +1273,121 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['dispatch_audit_log' => $this->dispatch->auditLog($limit)], $request->requestId());
+    }
+
+
+    public function customerCareGovernance(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['customer_care_governance' => $this->customerCare->dashboard()], $request->requestId());
+    }
+
+    public function customerAcceptancePolicies(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        return JsonResponse::ok(['customer_acceptance_policies' => $this->customerCare->customerAcceptancePolicies($status)], $request->requestId());
+    }
+
+    public function customerAcceptanceRecords(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['customer_acceptance_records' => $this->customerCare->acceptanceRecords($status, $limit)], $request->requestId());
+    }
+
+    public function createCustomerAcceptanceRecord(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['customer_acceptance_record' => $this->customerCare->createAcceptanceRecord($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function recordCustomerAcceptanceDecision(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['customer_acceptance_result' => $this->customerCare->recordCustomerDecision((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function warrantyPolicies(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        return JsonResponse::ok(['warranty_policies' => $this->customerCare->warrantyPolicies($status)], $request->requestId());
+    }
+
+    public function warrantyCases(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['warranty_cases' => $this->customerCare->warrantyCases($status, $limit)], $request->requestId());
+    }
+
+    public function createWarrantyCase(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['warranty_case' => $this->customerCare->createWarrantyCase($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function updateWarrantyCaseStatus(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['warranty_case' => $this->customerCare->updateWarrantyCaseStatus((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function postRepairSupportTickets(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['post_repair_support_tickets' => $this->customerCare->supportTickets($status, $limit)], $request->requestId());
+    }
+
+    public function createPostRepairSupportTicket(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['post_repair_support_ticket' => $this->customerCare->createSupportTicket($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function updatePostRepairSupportTicketStatus(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['post_repair_support_ticket' => $this->customerCare->updateSupportTicketStatus((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function customerFeedbackRecords(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['customer_feedback_records' => $this->customerCare->feedbackRecords($limit)], $request->requestId());
+    }
+
+    public function recordCustomerFeedback(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['customer_feedback_record' => $this->customerCare->recordFeedback($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function postRepairReviewItems(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['post_repair_review_items' => $this->customerCare->reviewItems($status, $limit)], $request->requestId());
+    }
+
+    public function reviewPostRepairItem(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['post_repair_review_item' => $this->customerCare->reviewPostRepairItem((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function postRepairAuditLog(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['post_repair_audit_log' => $this->customerCare->auditLog($limit)], $request->requestId());
     }
 
 }
