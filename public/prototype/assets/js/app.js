@@ -82,7 +82,8 @@ function stepper(active) {
     ['diagnosis', '03', 'Diagnose'],
     ['repair-paths', '04', 'Decide'],
     ['checkout', '05', 'Order'],
-    ['fulfilment', '06', 'Fulfil']
+    ['fulfilment', '06', 'Fulfil'],
+    ['learning', '07', 'Learn']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -450,6 +451,22 @@ function activeFulfilment() {
   return S.api.fulfilment || activeFulfilments()[0] || null;
 }
 
+function activeCompletionReports() {
+  return Array.isArray(S.api.completionReports) ? S.api.completionReports : [];
+}
+
+function activeCompletionReport() {
+  return S.api.completionReport || activeCompletionReports()[0] || null;
+}
+
+function activeLearningEvents() {
+  return Array.isArray(S.api.learningEvents) ? S.api.learningEvents : [];
+}
+
+function activeLearningEvent() {
+  return S.api.learningEvent || activeLearningEvents()[0] || null;
+}
+
 function mockRecognitionResult() {
   return {
     object_guess: { label: 'appliance knob / plastic cover / hinge / wearable case', confidence: 0.72 },
@@ -582,6 +599,43 @@ function mockFulfilment() {
     completed_at: null,
     rejected_at: null,
     updated_at: new Date().toISOString()
+  };
+}
+
+function mockCompletionReport() {
+  const fulfilment = activeFulfilment() || mockFulfilment();
+  return {
+    id: 'mock-completion-report',
+    fulfilment_id: fulfilment.id,
+    repair_order_id: fulfilment.repair_order_id,
+    repair_case_id: fulfilment.repair_case_id,
+    provider_id: fulfilment.provider_id,
+    reported_by: S.auth.user?.id || 'mock-provider',
+    status: 'recorded',
+    outcome_status: 'successful',
+    functional_result: 'object_returned_to_function',
+    customer_confirmed: true,
+    object_saved: true,
+    co2_avoided_grams: 1350,
+    evidence_attachment_ids: [],
+    outcome_json: { summary: 'Mock repair completed and object returned to function.', repair_method: 'provider_validated_replacement_part', material_used: 'PETG', quality_checks: ['fit_checked', 'function_checked'] },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+}
+
+function mockLearningEvent(report = null) {
+  const completionReport = report || activeCompletionReport() || mockCompletionReport();
+  return {
+    id: 'mock-learning-event',
+    completion_report_id: completionReport.id,
+    fulfilment_id: completionReport.fulfilment_id,
+    repair_case_id: completionReport.repair_case_id,
+    provider_id: completionReport.provider_id,
+    event_type: 'repair_outcome_confirmed',
+    signal_json: { source: 'mock_completion_report', outcome_status: completionReport.outcome_status, functional_result: completionReport.functional_result, object_saved: completionReport.object_saved, co2_avoided_grams: completionReport.co2_avoided_grams },
+    confidence_delta: 0.08,
+    created_at: new Date().toISOString()
   };
 }
 
@@ -849,11 +903,38 @@ function fulfilment() {
   return layout('Fulfilment', html`
     <section class="section-head"><div><p class="eyebrow">Step 15 · Repair Fulfilment Workflow</p><h2>The repair now becomes operational work.</h2></div><p class="muted">Provider acceptance and status updates make fulfilment auditable without turning Re-born into a generic print marketplace.</p></section>
     <section class="grid two">
-      <div class="panel stack"><h3>Fulfilment state</h3><table class="table"><tr><th>Order</th><td>${safe(order?.id ? String(order.id).slice(0, 8) : 'missing')}</td></tr><tr><th>Payment</th><td>${safe(intent?.status || 'not_authorized')}</td></tr><tr><th>Provider</th><td>${safe(fulfilment?.provider_id || order?.provider_id || 'pending')}</td></tr><tr><th>Status</th><td>${safe(fulfilment?.status || 'not_created')}</td></tr><tr><th>Accepted by</th><td>${safe(fulfilment?.accepted_by || 'pending')}</td></tr></table><div class="actions"><button class="btn green" onclick="createRepairFulfilment()" ${S.busy || !order || !intent || intent.status !== 'mock_authorized' || fulfilment ? 'disabled' : ''}>Create fulfilment</button><button class="btn orange" onclick="acceptProviderFulfilment()" ${S.busy || !fulfilment || !providerCanOperate || fulfilment.status !== 'awaiting_provider_acceptance' ? 'disabled' : ''}>Provider accept</button><button class="btn secondary" onclick="updateFulfilmentStatus('in_progress')" ${S.busy || !fulfilment || !providerCanOperate || fulfilment.status === 'awaiting_provider_acceptance' ? 'disabled' : ''}>Start work</button><button class="btn secondary" onclick="updateFulfilmentStatus('quality_check')" ${S.busy || !fulfilment || !providerCanOperate ? 'disabled' : ''}>Quality check</button><button class="btn green" onclick="updateFulfilmentStatus('completed')" ${S.busy || !fulfilment || !providerCanOperate ? 'disabled' : ''}>Complete</button></div><p class="muted small">Provider controls operational updates; repair user keeps visibility of the timeline.</p></div>
+      <div class="panel stack"><h3>Fulfilment state</h3><table class="table"><tr><th>Order</th><td>${safe(order?.id ? String(order.id).slice(0, 8) : 'missing')}</td></tr><tr><th>Payment</th><td>${safe(intent?.status || 'not_authorized')}</td></tr><tr><th>Provider</th><td>${safe(fulfilment?.provider_id || order?.provider_id || 'pending')}</td></tr><tr><th>Status</th><td>${safe(fulfilment?.status || 'not_created')}</td></tr><tr><th>Accepted by</th><td>${safe(fulfilment?.accepted_by || 'pending')}</td></tr></table><div class="actions"><button class="btn green" onclick="createRepairFulfilment()" ${S.busy || !order || !intent || intent.status !== 'mock_authorized' || fulfilment ? 'disabled' : ''}>Create fulfilment</button><button class="btn orange" onclick="acceptProviderFulfilment()" ${S.busy || !fulfilment || !providerCanOperate || fulfilment.status !== 'awaiting_provider_acceptance' ? 'disabled' : ''}>Provider accept</button><button class="btn secondary" onclick="updateFulfilmentStatus('in_progress')" ${S.busy || !fulfilment || !providerCanOperate || fulfilment.status === 'awaiting_provider_acceptance' ? 'disabled' : ''}>Start work</button><button class="btn secondary" onclick="updateFulfilmentStatus('quality_check')" ${S.busy || !fulfilment || !providerCanOperate ? 'disabled' : ''}>Quality check</button><button class="btn green" onclick="updateFulfilmentStatus('completed')" ${S.busy || !fulfilment || !providerCanOperate ? 'disabled' : ''}>Complete</button><a class="btn secondary" href="#/learning">Learning</a></div><p class="muted small">Provider controls operational updates; repair user keeps visibility of the timeline.</p></div>
       <aside class="panel dark-panel stack"><h3>Repair outcome contract</h3>${badges([[fulfilment?.status || 'not_created', fulfilment?.status === 'completed' ? 'green' : 'orange'], ['provider acceptance', 'blue'], ['real object repair', 'green']])}<p class="muted">The order is not “done” because a file was delivered. It is done when the object is functionally repaired and the outcome is captured as learning data.</p></aside>
     </section>
     <section class="section panel stack"><h3>Fulfilment timeline</h3>${timeline}</section>
   `, { currentStep: 'fulfilment' });
+}
+
+
+function learning() {
+  setActiveNav('learning');
+  const fulfilment = activeFulfilment();
+  const report = activeCompletionReport();
+  const learningEvent = activeLearningEvent();
+  const canReport = ['provider', 'admin'].includes(S.auth.user?.role || '');
+  const canCreate = fulfilment && fulfilment.status === 'completed' && canReport && !report;
+  const feedback = report ? [
+    ['completion recorded', 'green'],
+    [report.functional_result || 'object_returned_to_function', 'blue'],
+    [report.object_saved ? 'object saved' : 'review needed', report.object_saved ? 'green' : 'orange']
+  ] : [['waiting outcome', 'orange'], ['learning gate', 'blue']];
+
+  const learningRows = activeLearningEvents().length ? activeLearningEvents().map(event => `<div class="timeline-row"><div class="timeline-time">${safe(String(event.confidence_delta || 0))}</div><div class="timeline-content"><strong>${safe(String(event.event_type || '').replaceAll('_', ' '))}</strong><p class="muted small">Report ${safe(String(event.completion_report_id || '').slice(0, 8))} · case ${safe(String(event.repair_case_id || '').slice(0, 8))}</p><p class="muted small">${safe(event.created_at ? new Date(event.created_at).toLocaleString('it-IT') : '')}</p></div></div>`).join('') : '<p class="muted small">No learning events recorded yet.</p>';
+
+  return layout('Learning', html`
+    <section class="section-head"><div><p class="eyebrow">Step 16 · Completion Learning</p><h2>Close the loop: repair outcome becomes reusable intelligence.</h2></div><p class="muted">Re-born learns from completed repairs only after a provider confirms the object returned to function. This strengthens the Knowledge Graph without becoming an STL marketplace.</p></section>
+    <section class="grid two">
+      <div class="panel stack"><h3>Completion report</h3><table class="table"><tr><th>Fulfilment</th><td>${safe(fulfilment?.id ? String(fulfilment.id).slice(0, 8) : 'missing')}</td></tr><tr><th>Fulfilment status</th><td>${safe(fulfilment?.status || 'not_completed')}</td></tr><tr><th>Report</th><td>${safe(report?.status || 'not_recorded')}</td></tr><tr><th>Outcome</th><td>${safe(report?.outcome_status || 'pending')}</td></tr><tr><th>CO₂ avoided</th><td>${safe(report ? `${report.co2_avoided_grams || 0} g` : 'pending')}</td></tr></table><div class="actions"><button class="btn green" onclick="recordCompletionLearning()" ${S.busy || !canCreate ? 'disabled' : ''}>Record completion learning</button><a class="btn secondary" href="#/fulfilment">Back to fulfilment</a><button class="btn secondary" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh</button></div><p class="muted small">Provider/admin records outcome. Repair user can view the learning once it exists.</p></div>
+      <aside class="panel dark-panel stack"><h3>Knowledge feedback</h3>${badges(feedback)}${report ? `<p class="muted">${safe(report.outcome_json?.summary || 'Repair outcome recorded.')}</p><div class="grid two">${metric(report.customer_confirmed ? 'Yes' : 'No', 'Customer confirmed')}${metric(String(report.co2_avoided_grams || 0), 'CO₂ grams avoided')}${metric(learningEvent?.event_type || 'learning event', 'Learning signal')}${metric(String(learningEvent?.confidence_delta || 0), 'Confidence delta')}</div>` : '<p class="muted">Complete the fulfilment, then record the outcome to create a learning event and Knowledge Graph node.</p>'}</aside>
+    </section>
+    <section class="section panel stack"><h3>Learning events</h3><div class="timeline">${learningRows}</div></section>
+    <section class="section panel stack"><h3>Repair Intelligence loop</h3><div class="timeline"><div class="timeline-row"><div class="timeline-time">1</div><div class="timeline-content"><strong>Outcome confirmed</strong><p class="muted small">Provider reports whether the object returned to function.</p></div></div><div class="timeline-row"><div class="timeline-time">2</div><div class="timeline-content"><strong>Learning event recorded</strong><p class="muted small">A structured signal captures method, result, object saved and quality checks.</p></div></div><div class="timeline-row"><div class="timeline-time">3</div><div class="timeline-content"><strong>Knowledge Graph feedback applied</strong><p class="muted small">Re-born creates repair outcome knowledge for future diagnosis, decisions and provider matching.</p></div></div></div></section>
+  `, { currentStep: 'learning' });
 }
 
 function aiGeneration() {
@@ -902,6 +983,7 @@ const routes = {
   '/provider-network': providerNetwork,
   '/checkout': checkout,
   '/fulfilment': fulfilment,
+  '/learning': learning,
   '/ai-generation': aiGeneration,
   '/login': login,
   '/account': account,
@@ -1025,7 +1107,7 @@ async function createRepairCaseFromValues(payload) {
   try {
     const result = await window.REBORN_API.createRepairCase(payload);
     const repairCase = result.repair_case;
-    S.setApi({ repairCase, repairCases: [repairCase, ...S.api.repairCases], repairPaths: [], repairAttachments: [], recognitionJobs: [], recognitionJob: null, repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, repairOrders: [], repairOrder: null, paymentIntents: [], paymentIntent: null, diagnosis: null, lastSyncAt: new Date().toISOString() });
+    S.setApi({ repairCase, repairCases: [repairCase, ...S.api.repairCases], repairPaths: [], repairAttachments: [], recognitionJobs: [], recognitionJob: null, repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, repairOrders: [], repairOrder: null, paymentIntents: [], paymentIntent: null, fulfilments: [], fulfilment: null, completionReports: [], completionReport: null, learningEvents: [], learningEvent: null, diagnosis: null, lastSyncAt: new Date().toISOString() });
     toast('Live repair case created.');
     location.hash = '#/capture';
     return repairCase;
@@ -1593,6 +1675,66 @@ async function updateFulfilmentStatus(status) {
   } catch (error) {
     S.setApi({ status: 'error', message: `Fulfilment update failed: ${error.message}`, lastError: error.message });
     toast(`Update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+
+async function recordCompletionLearning() {
+  const fulfilment = activeFulfilment();
+  if (!fulfilment) {
+    toast('Create fulfilment first.');
+    return;
+  }
+  if (fulfilment.status !== 'completed') {
+    toast('Complete fulfilment before recording learning.');
+    return;
+  }
+
+  const data = {
+    outcome_status: 'successful',
+    functional_result: 'object_returned_to_function',
+    customer_confirmed: true,
+    object_saved: true,
+    co2_avoided_grams: 1350,
+    summary: 'The repaired object returned to function after provider validation and final fit check.',
+    repair_method: 'provider_validated_replacement_part',
+    material_used: 'PETG',
+    quality_checks: ['fit_checked', 'function_checked', 'visual_inspection'],
+    notes: 'Prototype Step 16 completion feedback.',
+    evidence_attachment_ids: []
+  };
+
+  if (S.api.status !== 'live') {
+    const report = mockCompletionReport();
+    const learningEvent = mockLearningEvent(report);
+    S.setApi({ completionReport: report, completionReports: [report], learningEvent, learningEvents: [learningEvent] });
+    toast('Mock completion learning recorded.');
+    render();
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.createCompletionReport(fulfilment.id, data);
+    const reports = await window.REBORN_API.getCompletionReports(fulfilment.id).catch(() => ({ completion_reports: [payload.completion_report] }));
+    const events = await window.REBORN_API.getLearningEvents(payload.completion_report.repair_case_id).catch(() => ({ learning_events: [payload.learning_event] }));
+    S.setApi({
+      completionReport: payload.completion_report,
+      completionReports: reports.completion_reports || [payload.completion_report],
+      learningEvent: payload.learning_event,
+      learningEvents: events.learning_events || [payload.learning_event],
+      message: 'Repair completion converted into Learning Event and Knowledge Graph feedback.',
+      status: 'live',
+      lastError: null,
+      lastSyncAt: new Date().toISOString()
+    });
+    toast('Completion learning recorded.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Completion learning failed: ${error.message}`, lastError: error.message });
+    toast(`Learning failed: ${error.message}`);
   } finally {
     setBusy(false);
     render();

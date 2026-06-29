@@ -17,6 +17,15 @@ use Reborn\Fulfilment\Application\ListRepairFulfilmentsService;
 use Reborn\Fulfilment\Application\UpdateFulfilmentStatusService;
 use Reborn\Fulfilment\Infrastructure\SqliteRepairFulfilmentRepository;
 use Reborn\Fulfilment\Presentation\RepairFulfilmentController;
+use Reborn\Learning\Application\CreateCompletionReportService;
+use Reborn\Learning\Application\GetCompletionReportService;
+use Reborn\Learning\Application\GetLearningEventService;
+use Reborn\Learning\Application\KnowledgeGraphFeedbackService;
+use Reborn\Learning\Application\ListCompletionReportsService;
+use Reborn\Learning\Application\ListLearningEventsService;
+use Reborn\Learning\Infrastructure\SqliteRepairCompletionReportRepository;
+use Reborn\Learning\Infrastructure\SqliteRepairLearningEventRepository;
+use Reborn\Learning\Presentation\LearningController;
 use Reborn\Identity\Application\AuthContext;
 use Reborn\Identity\Application\LoginUserService;
 use Reborn\Identity\Application\PasswordHasher;
@@ -111,6 +120,8 @@ $providerQuoteRequestRepository = new SqliteProviderQuoteRequestRepository($pdo)
 $repairOrderRepository = new SqliteRepairOrderRepository($pdo);
 $paymentIntentRepository = new SqlitePaymentIntentRepository($pdo);
 $repairFulfilmentRepository = new SqliteRepairFulfilmentRepository($pdo);
+$repairCompletionReportRepository = new SqliteRepairCompletionReportRepository($pdo);
+$repairLearningEventRepository = new SqliteRepairLearningEventRepository($pdo);
 $knowledgeEngine = new KnowledgeEngine($pdo);
 $recognitionEngine = new RecognitionEngine($knowledgeEngine);
 $decisionService = new RepairPathDecisionService($pdo);
@@ -215,8 +226,27 @@ $repairFulfilmentController = new RepairFulfilmentController(
     new RepairCaseAccessPolicy()
 );
 
+$learningController = new LearningController(
+    new CreateCompletionReportService(
+        $repairFulfilmentRepository,
+        $repairCompletionReportRepository,
+        $repairLearningEventRepository,
+        $repairRepository,
+        new KnowledgeGraphFeedbackService($pdo),
+        $eventBus
+    ),
+    new ListCompletionReportsService($repairCompletionReportRepository),
+    new GetCompletionReportService($repairCompletionReportRepository),
+    new ListLearningEventsService($repairLearningEventRepository),
+    new GetLearningEventService($repairLearningEventRepository),
+    new GetRepairFulfilmentService($repairFulfilmentRepository),
+    new GetRepairCaseService($repairRepository),
+    $authContext,
+    new RepairCaseAccessPolicy()
+);
+
 $router = new Router();
-(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $repairFulfilmentController, $authContext, $pdo);
+(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $repairFulfilmentController, $learningController, $authContext, $pdo);
 
 return [
     'router' => $router,

@@ -290,6 +290,30 @@
       });
     }
 
+
+    async createCompletionReport(fulfilmentId, data = {}) {
+      return this.request(`/api/v1/fulfilments/${encodeURIComponent(fulfilmentId)}/completion-reports`, {
+        method: 'POST',
+        body: data
+      });
+    }
+
+    async getCompletionReports(fulfilmentId) {
+      return this.request(`/api/v1/fulfilments/${encodeURIComponent(fulfilmentId)}/completion-reports`);
+    }
+
+    async getCompletionReport(completionReportId) {
+      return this.request(`/api/v1/completion-reports/${encodeURIComponent(completionReportId)}`);
+    }
+
+    async getLearningEvents(caseId) {
+      return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/learning-events`);
+    }
+
+    async getLearningEvent(learningEventId) {
+      return this.request(`/api/v1/learning-events/${encodeURIComponent(learningEventId)}`);
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -327,7 +351,9 @@
           quote_requests: [],
           repair_orders: [],
           payment_intents: [],
-          fulfilments: []
+          fulfilments: [],
+          completion_reports: [],
+          learning_events: []
         };
       }
 
@@ -351,6 +377,8 @@
       let repairOrders = { repair_orders: [] };
       let paymentIntents = { payment_intents: [] };
       let fulfilments = { fulfilments: [] };
+      let completionReports = { completion_reports: [] };
+      let learningEvents = { learning_events: [] };
 
       if (latestCase && this.getToken()) {
         try {
@@ -400,6 +428,19 @@
           } catch (_error) {
             fulfilments = { fulfilments: [] };
           }
+          const latestFulfilment = (fulfilments.fulfilments || [])[0] || null;
+          if (latestFulfilment) {
+            try {
+              completionReports = await this.getCompletionReports(latestFulfilment.id);
+            } catch (_error) {
+              completionReports = { completion_reports: [] };
+            }
+          }
+        }
+        try {
+          learningEvents = await this.getLearningEvents(latestCase.id);
+        } catch (_error) {
+          learningEvents = { learning_events: [] };
         }
       }
 
@@ -417,7 +458,9 @@
         quote_requests: quoteRequests.quote_requests || [],
         repair_orders: repairOrders.repair_orders || [],
         payment_intents: paymentIntents.payment_intents || [],
-        fulfilments: fulfilments.fulfilments || []
+        fulfilments: fulfilments.fulfilments || [],
+        completion_reports: completionReports.completion_reports || [],
+        learning_events: learningEvents.learning_events || []
       };
     }
   }

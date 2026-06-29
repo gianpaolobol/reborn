@@ -6,6 +6,7 @@ use Reborn\AI\Presentation\RecognitionJobController;
 use Reborn\Dashboard\Presentation\DashboardController;
 use Reborn\Fulfilment\Presentation\RepairFulfilmentController;
 use Reborn\Identity\Application\AuthContext;
+use Reborn\Learning\Presentation\LearningController;
 use Reborn\Identity\Domain\User;
 use Reborn\Identity\Presentation\AuthController;
 use Reborn\Marketplace\Presentation\RepairPathDecisionController;
@@ -16,7 +17,7 @@ use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
 use Reborn\Shared\Http\Router;
 
-return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, ProviderMatchController $providerMatchController, RepairOrderController $repairOrderController, RepairFulfilmentController $repairFulfilmentController, AuthContext $auth, PDO $pdo): void {
+return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, ProviderMatchController $providerMatchController, RepairOrderController $repairOrderController, RepairFulfilmentController $repairFulfilmentController, LearningController $learningController, AuthContext $auth, PDO $pdo): void {
     $router->get('/api/health', static function (Request $request): JsonResponse {
         return JsonResponse::ok([
             'status' => 'ok',
@@ -43,6 +44,9 @@ return static function (Router $router, RepairController $repairController, Auth
                 'mock_payment_intents',
                 'repair_fulfilment_workflow',
                 'provider_acceptance',
+                'repair_completion_reports',
+                'repair_learning_events',
+                'knowledge_graph_feedback',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -91,6 +95,11 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/fulfilments/{id}', [$repairFulfilmentController, 'show']);
     $router->post('/api/v1/fulfilments/{id}/accept-provider', [$repairFulfilmentController, 'acceptProvider']);
     $router->post('/api/v1/fulfilments/{id}/status', [$repairFulfilmentController, 'updateStatus']);
+    $router->get('/api/v1/fulfilments/{id}/completion-reports', [$learningController, 'completionReportsForFulfilment']);
+    $router->post('/api/v1/fulfilments/{id}/completion-reports', [$learningController, 'storeCompletionReport']);
+    $router->get('/api/v1/completion-reports/{id}', [$learningController, 'showCompletionReport']);
+    $router->get('/api/v1/repair-cases/{id}/learning-events', [$learningController, 'learningEventsForCase']);
+    $router->get('/api/v1/learning-events/{id}', [$learningController, 'showLearningEvent']);
 
     $router->get('/api/v1/providers', static function (Request $request) use ($pdo): JsonResponse {
         $stmt = $pdo->query('SELECT id, name, city, country, capabilities, rating, average_lead_time_days FROM providers ORDER BY rating DESC, name ASC');

@@ -161,7 +161,7 @@ p { margin: 0; }
 .metric span { color: var(--graphite-500); font-size: 0.86rem; }
 .dark-panel .metric span { color: var(--graphite-300); }
 
-.stepper { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 0 0 22px; }
+.stepper { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin: 0 0 22px; }
 .step {
   min-height: 54px;
   padding: 10px;
