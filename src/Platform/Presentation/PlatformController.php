@@ -15,6 +15,7 @@ use Reborn\Platform\Application\PrivacyGovernanceService;
 use Reborn\Platform\Application\ReleaseManagementService;
 use Reborn\Platform\Application\PartnerOnboardingService;
 use Reborn\Platform\Application\MarketplaceRevenueService;
+use Reborn\Platform\Application\MakerEconomyService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -32,6 +33,7 @@ final class PlatformController
         private readonly ReleaseManagementService $releases,
         private readonly PartnerOnboardingService $partners,
         private readonly MarketplaceRevenueService $revenue,
+        private readonly MakerEconomyService $makerEconomy,
         private readonly AuthContext $auth,
     ) {
     }
@@ -732,6 +734,123 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['revenue_audit_log' => $this->revenue->auditLog($limit)], $request->requestId());
+    }
+
+
+    public function makerEconomy(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['maker_economy' => $this->makerEconomy->dashboard()], $request->requestId());
+    }
+
+    public function makerProfiles(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['maker_profiles' => $this->makerEconomy->makerProfiles($status, $limit)], $request->requestId());
+    }
+
+    public function createMakerProfile(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['maker_profile' => $this->makerEconomy->createMakerProfile($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function updateMakerProfileStatus(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['maker_profile' => $this->makerEconomy->updateMakerProfileStatus((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function modelAssets(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['model_assets' => $this->makerEconomy->modelAssets($status, $limit)], $request->requestId());
+    }
+
+    public function submitModelAsset(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['model_asset' => $this->makerEconomy->submitModelAsset($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function reviewModelAsset(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['model_asset' => $this->makerEconomy->reviewModelAsset((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function modelLicenses(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        return JsonResponse::ok(['model_licenses' => $this->makerEconomy->modelLicenses($status)], $request->requestId());
+    }
+
+    public function modelDownloads(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        $modelAssetId = trim((string) $request->query('model_asset_id', '')) ?: null;
+        return JsonResponse::ok(['model_downloads' => $this->makerEconomy->modelDownloads($limit, $modelAssetId)], $request->requestId());
+    }
+
+    public function recordModelDownload(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['model_download_record' => $this->makerEconomy->recordModelDownload($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function modelRoyaltyEvents(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        $makerProfileId = trim((string) $request->query('maker_profile_id', '')) ?: null;
+        return JsonResponse::ok(['model_royalty_events' => $this->makerEconomy->royaltyEvents($limit, $makerProfileId)], $request->requestId());
+    }
+
+    public function repairBounties(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['repair_bounties' => $this->makerEconomy->repairBounties($status, $limit)], $request->requestId());
+    }
+
+    public function createRepairBounty(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['repair_bounty' => $this->makerEconomy->createRepairBounty($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function bountySubmissions(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        $bountyId = trim((string) $request->query('bounty_id', '')) ?: null;
+        return JsonResponse::ok(['bounty_submissions' => $this->makerEconomy->bountySubmissions($bountyId, $limit)], $request->requestId());
+    }
+
+    public function submitBounty(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['bounty_submission' => $this->makerEconomy->submitBounty($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function reviewBountySubmission(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['bounty_submission' => $this->makerEconomy->reviewBountySubmission((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function makerEconomyAuditLog(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['maker_economy_audit_log' => $this->makerEconomy->auditLog($limit)], $request->requestId());
     }
 
 }

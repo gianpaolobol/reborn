@@ -508,3 +508,35 @@ Smoke test:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\smoke-marketplace-revenue-governance.ps1
 ```
+
+## Step 29 — Maker Economy, Model Licensing & Repair Bounties v1
+
+Step 29 connects the maker economy to the Repair Journey without turning Re-born into a generic STL marketplace.
+
+It adds:
+
+- maker profiles connected to repair credit accounts;
+- governed repair model assets with status, license, category, quality score and safety notes;
+- model licenses for pilot repair use and future commercial review;
+- controlled model download records;
+- local maker royalty events posted as repair credits;
+- repair bounties for real object repair problems;
+- bounty submissions, review and credit-award workflow;
+- maker economy audit log;
+- admin prototype console `#/maker-economy`;
+- readiness check `maker_economy`;
+- smoke test `scripts/smoke-maker-economy-governance.ps1`.
+
+Important: Step 29 does **not** publish a public model marketplace, does not deliver real files, does not pay cash royalties and does not replace legal/IP review. It creates the local/pilot governance layer for makers, licenses, credit royalties and repair bounties.
+
+Smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-maker-economy-governance.ps1
+```
+
+Open the admin console:
+
+```text
+http://127.0.0.1:8080/prototype/index.html#/maker-economy
+```

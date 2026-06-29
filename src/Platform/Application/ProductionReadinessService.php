@@ -39,6 +39,7 @@ final class ProductionReadinessService
             'release_management' => $this->releaseManagementCheck(),
             'partner_onboarding' => $this->partnerOnboardingCheck(),
             'marketplace_revenue' => $this->marketplaceRevenueCheck(),
+            'maker_economy' => $this->makerEconomyCheck(),
         ];
 
         $status = 'ready';
@@ -90,7 +91,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v9_step28',
+            'checklist_version' => 'production_readiness_v10_step29',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -104,6 +105,7 @@ final class ProductionReadinessService
                 'feature flags, release gates and pilot cohort rules are reviewed',
                 'partner onboarding tasks, agreements, integrations and readiness reviews are approved',
                 'marketplace fee policies, credit ledger and payout governance are reviewed before monetization',
+                'maker model licensing, repair bounty rewards and royalty credit rules are reviewed before public maker onboarding',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
@@ -113,6 +115,7 @@ final class ProductionReadinessService
             'step_26_status' => 'Beta release management, feature flags, release gates and pilot cohort readiness v1 implemented.',
             'step_27_status' => 'Enterprise and partner onboarding governance, agreements, integrations and readiness reviews v1 implemented.',
             'step_28_status' => 'Marketplace revenue governance, repair credits ledger and mock payout workflow v1 implemented.',
+            'step_29_status' => 'Maker economy governance, model licensing, local royalty credits and repair bounty workflow v1 implemented.',
         ];
     }
 
@@ -549,6 +552,46 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Marketplace revenue governance checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function makerEconomyCheck(): array
+    {
+        try {
+            $tables = ['platform_maker_profiles', 'platform_model_assets', 'platform_model_licenses', 'platform_model_downloads', 'platform_model_royalty_events', 'platform_repair_bounties', 'platform_bounty_submissions', 'platform_maker_economy_audit_log'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $makers = 0;
+            $models = 0;
+            $licenses = 0;
+            $bounties = 0;
+            if ($missing === []) {
+                $makers = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_maker_profiles WHERE status IN ('onboarding', 'active')")->fetchColumn();
+                $models = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_model_assets WHERE status IN ('submitted', 'in_review', 'approved')")->fetchColumn();
+                $licenses = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_model_licenses WHERE status IN ('active', 'draft')")->fetchColumn();
+                $bounties = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_repair_bounties WHERE status IN ('open', 'in_review')")->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? (($makers > 0 && $models > 0 && $licenses > 0 && $bounties > 0) ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Maker economy, model licensing and repair bounty governance tables are available.' : 'Maker economy governance tables are not fully migrated yet.',
+                'maker_profiles' => $makers,
+                'model_assets' => $models,
+                'model_licenses' => $licenses,
+                'repair_bounties' => $bounties,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Maker economy governance checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 

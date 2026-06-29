@@ -903,6 +903,99 @@
       return this.request(`/api/v1/platform/revenue-audit-log?limit=${encodeURIComponent(limit)}`);
     }
 
+
+    async getMakerEconomy() {
+      return this.request('/api/v1/platform/maker-economy');
+    }
+
+    async getMakerProfiles(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/maker-profiles?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createMakerProfile(payload = {}) {
+      return this.request('/api/v1/platform/maker-profiles', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async updateMakerProfileStatus(id, status = 'active', trustTier = 'verified') {
+      return this.request(`/api/v1/platform/maker-profiles/${encodeURIComponent(id)}/status`, {
+        method: 'POST',
+        body: { status, trust_tier: trustTier }
+      });
+    }
+
+    async getModelAssets(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/model-assets?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async submitModelAsset(payload = {}) {
+      return this.request('/api/v1/platform/model-assets', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async reviewModelAsset(id, status = 'approved', qualityScore = 88) {
+      return this.request(`/api/v1/platform/model-assets/${encodeURIComponent(id)}/review`, {
+        method: 'POST',
+        body: { status, quality_score: qualityScore, safety_notes: 'Reviewed from Step 29 prototype console. Pilot only.' }
+      });
+    }
+
+    async getModelLicenses(status = 'all') {
+      return this.request(`/api/v1/platform/model-licenses?status=${encodeURIComponent(status)}`);
+    }
+
+    async getModelDownloads(limit = 50) {
+      return this.request(`/api/v1/platform/model-downloads?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async recordModelDownload(payload = {}) {
+      return this.request('/api/v1/platform/model-downloads', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getModelRoyaltyEvents(limit = 50) {
+      return this.request(`/api/v1/platform/model-royalty-events?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getRepairBounties(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/repair-bounties?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createRepairBounty(payload = {}) {
+      return this.request('/api/v1/platform/repair-bounties', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getBountySubmissions(limit = 50) {
+      return this.request(`/api/v1/platform/bounty-submissions?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async submitBounty(payload = {}) {
+      return this.request('/api/v1/platform/bounty-submissions', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async reviewBountySubmission(id, payload = {}) {
+      return this.request(`/api/v1/platform/bounty-submissions/${encodeURIComponent(id)}/review`, {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getMakerEconomyAuditLog(limit = 50) {
+      return this.request(`/api/v1/platform/maker-economy-audit-log?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -1130,6 +1223,15 @@
       let payoutRuns = { payout_runs: [] };
       let payoutItems = { payout_items: [] };
       let revenueAuditLog = { revenue_audit_log: [] };
+      let makerEconomy = { maker_economy: null };
+      let makerProfiles = { maker_profiles: [] };
+      let modelAssets = { model_assets: [] };
+      let modelLicenses = { model_licenses: [] };
+      let modelDownloads = { model_downloads: [] };
+      let modelRoyaltyEvents = { model_royalty_events: [] };
+      let repairBounties = { repair_bounties: [] };
+      let bountySubmissions = { bounty_submissions: [] };
+      let makerEconomyAuditLog = { maker_economy_audit_log: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -1493,6 +1595,51 @@
         } catch (_error) {
           revenueAuditLog = { revenue_audit_log: [] };
         }
+        try {
+          makerEconomy = await this.getMakerEconomy();
+        } catch (_error) {
+          makerEconomy = { maker_economy: null };
+        }
+        try {
+          makerProfiles = await this.getMakerProfiles('all', 30);
+        } catch (_error) {
+          makerProfiles = { maker_profiles: [] };
+        }
+        try {
+          modelAssets = await this.getModelAssets('all', 30);
+        } catch (_error) {
+          modelAssets = { model_assets: [] };
+        }
+        try {
+          modelLicenses = await this.getModelLicenses('all');
+        } catch (_error) {
+          modelLicenses = { model_licenses: [] };
+        }
+        try {
+          modelDownloads = await this.getModelDownloads(30);
+        } catch (_error) {
+          modelDownloads = { model_downloads: [] };
+        }
+        try {
+          modelRoyaltyEvents = await this.getModelRoyaltyEvents(30);
+        } catch (_error) {
+          modelRoyaltyEvents = { model_royalty_events: [] };
+        }
+        try {
+          repairBounties = await this.getRepairBounties('active', 30);
+        } catch (_error) {
+          repairBounties = { repair_bounties: [] };
+        }
+        try {
+          bountySubmissions = await this.getBountySubmissions(30);
+        } catch (_error) {
+          bountySubmissions = { bounty_submissions: [] };
+        }
+        try {
+          makerEconomyAuditLog = await this.getMakerEconomyAuditLog(30);
+        } catch (_error) {
+          makerEconomyAuditLog = { maker_economy_audit_log: [] };
+        }
 
       }
 
@@ -1668,7 +1815,16 @@
         payout_accounts: payoutAccounts.payout_accounts || [],
         payout_runs: payoutRuns.payout_runs || [],
         payout_items: payoutItems.payout_items || [],
-        revenue_audit_log: revenueAuditLog.revenue_audit_log || []
+        revenue_audit_log: revenueAuditLog.revenue_audit_log || [],
+        maker_economy: makerEconomy.maker_economy || null,
+        maker_profiles: makerProfiles.maker_profiles || [],
+        model_assets: modelAssets.model_assets || [],
+        model_licenses: modelLicenses.model_licenses || [],
+        model_downloads: modelDownloads.model_downloads || [],
+        model_royalty_events: modelRoyaltyEvents.model_royalty_events || [],
+        repair_bounties: repairBounties.repair_bounties || [],
+        bounty_submissions: bountySubmissions.bounty_submissions || [],
+        maker_economy_audit_log: makerEconomyAuditLog.maker_economy_audit_log || []
       };
     }
   }

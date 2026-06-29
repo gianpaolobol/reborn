@@ -103,7 +103,8 @@ function stepper(active) {
     ['privacy-governance', '16', 'Privacy'],
     ['release-management', '17', 'Release'],
     ['partner-onboarding', '18', 'Partners'],
-    ['marketplace-revenue', '19', 'Revenue']
+    ['marketplace-revenue', '19', 'Revenue'],
+    ['maker-economy', '20', 'Makers']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -2346,6 +2347,173 @@ async function markPayoutRunPaid(id) {
   }
 }
 
+
+
+function makerEconomyDashboard() {
+  setActiveNav('maker-economy');
+  if (!S.auth.user) {
+    return layout('Maker Economy', authRequiredPanel('the Step 29 maker economy governance console'), { currentStep: 'maker-economy' });
+  }
+
+  const dashboard = S.api.makerEconomy || {};
+  const summary = dashboard.summary || {};
+  const makerProfiles = S.api.makerProfiles || dashboard.maker_profiles || [];
+  const modelAssets = S.api.modelAssets || dashboard.model_assets || [];
+  const modelLicenses = S.api.modelLicenses || dashboard.model_licenses || [];
+  const modelDownloads = S.api.modelDownloads || dashboard.recent_downloads || [];
+  const royaltyEvents = S.api.modelRoyaltyEvents || dashboard.recent_royalty_events || [];
+  const bounties = S.api.repairBounties || dashboard.repair_bounties || [];
+  const submissions = S.api.bountySubmissions || dashboard.bounty_submissions || [];
+  const auditLog = S.api.makerEconomyAuditLog || [];
+  const actionRows = Object.entries(dashboard.operator_actions || {}).map(([key, value]) => `<li><strong>${safe(key)}</strong> — ${safe(value)}</li>`).join('') || '<li>No immediate maker economy action.</li>';
+  const makerRows = makerProfiles.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : item.status === 'onboarding' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.display_name)}</td><td>${safe(item.trust_tier)}</td><td>${safe(item.balance_credits ?? 0)}</td><td><button class="mini-button" onclick="activateMakerProfile('${safe(item.id)}')" ${item.status === 'active' ? 'disabled' : ''}>Activate</button></td></tr>`).join('') || '<tr><td colspan="5">No maker profiles yet.</td></tr>';
+  const modelRows = modelAssets.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'approved' ? 'green' : item.status === 'in_review' || item.status === 'submitted' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.title)}</td><td>${safe(item.object_category)}</td><td>${safe(item.quality_score)}</td><td><button class="mini-button" onclick="approveModelAsset('${safe(item.id)}')" ${item.status === 'approved' ? 'disabled' : ''}>Approve</button> <button class="mini-button" onclick="recordDemoModelDownload('${safe(item.id)}')" ${item.status !== 'approved' ? 'disabled' : ''}>Download</button></td></tr>`).join('') || '<tr><td colspan="5">No repair model assets yet.</td></tr>';
+  const licenseRows = modelLicenses.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.name)}</td><td>${safe(item.license_key)}</td><td>${safe(item.royalty_credits_per_download)}</td><td>${item.commercial_use_allowed ? 'Yes' : 'No'}</td></tr>`).join('') || '<tr><td colspan="5">No model licenses configured.</td></tr>';
+  const downloadRows = modelDownloads.slice(0, 10).map(item => `<tr><td>${safe(item.model_title)}</td><td>${safe(item.downloader_type)}</td><td>${safe(item.purpose)}</td><td>${safe(item.royalty_credits)}</td><td>${safe(item.created_at)}</td></tr>`).join('') || '<tr><td colspan="5">No model downloads recorded.</td></tr>';
+  const royaltyRows = royaltyEvents.slice(0, 10).map(item => `<tr><td>${safe(item.maker_name)}</td><td>${safe(item.model_title)}</td><td>${safe(item.credits_awarded)}</td><td>${safe(item.status)}</td><td>${safe(item.created_at)}</td></tr>`).join('') || '<tr><td colspan="5">No royalty events yet.</td></tr>';
+  const bountyRows = bounties.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'open' ? 'green' : item.status === 'in_review' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.title)}</td><td>${safe(item.priority)}</td><td>${safe(item.reward_credits)}</td><td><button class="mini-button" onclick="submitDemoBounty('${safe(item.id)}')" ${!['open', 'in_review'].includes(item.status) ? 'disabled' : ''}>Submit</button></td></tr>`).join('') || '<tr><td colspan="5">No repair bounties open.</td></tr>';
+  const submissionRows = submissions.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'accepted' ? 'green' : item.status === 'rejected' ? 'blue' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.bounty_title)}</td><td>${safe(item.maker_name)}</td><td>${safe(item.awarded_credits)}</td><td><button class="mini-button" onclick="acceptBountySubmission('${safe(item.id)}')" ${item.status === 'accepted' ? 'disabled' : ''}>Accept</button></td></tr>`).join('') || '<tr><td colspan="5">No bounty submissions yet.</td></tr>';
+  const auditRows = auditLog.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No maker economy audit records yet.</li>';
+
+  return layout('Maker Economy', `
+    <section class="section-head"><div><p class="eyebrow">Step 29 · Maker Economy, Model Licensing & Repair Bounties</p><h2>Reward useful repair knowledge without becoming an STL bazaar.</h2></div><p class="muted">Step 29 connects makers to the Repair Journey through governed profiles, repair model assets, pilot licenses, controlled download records, credit royalty events and repair bounties.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.maker_profiles_active ?? 0)}</strong><span>Active makers</span></div><div class="metric"><strong>${safe(summary.model_assets_approved ?? 0)}</strong><span>Approved models</span></div><div class="metric"><strong>${safe(summary.royalty_credits_awarded ?? 0)}</strong><span>Royalty credits</span></div><div class="metric"><strong>${safe(summary.repair_bounties_open ?? 0)}</strong><span>Open bounties</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoMakerProfile()" ${S.busy ? 'disabled' : ''}>Create maker</button><button class="btn secondary" onclick="submitDemoModelAsset()" ${S.busy ? 'disabled' : ''}>Submit model</button><button class="btn secondary" onclick="createDemoRepairBounty()" ${S.busy ? 'disabled' : ''}>Create bounty</button><a class="btn secondary" href="#/marketplace-revenue">Open revenue ledger</a></div><ul class="muted small">${actionRows}</ul></section>
+    <section class="section grid two"><div class="panel stack"><h3>Maker profiles</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Tier</th><th>Credits</th><th>Action</th></tr>${makerRows}</table></div><div class="panel stack"><h3>Repair model assets</h3><table class="table"><tr><th>Status</th><th>Title</th><th>Category</th><th>Score</th><th>Action</th></tr>${modelRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Model licenses</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Key</th><th>Credits/download</th><th>Commercial</th></tr>${licenseRows}</table></div><div class="panel stack"><h3>Download governance</h3><table class="table"><tr><th>Model</th><th>Downloader</th><th>Purpose</th><th>Royalty</th><th>Created</th></tr>${downloadRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Royalty events</h3><table class="table"><tr><th>Maker</th><th>Model</th><th>Credits</th><th>Status</th><th>Created</th></tr>${royaltyRows}</table></div><div class="panel stack"><h3>Repair bounties</h3><table class="table"><tr><th>Status</th><th>Title</th><th>Priority</th><th>Reward</th><th>Action</th></tr>${bountyRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Bounty submissions</h3><table class="table"><tr><th>Status</th><th>Bounty</th><th>Maker</th><th>Awarded</th><th>Action</th></tr>${submissionRows}</table></div><div class="panel stack"><h3>Maker economy audit</h3><ul class="muted small">${auditRows}</ul></div></section>
+  `, { currentStep: 'maker-economy' });
+}
+
+async function createDemoMakerProfile() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create maker profiles.');
+  setBusy(true);
+  try {
+    const suffix = `${new Date().getMinutes()}${new Date().getSeconds()}`;
+    await window.REBORN_API.createMakerProfile({ maker_ref: `maker-pilot-${suffix}`, display_name: `Maker Pilot ${suffix}`, status: 'onboarding', specialty_tags: ['reverse_engineering', 'functional_parts'], notes: 'Created from Step 29 prototype console.' });
+    toast('Maker profile created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Maker creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function activateMakerProfile(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to update maker profiles.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.updateMakerProfileStatus(id, 'active', 'verified');
+    toast('Maker profile activated.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Maker activation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function submitDemoModelAsset() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to submit repair models.');
+  const maker = (S.api.makerProfiles || [])[0];
+  if (!maker) return toast('Create a maker profile first.');
+  setBusy(true);
+  try {
+    const suffix = `${new Date().getMinutes()}${new Date().getSeconds()}`;
+    await window.REBORN_API.submitModelAsset({ maker_profile_id: maker.id, title: `Pilot repair clip ${suffix}`, object_category: 'appliance', repair_use_case: 'Replace a small broken plastic clip as part of a repair journey.', status: 'in_review', license_key: 'repair_credit_pilot', file_kind: 'stl', quality_score: 70, safety_notes: 'Prototype sample only.' });
+    toast('Repair model submitted.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Model submission failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function approveModelAsset(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to review repair models.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.reviewModelAsset(id, 'approved', 88);
+    toast('Repair model approved.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Model review failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function recordDemoModelDownload(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to record model downloads.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.recordModelDownload({ model_asset_id: id, downloader_type: 'repair_user', downloader_ref: 'prototype-repair-user', purpose: 'repair_attempt' });
+    toast('Model download recorded and royalty credits posted.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Model download failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function createDemoRepairBounty() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create repair bounties.');
+  setBusy(true);
+  try {
+    const suffix = `${new Date().getMinutes()}${new Date().getSeconds()}`;
+    await window.REBORN_API.createRepairBounty({ title: `Pilot repair bounty ${suffix}`, object_category: 'home_repair', problem_statement: 'Create a useful printable replacement for a real broken object reported in the pilot.', reward_credits: 55, priority: 'normal', source_type: 'prototype_console', source_ref: `bounty-${suffix}` });
+    toast('Repair bounty created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Bounty creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function submitDemoBounty(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to submit bounty responses.');
+  const maker = (S.api.makerProfiles || [])[0];
+  const model = (S.api.modelAssets || []).find(item => item.status === 'approved') || (S.api.modelAssets || [])[0];
+  if (!maker) return toast('Create a maker profile first.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.submitBounty({ bounty_id: id, maker_profile_id: maker.id, model_asset_id: model?.id || null, submission_notes: 'Prototype bounty submission with repair evidence placeholder.' });
+    toast('Bounty submission recorded.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Bounty submission failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function acceptBountySubmission(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to review bounty submissions.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.reviewBountySubmission(id, { status: 'accepted', review_notes: 'Accepted from Step 29 prototype console.', awarded_credits: 60 });
+    toast('Bounty submission accepted and credits awarded.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Bounty review failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -2369,6 +2537,7 @@ const routes = {
   '/release-management': releaseManagementDashboard,
   '/partner-onboarding': partnerOnboardingDashboard,
   '/marketplace-revenue': marketplaceRevenueDashboard,
+  '/maker-economy': makerEconomyDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -2514,6 +2683,15 @@ async function refreshApiData(options = {}) {
       payoutRuns: bootstrap.payout_runs || S.api.payoutRuns || [],
       payoutItems: bootstrap.payout_items || S.api.payoutItems || [],
       revenueAuditLog: bootstrap.revenue_audit_log || S.api.revenueAuditLog || [],
+      makerEconomy: bootstrap.maker_economy || S.api.makerEconomy || null,
+      makerProfiles: bootstrap.maker_profiles || S.api.makerProfiles || [],
+      modelAssets: bootstrap.model_assets || S.api.modelAssets || [],
+      modelLicenses: bootstrap.model_licenses || S.api.modelLicenses || [],
+      modelDownloads: bootstrap.model_downloads || S.api.modelDownloads || [],
+      modelRoyaltyEvents: bootstrap.model_royalty_events || S.api.modelRoyaltyEvents || [],
+      repairBounties: bootstrap.repair_bounties || S.api.repairBounties || [],
+      bountySubmissions: bootstrap.bounty_submissions || S.api.bountySubmissions || [],
+      makerEconomyAuditLog: bootstrap.maker_economy_audit_log || S.api.makerEconomyAuditLog || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {

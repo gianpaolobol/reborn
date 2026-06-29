@@ -193,6 +193,7 @@ final class OperationalTelemetryService
             'smoke-beta-release-management.ps1' => 'Step 26 beta release management',
             'smoke-partner-onboarding-governance.ps1' => 'Step 27 partner onboarding governance',
             'smoke-marketplace-revenue-governance.ps1' => 'Step 28 marketplace revenue governance',
+            'smoke-maker-economy-governance.ps1' => 'Step 29 maker economy governance',
         ];
 
         $rows = [];

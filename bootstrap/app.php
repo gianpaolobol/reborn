@@ -83,6 +83,7 @@ use Reborn\Platform\Application\PrivacyGovernanceService;
 use Reborn\Platform\Application\ReleaseManagementService;
 use Reborn\Platform\Application\PartnerOnboardingService;
 use Reborn\Platform\Application\MarketplaceRevenueService;
+use Reborn\Platform\Application\MakerEconomyService;
 use Reborn\Platform\Application\OperationalTelemetryService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Platform\Presentation\PlatformController;
@@ -349,6 +350,7 @@ $privacyGovernanceService = new PrivacyGovernanceService($pdo);
 $releaseManagementService = new ReleaseManagementService($pdo);
 $partnerOnboardingService = new PartnerOnboardingService($pdo);
 $marketplaceRevenueService = new MarketplaceRevenueService($pdo);
+$makerEconomyService = new MakerEconomyService($pdo);
 $operationalTelemetryService = new OperationalTelemetryService(
     $pdo,
     $productionReadinessService,
@@ -367,6 +369,7 @@ $platformController = new PlatformController(
     $releaseManagementService,
     $partnerOnboardingService,
     $marketplaceRevenueService,
+    $makerEconomyService,
     $authContext
 );
 

@@ -110,6 +110,13 @@ return static function (Router $router, RepairController $repairController, Auth
                 'credit_ledger',
                 'payout_governance',
                 'fee_policies',
+                'maker_economy',
+                'maker_profiles',
+                'model_licensing',
+                'model_download_governance',
+                'maker_royalties',
+                'repair_bounties',
+                'bounty_submissions',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -225,6 +232,24 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->post('/api/v1/platform/payout-runs/{id}/paid', [$platformController, 'markPayoutRunPaid']);
     $router->get('/api/v1/platform/payout-items', [$platformController, 'payoutItems']);
     $router->get('/api/v1/platform/revenue-audit-log', [$platformController, 'revenueAuditLog']);
+
+    $router->get('/api/v1/platform/maker-economy', [$platformController, 'makerEconomy']);
+    $router->get('/api/v1/platform/maker-profiles', [$platformController, 'makerProfiles']);
+    $router->post('/api/v1/platform/maker-profiles', [$platformController, 'createMakerProfile']);
+    $router->post('/api/v1/platform/maker-profiles/{id}/status', [$platformController, 'updateMakerProfileStatus']);
+    $router->get('/api/v1/platform/model-assets', [$platformController, 'modelAssets']);
+    $router->post('/api/v1/platform/model-assets', [$platformController, 'submitModelAsset']);
+    $router->post('/api/v1/platform/model-assets/{id}/review', [$platformController, 'reviewModelAsset']);
+    $router->get('/api/v1/platform/model-licenses', [$platformController, 'modelLicenses']);
+    $router->get('/api/v1/platform/model-downloads', [$platformController, 'modelDownloads']);
+    $router->post('/api/v1/platform/model-downloads', [$platformController, 'recordModelDownload']);
+    $router->get('/api/v1/platform/model-royalty-events', [$platformController, 'modelRoyaltyEvents']);
+    $router->get('/api/v1/platform/repair-bounties', [$platformController, 'repairBounties']);
+    $router->post('/api/v1/platform/repair-bounties', [$platformController, 'createRepairBounty']);
+    $router->get('/api/v1/platform/bounty-submissions', [$platformController, 'bountySubmissions']);
+    $router->post('/api/v1/platform/bounty-submissions', [$platformController, 'submitBounty']);
+    $router->post('/api/v1/platform/bounty-submissions/{id}/review', [$platformController, 'reviewBountySubmission']);
+    $router->get('/api/v1/platform/maker-economy-audit-log', [$platformController, 'makerEconomyAuditLog']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);
