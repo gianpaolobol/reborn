@@ -19,6 +19,7 @@ use Reborn\Platform\Application\MakerEconomyService;
 use Reborn\Platform\Application\AiPipelineGovernanceService;
 use Reborn\Platform\Application\AiProviderSandboxService;
 use Reborn\Platform\Application\GeometryPrintabilityService;
+use Reborn\Platform\Application\ProviderRoutingGovernanceService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -40,6 +41,7 @@ final class PlatformController
         private readonly AiPipelineGovernanceService $aiGovernance,
         private readonly AiProviderSandboxService $aiSandbox,
         private readonly GeometryPrintabilityService $geometry,
+        private readonly ProviderRoutingGovernanceService $routing,
         private readonly AuthContext $auth,
     ) {
     }
@@ -1099,6 +1101,85 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['geometry_governance_audit_log' => $this->geometry->auditLog($limit)], $request->requestId());
+    }
+
+
+    public function providerRouting(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['provider_routing' => $this->routing->dashboard()], $request->requestId());
+    }
+
+    public function providerCapabilities(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['provider_capabilities' => $this->routing->providerCapabilities($status, $limit)], $request->requestId());
+    }
+
+    public function machineProfiles(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['machine_profiles' => $this->routing->machineProfiles($status, $limit)], $request->requestId());
+    }
+
+    public function routingPolicies(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        return JsonResponse::ok(['routing_policies' => $this->routing->routingPolicies($status)], $request->requestId());
+    }
+
+    public function routingRequests(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['routing_requests' => $this->routing->routingRequests($status, $limit)], $request->requestId());
+    }
+
+    public function createRoutingRequest(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['routing_request' => $this->routing->createRoutingRequest($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function evaluateRoutingRequest(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['routing_evaluation' => $this->routing->evaluateRoutingRequest((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function routingMatches(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['routing_matches' => $this->routing->routingMatches($status, $limit)], $request->requestId());
+    }
+
+    public function routingReviews(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['routing_review_items' => $this->routing->routingReviews($status, $limit)], $request->requestId());
+    }
+
+    public function reviewRoutingItem(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['routing_review_item' => $this->routing->reviewRouting((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function providerRoutingAuditLog(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['provider_routing_audit_log' => $this->routing->auditLog($limit)], $request->requestId());
     }
 
 }

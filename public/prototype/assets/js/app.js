@@ -107,7 +107,8 @@ function stepper(active) {
     ['maker-economy', '20', 'Makers'],
     ['ai-governance', '21', 'AI Gov'],
     ['ai-provider-sandbox', '22', 'AI Ops'],
-    ['geometry-printability', '23', 'Geometry']
+    ['geometry-printability', '23', 'Geometry'],
+    ['provider-routing', '24', 'Routing']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -2784,6 +2785,94 @@ async function approveGeometryReview(id) {
   }
 }
 
+
+function providerRoutingDashboard() {
+  setActiveNav('provider-routing');
+  if (!S.auth.user) {
+    return layout('Provider Routing Governance', authRequiredPanel('the Step 33 provider routing console'), { currentStep: 'provider-routing' });
+  }
+
+  const dashboard = S.api.providerRouting || {};
+  const summary = dashboard.summary || {};
+  const capabilities = S.api.providerCapabilities || dashboard.provider_capabilities || [];
+  const machines = S.api.machineProfiles || [];
+  const policies = S.api.routingPolicies || [];
+  const requests = S.api.routingRequests || dashboard.latest_requests || [];
+  const matches = S.api.routingMatches || dashboard.top_matches || [];
+  const reviews = S.api.routingReviewItems || dashboard.open_reviews || [];
+  const audit = S.api.providerRoutingAuditLog || [];
+
+  const capabilityRows = capabilities.slice(0, 8).map(item => `<tr><td>${safe(item.provider_name)}</td><td>${safe(item.process)}</td><td>${safe((item.materials || []).join(', '))}</td><td>${safe(item.max_build_volume_mm?.x)}×${safe(item.max_build_volume_mm?.y)}×${safe(item.max_build_volume_mm?.z)} mm</td><td>${safe(item.average_lead_time_days)} d</td><td>${safe(item.quality_score)}</td></tr>`).join('') || '<tr><td colspan="6">No provider capabilities available.</td></tr>';
+  const machineRows = machines.slice(0, 8).map(item => `<tr><td>${safe(item.machine_code)}</td><td>${safe(item.provider_name)}</td><td>${safe(item.machine_name)}</td><td>${safe((item.materials || []).join(', '))}</td><td>${safe(item.build_volume_mm?.x)}×${safe(item.build_volume_mm?.y)}×${safe(item.build_volume_mm?.z)} mm</td><td>${safe(item.reliability_score)}</td></tr>`).join('') || '<tr><td colspan="6">No machine profiles available.</td></tr>';
+  const policyRows = policies.slice(0, 6).map(item => `<li><strong>${safe(item.policy_key)}</strong> — ${safe(item.description)}</li>`).join('') || '<li>No active routing policies.</li>';
+  const requestRows = requests.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'matched' || item.status === 'approved_for_fulfilment' ? 'green' : item.status === 'blocked' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.request_code)}</td><td>${safe(item.asset_code || item.geometry_asset_id || 'manual')}</td><td>${safe(item.material_family)}</td><td>${safe(item.max_lead_time_days)} d</td><td><button class="mini-button" onclick="evaluateRoutingRequest('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Evaluate</button></td></tr>`).join('') || '<tr><td colspan="6">No routing requests yet.</td></tr>';
+  const matchRows = matches.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'recommended' ? 'green' : 'blue'}">${safe(item.status)}</span></td><td>#${safe(item.rank)}</td><td>${safe(item.provider_name)}</td><td>${safe(item.machine_name)}</td><td>${safe(item.match_score)}</td><td>€${((item.estimated_cost_cents || 0) / 100).toFixed(2)}</td><td>${safe(item.estimated_lead_time_days)} d</td></tr>`).join('') || '<tr><td colspan="7">No routing matches yet.</td></tr>';
+  const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.priority === 'high' ? 'orange' : 'blue'}">${safe(item.priority)}</span></td><td>${safe(item.status)}</td><td>${safe(item.request_code)}</td><td>${safe(item.review_reason)}</td><td><button class="mini-button" onclick="approveRoutingReview('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Approve route</button></td></tr>`).join('') || '<tr><td colspan="5">No active routing reviews.</td></tr>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No routing audit records yet.</li>';
+
+  return layout('Provider Routing Governance', `
+    <section class="section-head"><div><p class="eyebrow">Step 33 · Provider Capability, Machine Profile & Fulfilment Routing Governance</p><h2>Route validated repair geometry to compatible providers and machines.</h2></div><p class="muted">Step 33 connects geometry governance to provider fulfilment by scoring process, material, machine volume, lead time, budget and quality signals.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.provider_capabilities ?? 0)}</strong><span>Provider capabilities</span></div><div class="metric"><strong>${safe(summary.active_machines ?? 0)}</strong><span>Active machines</span></div><div class="metric"><strong>${safe(summary.routing_requests ?? 0)}</strong><span>Routing requests</span></div><div class="metric"><strong>${safe(summary.open_reviews ?? 0)}</strong><span>Open reviews</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoRoutingRequest()" ${S.busy ? 'disabled' : ''}>Create demo route</button><button class="btn secondary" onclick="evaluateFirstRoutingRequest()" ${S.busy ? 'disabled' : ''}>Evaluate first route</button><a class="btn secondary" href="#/geometry-printability">Open geometry</a><a class="btn secondary" href="#/provider-network">Provider network</a></div><p class="muted small">This is a governance layer: it does not reserve real capacity, quote live prices or create shipments.</p></section>
+    <section class="section grid two"><div class="panel stack"><h3>Provider capabilities</h3><table class="table"><tr><th>Provider</th><th>Process</th><th>Materials</th><th>Volume</th><th>Lead</th><th>Quality</th></tr>${capabilityRows}</table></div><div class="panel stack"><h3>Machine profiles</h3><table class="table"><tr><th>Code</th><th>Provider</th><th>Machine</th><th>Materials</th><th>Volume</th><th>Reliability</th></tr>${machineRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Routing requests</h3><table class="table"><tr><th>Status</th><th>Request</th><th>Geometry</th><th>Material</th><th>Lead</th><th>Action</th></tr>${requestRows}</table></div><div class="panel stack"><h3>Routing policies</h3><ul class="muted small">${policyRows}</ul></div></section>
+    <section class="section panel stack"><h3>Provider routing matches</h3><table class="table"><tr><th>Status</th><th>Rank</th><th>Provider</th><th>Machine</th><th>Score</th><th>Cost</th><th>Lead</th></tr>${matchRows}</table></section>
+    <section class="section grid two"><div class="panel stack"><h3>Human routing reviews</h3><table class="table"><tr><th>Priority</th><th>Status</th><th>Request</th><th>Reason</th><th>Action</th></tr>${reviewRows}</table></div><div class="panel stack"><h3>Routing audit</h3><ul class="muted small">${auditRows}</ul></div></section>
+  `, { currentStep: 'provider-routing' });
+}
+
+async function createDemoRoutingRequest() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create routing requests.');
+  setBusy(true);
+  try {
+    const geometry = (S.api.geometryAssets || [])[0];
+    await window.REBORN_API.createRoutingRequest({ geometry_asset_id: geometry?.id || null, requested_process: 'fdm_3d_printing', material_family: 'pla_petg', quantity: 1, priority: 'normal', destination_country: 'IT', max_lead_time_days: 7, max_budget_cents: 3800, routing_context: { source: 'prototype_console', step: '33' } });
+    toast('Routing request created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Routing request failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function evaluateRoutingRequest(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate routing.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.evaluateRoutingRequest(id, { evaluation_mode: 'pilot_mock' });
+    toast('Provider routing evaluated.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Routing evaluation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function evaluateFirstRoutingRequest() {
+  const request = (S.api.routingRequests || [])[0];
+  if (!request) return toast('No routing request available. Create one first.');
+  await evaluateRoutingRequest(request.id);
+}
+
+async function approveRoutingReview(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to review routing.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.reviewRoutingItem(id, { decision: 'approved_with_operator_notes', notes: 'Approved for pilot fulfilment handoff. Real capacity booking and shipment remain deferred.' });
+    toast('Routing review completed.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Routing review failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -2811,6 +2900,7 @@ const routes = {
   '/ai-governance': aiGovernanceDashboard,
   '/ai-provider-sandbox': aiProviderSandboxDashboard,
   '/geometry-printability': geometryPrintabilityDashboard,
+  '/provider-routing': providerRoutingDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -2988,6 +3078,14 @@ async function refreshApiData(options = {}) {
       printabilityFindings: bootstrap.printability_findings || S.api.printabilityFindings || [],
       geometryReviewItems: bootstrap.geometry_review_items || S.api.geometryReviewItems || [],
       geometryGovernanceAuditLog: bootstrap.geometry_governance_audit_log || S.api.geometryGovernanceAuditLog || [],
+      providerRouting: bootstrap.provider_routing || S.api.providerRouting || null,
+      providerCapabilities: bootstrap.provider_capabilities || S.api.providerCapabilities || [],
+      machineProfiles: bootstrap.machine_profiles || S.api.machineProfiles || [],
+      routingPolicies: bootstrap.routing_policies || S.api.routingPolicies || [],
+      routingRequests: bootstrap.routing_requests || S.api.routingRequests || [],
+      routingMatches: bootstrap.routing_matches || S.api.routingMatches || [],
+      routingReviewItems: bootstrap.routing_review_items || S.api.routingReviewItems || [],
+      providerRoutingAuditLog: bootstrap.provider_routing_audit_log || S.api.providerRoutingAuditLog || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {

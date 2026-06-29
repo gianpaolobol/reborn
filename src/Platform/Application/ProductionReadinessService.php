@@ -43,6 +43,7 @@ final class ProductionReadinessService
             'ai_pipeline_governance' => $this->aiPipelineGovernanceCheck(),
             'ai_provider_sandbox' => $this->aiProviderSandboxCheck(),
             'geometry_printability' => $this->geometryPrintabilityCheck(),
+            'provider_routing' => $this->providerRoutingCheck(),
         ];
 
         $status = 'ready';
@@ -749,4 +750,44 @@ final class ProductionReadinessService
                 : ($missingOptional ? 'Runtime is usable, but one or more optional extensions should be enabled before production.' : 'Runtime extensions are ready.'),
         ];
     }
+
+    /** @return array<string, mixed> */
+    private function providerRoutingCheck(): array
+    {
+        try {
+            $tables = ['platform_provider_capability_profiles', 'platform_machine_profiles', 'platform_routing_policies', 'platform_fulfilment_routing_requests', 'platform_provider_routing_matches', 'platform_routing_review_items', 'platform_provider_routing_audit_log'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $capabilities = 0;
+            $machines = 0;
+            $policies = 0;
+            $requests = 0;
+            if ($missing === []) {
+                $capabilities = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_provider_capability_profiles WHERE status = 'active'")->fetchColumn();
+                $machines = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_machine_profiles WHERE status = 'active'")->fetchColumn();
+                $policies = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_routing_policies WHERE status = 'active'")->fetchColumn();
+                $requests = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_fulfilment_routing_requests')->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? (($capabilities > 0 && $machines > 0 && $policies > 0) ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Provider capability, machine profile and fulfilment routing governance tables are available. Real capacity booking remains out of scope for the local pilot.' : 'Provider routing governance tables are not fully migrated yet.',
+                'provider_capabilities' => $capabilities,
+                'machine_profiles' => $machines,
+                'routing_policies' => $policies,
+                'routing_requests' => $requests,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Provider routing governance checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
 }

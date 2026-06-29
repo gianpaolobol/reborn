@@ -1162,6 +1162,51 @@
       return this.request(`/api/v1/platform/geometry-governance-audit-log?limit=${encodeURIComponent(limit)}`);
     }
 
+
+    async getProviderRouting() {
+      return this.request('/api/v1/platform/provider-routing');
+    }
+
+    async getProviderCapabilities(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/provider-capabilities?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getMachineProfiles(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/machine-profiles?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getRoutingPolicies(status = 'active') {
+      return this.request(`/api/v1/platform/routing-policies?status=${encodeURIComponent(status)}`);
+    }
+
+    async getRoutingRequests(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/routing-requests?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createRoutingRequest(payload = {}) {
+      return this.request('/api/v1/platform/routing-requests', { method: 'POST', body: payload });
+    }
+
+    async evaluateRoutingRequest(id, payload = {}) {
+      return this.request(`/api/v1/platform/routing-requests/${encodeURIComponent(id)}/evaluate`, { method: 'POST', body: payload });
+    }
+
+    async getRoutingMatches(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/routing-matches?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getRoutingReviewItems(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/routing-review-items?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async reviewRoutingItem(id, payload = {}) {
+      return this.request(`/api/v1/platform/routing-review-items/${encodeURIComponent(id)}/review`, { method: 'POST', body: payload });
+    }
+
+    async getProviderRoutingAuditLog(limit = 50) {
+      return this.request(`/api/v1/platform/provider-routing-audit-log?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -1327,7 +1372,15 @@
           ai_job_events: [],
           ai_artifact_stubs: [],
           ai_provider_cost_ledger: [],
-          ai_provider_sandbox_audit_log: []
+          ai_provider_sandbox_audit_log: [],
+          provider_routing: null,
+          provider_capabilities: [],
+          machine_profiles: [],
+          routing_policies: [],
+          routing_requests: [],
+          routing_matches: [],
+          routing_review_items: [],
+          provider_routing_audit_log: []
         };
       }
 
@@ -1428,6 +1481,14 @@
       let printabilityFindings = { printability_findings: [] };
       let geometryReviewItems = { geometry_review_items: [] };
       let geometryGovernanceAuditLog = { geometry_governance_audit_log: [] };
+      let providerRouting = { provider_routing: null };
+      let providerCapabilities = { provider_capabilities: [] };
+      let machineProfiles = { machine_profiles: [] };
+      let routingPolicies = { routing_policies: [] };
+      let routingRequests = { routing_requests: [] };
+      let routingMatches = { routing_matches: [] };
+      let routingReviewItems = { routing_review_items: [] };
+      let providerRoutingAuditLog = { provider_routing_audit_log: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -1954,6 +2015,47 @@
           geometryGovernanceAuditLog = { geometry_governance_audit_log: [] };
         }
 
+        try {
+          providerRouting = await this.getProviderRouting();
+        } catch (_error) {
+          providerRouting = { provider_routing: null };
+        }
+        try {
+          providerCapabilities = await this.getProviderCapabilities('active', 30);
+        } catch (_error) {
+          providerCapabilities = { provider_capabilities: [] };
+        }
+        try {
+          machineProfiles = await this.getMachineProfiles('active', 30);
+        } catch (_error) {
+          machineProfiles = { machine_profiles: [] };
+        }
+        try {
+          routingPolicies = await this.getRoutingPolicies('active');
+        } catch (_error) {
+          routingPolicies = { routing_policies: [] };
+        }
+        try {
+          routingRequests = await this.getRoutingRequests('all', 30);
+        } catch (_error) {
+          routingRequests = { routing_requests: [] };
+        }
+        try {
+          routingMatches = await this.getRoutingMatches('all', 30);
+        } catch (_error) {
+          routingMatches = { routing_matches: [] };
+        }
+        try {
+          routingReviewItems = await this.getRoutingReviewItems('active', 30);
+        } catch (_error) {
+          routingReviewItems = { routing_review_items: [] };
+        }
+        try {
+          providerRoutingAuditLog = await this.getProviderRoutingAuditLog(30);
+        } catch (_error) {
+          providerRoutingAuditLog = { provider_routing_audit_log: [] };
+        }
+
       }
 
       if (latestCase && this.getToken()) {
@@ -2160,7 +2262,15 @@
         geometry_validation_runs: geometryValidationRuns.geometry_validation_runs || [],
         printability_findings: printabilityFindings.printability_findings || [],
         geometry_review_items: geometryReviewItems.geometry_review_items || [],
-        geometry_governance_audit_log: geometryGovernanceAuditLog.geometry_governance_audit_log || []
+        geometry_governance_audit_log: geometryGovernanceAuditLog.geometry_governance_audit_log || [],
+        provider_routing: providerRouting.provider_routing || null,
+        provider_capabilities: providerCapabilities.provider_capabilities || [],
+        machine_profiles: machineProfiles.machine_profiles || [],
+        routing_policies: routingPolicies.routing_policies || [],
+        routing_requests: routingRequests.routing_requests || [],
+        routing_matches: routingMatches.routing_matches || [],
+        routing_review_items: routingReviewItems.routing_review_items || [],
+        provider_routing_audit_log: providerRoutingAuditLog.provider_routing_audit_log || []
       };
     }
   }

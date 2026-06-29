@@ -595,3 +595,19 @@ powershell -ExecutionPolicy Bypass -File .\scripts\smoke-geometry-printability-g
 ```
 
 This step does not run a real CAD kernel or slicer. It records the governance workflow needed before AI-generated or uploaded geometry can be routed to providers, maker publication or repair orders.
+
+### Step 33 — Provider Capability, Machine Profile & Fulfilment Routing Governance v1
+
+Step 33 adds provider capability profiles, machine profiles, routing policies, fulfilment routing requests, provider routing matches, human routing review and provider routing audit logging.
+
+Smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-provider-routing-governance.ps1
+```
+
+Prototype route:
+
+```text
+/prototype/index.html#/provider-routing
+```

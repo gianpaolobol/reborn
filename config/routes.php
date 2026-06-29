@@ -129,6 +129,10 @@ return static function (Router $router, RepairController $repairController, Auth
                 'cad_geometry_validation',
                 'printability_governance',
                 'geometry_human_review',
+                'provider_capability_governance',
+                'machine_profile_governance',
+                'provider_fulfilment_routing',
+                'routing_human_review',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -299,6 +303,18 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/platform/geometry-review-items', [$platformController, 'geometryReviewItems']);
     $router->post('/api/v1/platform/geometry-review-items/{id}/review', [$platformController, 'reviewGeometryItem']);
     $router->get('/api/v1/platform/geometry-governance-audit-log', [$platformController, 'geometryGovernanceAuditLog']);
+
+    $router->get('/api/v1/platform/provider-routing', [$platformController, 'providerRouting']);
+    $router->get('/api/v1/platform/provider-capabilities', [$platformController, 'providerCapabilities']);
+    $router->get('/api/v1/platform/machine-profiles', [$platformController, 'machineProfiles']);
+    $router->get('/api/v1/platform/routing-policies', [$platformController, 'routingPolicies']);
+    $router->get('/api/v1/platform/routing-requests', [$platformController, 'routingRequests']);
+    $router->post('/api/v1/platform/routing-requests', [$platformController, 'createRoutingRequest']);
+    $router->post('/api/v1/platform/routing-requests/{id}/evaluate', [$platformController, 'evaluateRoutingRequest']);
+    $router->get('/api/v1/platform/routing-matches', [$platformController, 'routingMatches']);
+    $router->get('/api/v1/platform/routing-review-items', [$platformController, 'routingReviews']);
+    $router->post('/api/v1/platform/routing-review-items/{id}/review', [$platformController, 'reviewRoutingItem']);
+    $router->get('/api/v1/platform/provider-routing-audit-log', [$platformController, 'providerRoutingAuditLog']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);
