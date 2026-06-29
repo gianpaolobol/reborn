@@ -1,0 +1,22 @@
+{
+  "name": "reborn/repair-intelligence-platform",
+  "description": "Re-born backend skeleton: Repair Intelligence Platform, PHP 8.3, Clean Architecture, DDD, SQLite dev, MariaDB production ready.",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.3",
+    "ext-json": "*",
+    "ext-pdo": "*",
+    "ext-pdo_sqlite": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Reborn\\": "src/"
+    }
+  },
+  "scripts": {
+    "serve": "php -S 127.0.0.1:8080 -t public public/index.php",
+    "setup": "php scripts/setup-dev.php",
+    "doctor": "php scripts/doctor.php"
+  }
+}

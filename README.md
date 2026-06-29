@@ -178,3 +178,31 @@ Main prototype routes:
 #/enterprise
 #/admin-ops
 ```
+
+## Step 5 — Backend Skeleton
+
+The repository now includes a first PHP 8.3 backend skeleton for the MVP API.
+
+```powershell
+php scripts/doctor.php
+php scripts/setup-dev.php
+php -S 127.0.0.1:8080 -t public public/index.php
+```
+
+Open:
+
+```text
+http://127.0.0.1:8080/api/health
+http://127.0.0.1:8080/prototype/index.html
+```
+
+Core endpoints:
+
+```text
+GET  /api/health
+GET  /api/v1/repair-cases
+POST /api/v1/repair-cases
+POST /api/v1/repair-cases/{id}/diagnose
+GET  /api/v1/providers
+GET  /api/v1/knowledge/nodes
+```

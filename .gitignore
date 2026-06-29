@@ -24,3 +24,11 @@ vendor/
 
 # Logs
 *.log
+
+# Re-born local runtime
+.env
+/storage/database/*.sqlite
+/storage/database/*.db
+/storage/logs/*.log
+/vendor/
+/.phpunit.cache/
