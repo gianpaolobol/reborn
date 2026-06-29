@@ -6,6 +6,9 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
+$CiSmokeSuiteVersion = "STEP38_CI_AUTH_GUARD_V3"
+Write-Host "CI smoke script version: $CiSmokeSuiteVersion" -ForegroundColor Magenta
+
 $env:REBORN_BASE_URL = $BaseUrl
 
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
@@ -177,13 +180,17 @@ function Assert-CiAdminLogin() {
     Write-Host "CI auth guard login passed." -ForegroundColor Green
 }
 
-# Harden CI against stale persisted demo hashes or partially applied seed fixes.
-# This runs inside the same workflow step as the smoke suite, immediately before the first API login.
-if ($env:CI) {
-    Invoke-CiPhpScript "scripts/reset-demo-credentials.php"
-    Invoke-CiPhpScript "scripts/verify-demo-credentials.php"
-    Assert-CiAdminLogin
+# Harden against stale persisted demo hashes or partially applied seed fixes.
+# This script is CI-specific, so the guard runs unconditionally before the first smoke login.
+$IdentitySmokePath = Join-Path $ScriptsRoot "smoke-identity-access.ps1"
+$IdentitySmokeText = Get-Content -Raw -Path $IdentitySmokePath
+if ($IdentitySmokeText -notmatch "STEP38_IDENTITY_SMOKE_GUARD_V3") {
+    throw "Outdated scripts/smoke-identity-access.ps1 detected. Expected marker STEP38_IDENTITY_SMOKE_GUARD_V3. The workflow is not running the patched files. Re-apply the latest Step 38 zip, commit, push, and confirm the Actions run uses the newest commit SHA."
 }
+
+Invoke-CiPhpScript "scripts/reset-demo-credentials.php"
+Invoke-CiPhpScript "scripts/verify-demo-credentials.php"
+Assert-CiAdminLogin
 
 
 foreach ($SmokeTest in $SmokeTests) {

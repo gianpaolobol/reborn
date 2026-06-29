@@ -1,4 +1,6 @@
 $ErrorActionPreference = "Stop"
+$IdentitySmokeVersion = "STEP38_IDENTITY_SMOKE_GUARD_V3"
+Write-Host "Identity smoke script version: $IdentitySmokeVersion" -ForegroundColor Magenta
 
 $BaseUrl = if ($env:REBORN_BASE_URL) { $env:REBORN_BASE_URL } else { "http://127.0.0.1:8080" }
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
