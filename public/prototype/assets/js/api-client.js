@@ -261,6 +261,35 @@
       });
     }
 
+
+    async createRepairFulfilment(orderId) {
+      return this.request(`/api/v1/repair-orders/${encodeURIComponent(orderId)}/fulfilments`, {
+        method: 'POST'
+      });
+    }
+
+    async getRepairFulfilments(orderId) {
+      return this.request(`/api/v1/repair-orders/${encodeURIComponent(orderId)}/fulfilments`);
+    }
+
+    async getRepairFulfilment(fulfilmentId) {
+      return this.request(`/api/v1/fulfilments/${encodeURIComponent(fulfilmentId)}`);
+    }
+
+    async acceptProviderFulfilment(fulfilmentId, providerNotes = '') {
+      return this.request(`/api/v1/fulfilments/${encodeURIComponent(fulfilmentId)}/accept-provider`, {
+        method: 'POST',
+        body: { provider_notes: providerNotes }
+      });
+    }
+
+    async updateFulfilmentStatus(fulfilmentId, status, note = '') {
+      return this.request(`/api/v1/fulfilments/${encodeURIComponent(fulfilmentId)}/status`, {
+        method: 'POST',
+        body: { status, note }
+      });
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -297,7 +326,8 @@
           provider_matches: [],
           quote_requests: [],
           repair_orders: [],
-          payment_intents: []
+          payment_intents: [],
+          fulfilments: []
         };
       }
 
@@ -320,6 +350,7 @@
       let quoteRequests = { quote_requests: [] };
       let repairOrders = { repair_orders: [] };
       let paymentIntents = { payment_intents: [] };
+      let fulfilments = { fulfilments: [] };
 
       if (latestCase && this.getToken()) {
         try {
@@ -364,6 +395,11 @@
           } catch (_error) {
             paymentIntents = { payment_intents: [] };
           }
+          try {
+            fulfilments = await this.getRepairFulfilments(latestOrder.id);
+          } catch (_error) {
+            fulfilments = { fulfilments: [] };
+          }
         }
       }
 
@@ -380,7 +416,8 @@
         provider_matches: providerMatches.provider_matches || [],
         quote_requests: quoteRequests.quote_requests || [],
         repair_orders: repairOrders.repair_orders || [],
-        payment_intents: paymentIntents.payment_intents || []
+        payment_intents: paymentIntents.payment_intents || [],
+        fulfilments: fulfilments.fulfilments || []
       };
     }
   }

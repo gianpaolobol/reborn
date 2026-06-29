@@ -81,7 +81,8 @@ function stepper(active) {
     ['capture', '02', 'Capture'],
     ['diagnosis', '03', 'Diagnose'],
     ['repair-paths', '04', 'Decide'],
-    ['checkout', '05', 'Repair']
+    ['checkout', '05', 'Order'],
+    ['fulfilment', '06', 'Fulfil']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -441,6 +442,14 @@ function activePaymentIntent() {
   return S.api.paymentIntent || activePaymentIntents()[0] || null;
 }
 
+function activeFulfilments() {
+  return Array.isArray(S.api.fulfilments) ? S.api.fulfilments : [];
+}
+
+function activeFulfilment() {
+  return S.api.fulfilment || activeFulfilments()[0] || null;
+}
+
 function mockRecognitionResult() {
   return {
     object_guess: { label: 'appliance knob / plastic cover / hinge / wearable case', confidence: 0.72 },
@@ -547,6 +556,39 @@ function mockPaymentIntent() {
     confirmed_at: null,
     cancelled_at: null
   };
+}
+
+function mockFulfilment() {
+  const order = activeRepairOrder() || mockRepairOrder();
+  return {
+    id: 'mock-fulfilment',
+    repair_order_id: order.id,
+    quote_request_id: order.quote_request_id,
+    repair_case_id: order.repair_case_id,
+    provider_id: order.provider_id,
+    requested_by: S.auth.user?.id || 'mock-user',
+    accepted_by: null,
+    status: 'awaiting_provider_acceptance',
+    provider_notes: null,
+    tracking_reference: null,
+    timeline_json: [
+      { event: 'fulfilment_requested', status: 'awaiting_provider_acceptance', actor_id: S.auth.user?.id || 'mock-user', note: 'Mock fulfilment created after payment authorization.', occurred_at: new Date().toISOString() }
+    ],
+    created_at: new Date().toISOString(),
+    accepted_at: null,
+    started_at: null,
+    quality_checked_at: null,
+    ready_at: null,
+    completed_at: null,
+    rejected_at: null,
+    updated_at: new Date().toISOString()
+  };
+}
+
+function fulfilmentTimeline(fulfilment) {
+  const rows = Array.isArray(fulfilment?.timeline_json) ? fulfilment.timeline_json : [];
+  if (!rows.length) return '<p class="muted small">No fulfilment events yet.</p>';
+  return `<div class="timeline">${rows.map((row, index) => `<div class="timeline-row"><div class="timeline-time">${index + 1}</div><div class="timeline-content"><strong>${safe(String(row.status || row.event || 'event').replaceAll('_', ' '))}</strong><p class="muted small">${safe(row.note || row.event || '')}</p><p class="muted small">${safe(row.occurred_at ? new Date(row.occurred_at).toLocaleString('it-IT') : '')}</p></div></div>`).join('')}</div>`;
 }
 
 function selectedFilePreview() {
@@ -781,20 +823,37 @@ function checkout() {
   const platformFee = Number(order?.platform_fee_cents || quoteJson.platform_fee_cents || 0);
   const payout = Number(order?.provider_payout_cents || quoteJson.provider_payout_cents || 0);
   const paymentStatus = intent ? intent.status : 'not_created';
+  const fulfilment = activeFulfilment();
 
   return layout('Checkout', html`
-    <section class="section-head"><div><p class="eyebrow">Step 14 · Repair Order & Payment Intent MVP</p><h2>Confirm the repair, not just the purchase.</h2></div><p class="muted">A repair order is created from a validated quote. Payment intent is mock-only: no real money movement happens in this MVP.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 14 → Step 15</p><h2>Confirm the repair, then start fulfilment.</h2></div><p class="muted">A repair order is created from a validated quote. Payment intent is mock-only: no real money movement happens in this MVP.</p></section>
     <section class="grid two">
       <div class="panel stack">
         <p class="eyebrow">Repair order</p>
         <h2>${order ? `Order ${safe(String(order.id).slice(0, 8))}` : 'Create an order from the quote'}</h2>
         <table class="table"><tr><th>Object</th><td>${safe(p.detectedName)}</td></tr><tr><th>Provider</th><td>${safe(providerName)}</td></tr><tr><th>Quote status</th><td>${safe(quote?.status || 'missing')}</td></tr><tr><th>Order status</th><td>${safe(order?.status || 'not_created')}</td></tr><tr><th>Total</th><td>${formatEuro(total)}</td></tr><tr><th>Platform fee</th><td>${formatEuro(platformFee)}</td></tr><tr><th>Provider payout</th><td>${formatEuro(payout)}</td></tr></table>
-        <div class="actions"><button class="btn green" onclick="createRepairOrder()" ${S.busy || !quote || order ? 'disabled' : ''}>Create repair order</button><button class="btn orange" onclick="createPaymentIntent()" ${S.busy || !order || intent ? 'disabled' : ''}>Create payment intent</button><button class="btn green" onclick="confirmMockPaymentIntent()" ${S.busy || !intent || intent.status !== 'requires_mock_confirmation' ? 'disabled' : ''}>Mock authorize</button><a class="btn secondary" href="#/provider-network">Back</a></div>
+        <div class="actions"><button class="btn green" onclick="createRepairOrder()" ${S.busy || !quote || order ? 'disabled' : ''}>Create repair order</button><button class="btn orange" onclick="createPaymentIntent()" ${S.busy || !order || intent ? 'disabled' : ''}>Create payment intent</button><button class="btn green" onclick="confirmMockPaymentIntent()" ${S.busy || !intent || intent.status !== 'requires_mock_confirmation' ? 'disabled' : ''}>Mock authorize</button><button class="btn green" onclick="createRepairFulfilment()" ${S.busy || !order || !intent || intent.status !== 'mock_authorized' || fulfilment ? 'disabled' : ''}>Start fulfilment</button><a class="btn secondary" href="#/fulfilment">Fulfilment</a><a class="btn secondary" href="#/provider-network">Back</a></div>
       </div>
       <aside class="panel dark-panel stack"><h3>Payment intent</h3>${intent ? `<div class="price">${formatEuro(Number(intent.amount_cents || 0))}</div><p class="muted">${safe(intent.provider)} · ${safe(paymentStatus)} · expires ${safe(new Date(intent.expires_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }))}</p>${badges([[intent.status, intent.status === 'mock_authorized' ? 'green' : 'orange'], ['mock only', 'blue'], ['no real charge', '']])}<p class="muted small">Client secret: <code>${safe(String(intent.client_secret || '').slice(0, 18))}…</code></p>` : '<p class="muted">Create a payment intent after the repair order. This prepares checkout and audit trail without connecting a payment provider yet.</p>'}<div class="grid two">${metric(D.wallet.credits, 'Repair Credits')}${metric(D.wallet.savedObjects, 'Objects saved')}${metric(D.wallet.co2, 'CO₂ avoided')}${metric(formatEuro(platformFee), 'Platform fee')}</div><p class="muted">After completion, the repair updates provider trust, maker royalty, model reliability and Knowledge Graph confidence.</p></aside>
     </section>
-    <section class="section panel stack"><h3>Order quality gates</h3><div class="timeline"><div class="timeline-row"><div class="timeline-time">1</div><div class="timeline-content"><strong>Quote estimated</strong><p class="muted small">Provider reviewed repair fit and platform fee is explicit.</p></div></div><div class="timeline-row"><div class="timeline-time">2</div><div class="timeline-content"><strong>Repair order created</strong><p class="muted small">The quote becomes a fulfilment contract for a real repair outcome.</p></div></div><div class="timeline-row"><div class="timeline-time">3</div><div class="timeline-content"><strong>Payment intent prepared</strong><p class="muted small">Mock checkout is auditable; real Stripe/PayPal adapter can be added later.</p></div></div><div class="timeline-row"><div class="timeline-time">4</div><div class="timeline-content"><strong>Repair outcome pending</strong><p class="muted small">Order should close only when the object returns to function.</p></div></div></div></section>
+    <section class="section panel stack"><h3>Order quality gates</h3><div class="timeline"><div class="timeline-row"><div class="timeline-time">1</div><div class="timeline-content"><strong>Quote estimated</strong><p class="muted small">Provider reviewed repair fit and platform fee is explicit.</p></div></div><div class="timeline-row"><div class="timeline-time">2</div><div class="timeline-content"><strong>Repair order created</strong><p class="muted small">The quote becomes a fulfilment contract for a real repair outcome.</p></div></div><div class="timeline-row"><div class="timeline-time">3</div><div class="timeline-content"><strong>Payment intent prepared</strong><p class="muted small">Mock checkout is auditable; real Stripe/PayPal adapter can be added later.</p></div></div><div class="timeline-row"><div class="timeline-time">4</div><div class="timeline-content"><strong>Fulfilment requested</strong><p class="muted small">Provider receives an operational workflow to accept, execute and close.</p></div></div><div class="timeline-row"><div class="timeline-time">5</div><div class="timeline-content"><strong>Repair outcome confirmed</strong><p class="muted small">Order closes only when the object returns to function.</p></div></div></div></section>
   `, { currentStep: 'checkout' });
+}
+
+function fulfilment() {
+  const order = activeRepairOrder();
+  const intent = activePaymentIntent();
+  const fulfilment = activeFulfilment();
+  const providerCanOperate = ['provider', 'admin'].includes(S.auth.user?.role || '');
+  const timeline = fulfilment ? fulfilmentTimeline(fulfilment) : '<p class="muted">Create fulfilment after mock payment authorization. The provider then accepts and updates execution status.</p>';
+  return layout('Fulfilment', html`
+    <section class="section-head"><div><p class="eyebrow">Step 15 · Repair Fulfilment Workflow</p><h2>The repair now becomes operational work.</h2></div><p class="muted">Provider acceptance and status updates make fulfilment auditable without turning Re-born into a generic print marketplace.</p></section>
+    <section class="grid two">
+      <div class="panel stack"><h3>Fulfilment state</h3><table class="table"><tr><th>Order</th><td>${safe(order?.id ? String(order.id).slice(0, 8) : 'missing')}</td></tr><tr><th>Payment</th><td>${safe(intent?.status || 'not_authorized')}</td></tr><tr><th>Provider</th><td>${safe(fulfilment?.provider_id || order?.provider_id || 'pending')}</td></tr><tr><th>Status</th><td>${safe(fulfilment?.status || 'not_created')}</td></tr><tr><th>Accepted by</th><td>${safe(fulfilment?.accepted_by || 'pending')}</td></tr></table><div class="actions"><button class="btn green" onclick="createRepairFulfilment()" ${S.busy || !order || !intent || intent.status !== 'mock_authorized' || fulfilment ? 'disabled' : ''}>Create fulfilment</button><button class="btn orange" onclick="acceptProviderFulfilment()" ${S.busy || !fulfilment || !providerCanOperate || fulfilment.status !== 'awaiting_provider_acceptance' ? 'disabled' : ''}>Provider accept</button><button class="btn secondary" onclick="updateFulfilmentStatus('in_progress')" ${S.busy || !fulfilment || !providerCanOperate || fulfilment.status === 'awaiting_provider_acceptance' ? 'disabled' : ''}>Start work</button><button class="btn secondary" onclick="updateFulfilmentStatus('quality_check')" ${S.busy || !fulfilment || !providerCanOperate ? 'disabled' : ''}>Quality check</button><button class="btn green" onclick="updateFulfilmentStatus('completed')" ${S.busy || !fulfilment || !providerCanOperate ? 'disabled' : ''}>Complete</button></div><p class="muted small">Provider controls operational updates; repair user keeps visibility of the timeline.</p></div>
+      <aside class="panel dark-panel stack"><h3>Repair outcome contract</h3>${badges([[fulfilment?.status || 'not_created', fulfilment?.status === 'completed' ? 'green' : 'orange'], ['provider acceptance', 'blue'], ['real object repair', 'green']])}<p class="muted">The order is not “done” because a file was delivered. It is done when the object is functionally repaired and the outcome is captured as learning data.</p></aside>
+    </section>
+    <section class="section panel stack"><h3>Fulfilment timeline</h3>${timeline}</section>
+  `, { currentStep: 'fulfilment' });
 }
 
 function aiGeneration() {
@@ -842,6 +901,7 @@ const routes = {
   '/part-detail': partDetail,
   '/provider-network': providerNetwork,
   '/checkout': checkout,
+  '/fulfilment': fulfilment,
   '/ai-generation': aiGeneration,
   '/login': login,
   '/account': account,
@@ -905,6 +965,8 @@ async function refreshApiData(options = {}) {
       repairOrder: (bootstrap.repair_orders || [])[0] || S.api.repairOrder,
       paymentIntents: bootstrap.payment_intents || [],
       paymentIntent: (bootstrap.payment_intents || [])[0] || S.api.paymentIntent,
+      fulfilments: bootstrap.fulfilments || [],
+      fulfilment: (bootstrap.fulfilments || [])[0] || S.api.fulfilment,
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
@@ -1440,6 +1502,103 @@ async function confirmMockPaymentIntent() {
   }
 }
 
+async function createRepairFulfilment() {
+  if (S.api.status !== 'live') {
+    const fulfilment = mockFulfilment();
+    S.setApi({ fulfilment, fulfilments: [fulfilment] });
+    toast('Mock fulfilment created.');
+    location.hash = '#/fulfilment';
+    render();
+    return;
+  }
+
+  const order = activeRepairOrder();
+  if (!order) {
+    toast('Create a repair order first.');
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.createRepairFulfilment(order.id);
+    const list = await window.REBORN_API.getRepairFulfilments(order.id).catch(() => ({ fulfilments: [payload.fulfilment] }));
+    S.setApi({
+      fulfilment: payload.fulfilment,
+      fulfilments: list.fulfilments || [payload.fulfilment],
+      message: 'Repair fulfilment workflow created and awaiting provider acceptance.',
+      status: 'live',
+      lastError: null,
+      lastSyncAt: new Date().toISOString()
+    });
+    toast('Fulfilment created.');
+    location.hash = '#/fulfilment';
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Fulfilment creation failed: ${error.message}`, lastError: error.message });
+    toast(`Fulfilment failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function acceptProviderFulfilment() {
+  const fulfilment = activeFulfilment();
+  if (!fulfilment) {
+    toast('Create fulfilment first.');
+    return;
+  }
+
+  if (S.api.status !== 'live') {
+    const updated = { ...fulfilment, status: 'accepted', accepted_by: S.auth.user?.id || 'mock-provider', accepted_at: new Date().toISOString(), timeline_json: [...(fulfilment.timeline_json || []), { event: 'provider_accepted', status: 'accepted', actor_id: S.auth.user?.id || 'mock-provider', note: 'Mock provider accepted fulfilment.', occurred_at: new Date().toISOString() }] };
+    S.setApi({ fulfilment: updated, fulfilments: [updated] });
+    toast('Provider accepted fulfilment.');
+    render();
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.acceptProviderFulfilment(fulfilment.id, 'Provider accepts geometry validation, material checks and repair outcome responsibility.');
+    S.setApi({ fulfilment: payload.fulfilment, fulfilments: [payload.fulfilment, ...activeFulfilments().filter(item => item.id !== payload.fulfilment.id)], message: 'Provider accepted the repair fulfilment workflow.', status: 'live', lastError: null, lastSyncAt: new Date().toISOString() });
+    toast('Provider accepted.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Provider acceptance failed: ${error.message}`, lastError: error.message });
+    toast(`Acceptance failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function updateFulfilmentStatus(status) {
+  const fulfilment = activeFulfilment();
+  if (!fulfilment) {
+    toast('Create fulfilment first.');
+    return;
+  }
+
+  if (S.api.status !== 'live') {
+    const updated = { ...fulfilment, status, timeline_json: [...(fulfilment.timeline_json || []), { event: 'status_updated', status, actor_id: S.auth.user?.id || 'mock-provider', note: `Mock status set to ${status}.`, occurred_at: new Date().toISOString() }], updated_at: new Date().toISOString() };
+    S.setApi({ fulfilment: updated, fulfilments: [updated] });
+    toast(`Fulfilment ${status.replaceAll('_', ' ')}.`);
+    render();
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.updateFulfilmentStatus(fulfilment.id, status, `Provider updated fulfilment to ${status}.`);
+    S.setApi({ fulfilment: payload.fulfilment, fulfilments: [payload.fulfilment, ...activeFulfilments().filter(item => item.id !== payload.fulfilment.id)], message: `Fulfilment status updated to ${status}.`, status: 'live', lastError: null, lastSyncAt: new Date().toISOString() });
+    toast(`Fulfilment ${status.replaceAll('_', ' ')}.`);
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Fulfilment update failed: ${error.message}`, lastError: error.message });
+    toast(`Update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 async function bootAuthSession() {
   if (!window.REBORN_API?.getToken()) {
     S.setAuth({ status: 'guest', user: null, tokenStored: false });
@@ -1495,7 +1654,7 @@ async function handleLogout() {
     if (S.auth.status === 'authenticated') await window.REBORN_API.logout();
     else window.REBORN_API.setToken(null);
     S.setAuth({ status: 'guest', user: null, tokenStored: false, lastLoginAt: null });
-    S.setApi({ dashboard: null, roleDashboards: {}, repairCases: [], repairCase: null, repairPaths: [], repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, repairOrders: [], repairOrder: null, paymentIntents: [], paymentIntent: null });
+    S.setApi({ dashboard: null, roleDashboards: {}, repairCases: [], repairCase: null, repairPaths: [], repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, repairOrders: [], repairOrder: null, paymentIntents: [], paymentIntent: null, fulfilments: [], fulfilment: null });
     toast('Logged out.');
     location.hash = '#/login';
   } catch (error) {

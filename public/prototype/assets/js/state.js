@@ -33,6 +33,8 @@ window.REBORN_STATE = {
     repairOrder: null,
     paymentIntents: [],
     paymentIntent: null,
+    fulfilments: [],
+    fulfilment: null,
     providers: [],
     knowledgeNodes: [],
     lastSyncAt: null,

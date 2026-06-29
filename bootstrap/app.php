@@ -10,6 +10,13 @@ use Reborn\AI\Infrastructure\SqliteRecognitionJobRepository;
 use Reborn\AI\Presentation\RecognitionJobController;
 use Reborn\Dashboard\Application\UserDashboardService;
 use Reborn\Dashboard\Presentation\DashboardController;
+use Reborn\Fulfilment\Application\AcceptProviderFulfilmentService;
+use Reborn\Fulfilment\Application\CreateRepairFulfilmentService;
+use Reborn\Fulfilment\Application\GetRepairFulfilmentService;
+use Reborn\Fulfilment\Application\ListRepairFulfilmentsService;
+use Reborn\Fulfilment\Application\UpdateFulfilmentStatusService;
+use Reborn\Fulfilment\Infrastructure\SqliteRepairFulfilmentRepository;
+use Reborn\Fulfilment\Presentation\RepairFulfilmentController;
 use Reborn\Identity\Application\AuthContext;
 use Reborn\Identity\Application\LoginUserService;
 use Reborn\Identity\Application\PasswordHasher;
@@ -103,6 +110,7 @@ $providerMatchRepository = new SqliteProviderMatchRepository($pdo);
 $providerQuoteRequestRepository = new SqliteProviderQuoteRequestRepository($pdo);
 $repairOrderRepository = new SqliteRepairOrderRepository($pdo);
 $paymentIntentRepository = new SqlitePaymentIntentRepository($pdo);
+$repairFulfilmentRepository = new SqliteRepairFulfilmentRepository($pdo);
 $knowledgeEngine = new KnowledgeEngine($pdo);
 $recognitionEngine = new RecognitionEngine($knowledgeEngine);
 $decisionService = new RepairPathDecisionService($pdo);
@@ -194,8 +202,21 @@ $repairOrderController = new RepairOrderController(
     new RepairCaseAccessPolicy()
 );
 
+
+$repairFulfilmentController = new RepairFulfilmentController(
+    new CreateRepairFulfilmentService($repairOrderRepository, $paymentIntentRepository, $repairFulfilmentRepository, $eventBus),
+    new ListRepairFulfilmentsService($repairFulfilmentRepository),
+    new GetRepairFulfilmentService($repairFulfilmentRepository),
+    new AcceptProviderFulfilmentService($repairFulfilmentRepository, $eventBus),
+    new UpdateFulfilmentStatusService($repairFulfilmentRepository, $eventBus),
+    new GetRepairOrderService($repairOrderRepository),
+    new GetRepairCaseService($repairRepository),
+    $authContext,
+    new RepairCaseAccessPolicy()
+);
+
 $router = new Router();
-(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $authContext, $pdo);
+(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $repairFulfilmentController, $authContext, $pdo);
 
 return [
     'router' => $router,

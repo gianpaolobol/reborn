@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Reborn\AI\Presentation\RecognitionJobController;
 use Reborn\Dashboard\Presentation\DashboardController;
+use Reborn\Fulfilment\Presentation\RepairFulfilmentController;
 use Reborn\Identity\Application\AuthContext;
 use Reborn\Identity\Domain\User;
 use Reborn\Identity\Presentation\AuthController;
@@ -15,7 +16,7 @@ use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
 use Reborn\Shared\Http\Router;
 
-return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, ProviderMatchController $providerMatchController, RepairOrderController $repairOrderController, AuthContext $auth, PDO $pdo): void {
+return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, ProviderMatchController $providerMatchController, RepairOrderController $repairOrderController, RepairFulfilmentController $repairFulfilmentController, AuthContext $auth, PDO $pdo): void {
     $router->get('/api/health', static function (Request $request): JsonResponse {
         return JsonResponse::ok([
             'status' => 'ok',
@@ -40,6 +41,8 @@ return static function (Router $router, RepairController $repairController, Auth
                 'provider_quote_engine',
                 'repair_order_engine',
                 'mock_payment_intents',
+                'repair_fulfilment_workflow',
+                'provider_acceptance',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -82,6 +85,12 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/repair-orders/{id}/payment-intents', [$repairOrderController, 'paymentIntents']);
     $router->get('/api/v1/payment-intents/{id}', [$repairOrderController, 'showPaymentIntent']);
     $router->post('/api/v1/payment-intents/{id}/confirm-mock', [$repairOrderController, 'confirmMockPaymentIntent']);
+
+    $router->post('/api/v1/repair-orders/{id}/fulfilments', [$repairFulfilmentController, 'storeForOrder']);
+    $router->get('/api/v1/repair-orders/{id}/fulfilments', [$repairFulfilmentController, 'indexForOrder']);
+    $router->get('/api/v1/fulfilments/{id}', [$repairFulfilmentController, 'show']);
+    $router->post('/api/v1/fulfilments/{id}/accept-provider', [$repairFulfilmentController, 'acceptProvider']);
+    $router->post('/api/v1/fulfilments/{id}/status', [$repairFulfilmentController, 'updateStatus']);
 
     $router->get('/api/v1/providers', static function (Request $request) use ($pdo): JsonResponse {
         $stmt = $pdo->query('SELECT id, name, city, country, capabilities, rating, average_lead_time_days FROM providers ORDER BY rating DESC, name ASC');
