@@ -3,6 +3,14 @@
 declare(strict_types=1);
 
 use Reborn\AI\Application\RecognitionEngine;
+use Reborn\Identity\Application\AuthContext;
+use Reborn\Identity\Application\LoginUserService;
+use Reborn\Identity\Application\PasswordHasher;
+use Reborn\Identity\Application\RegisterUserService;
+use Reborn\Identity\Application\TokenFactory;
+use Reborn\Identity\Infrastructure\SqliteAuthSessionRepository;
+use Reborn\Identity\Infrastructure\SqliteUserRepository;
+use Reborn\Identity\Presentation\AuthController;
 use Reborn\Knowledge\Application\KnowledgeEngine;
 use Reborn\Marketplace\Application\RepairPathDecisionService;
 use Reborn\Provider\Application\ProviderMatchingService;
@@ -28,11 +36,23 @@ Env::load(dirname(__DIR__) . '/.env');
 $config = [
     'app' => require dirname(__DIR__) . '/config/app.php',
     'database' => require dirname(__DIR__) . '/config/database.php',
+    'auth' => require dirname(__DIR__) . '/config/auth.php',
 ];
 
 $connection = new Connection($config['database']);
 $pdo = $connection->pdo();
 $eventBus = new EventBus($pdo);
+
+$userRepository = new SqliteUserRepository($pdo);
+$sessionRepository = new SqliteAuthSessionRepository($pdo);
+$tokenFactory = new TokenFactory();
+$passwordHasher = new PasswordHasher();
+$authContext = new AuthContext($userRepository, $sessionRepository, $tokenFactory);
+$authController = new AuthController(
+    new RegisterUserService($userRepository, $sessionRepository, $passwordHasher, $tokenFactory, $eventBus, $config['auth']),
+    new LoginUserService($userRepository, $sessionRepository, $passwordHasher, $tokenFactory, $eventBus, $config['auth']),
+    $authContext
+);
 
 $repairRepository = new SqliteRepairCaseRepository($pdo);
 $attachmentRepository = new SqliteRepairAttachmentRepository($pdo);
@@ -58,7 +78,7 @@ $repairController = new RepairController(
 );
 
 $router = new Router();
-(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $pdo);
+(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $authContext, $pdo);
 
 return [
     'router' => $router,

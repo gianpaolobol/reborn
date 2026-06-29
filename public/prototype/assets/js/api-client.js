@@ -23,6 +23,7 @@
   class RebornApiClient {
     constructor() {
       this.baseUrl = isHttpRuntime() ? window.location.origin : null;
+      this.tokenKey = 'reborn_access_token';
     }
 
     canUseApi() {
@@ -40,6 +41,7 @@
           method: options.method || 'GET',
           headers: {
             'Accept': 'application/json',
+            ...(this.getToken() ? { 'Authorization': `Bearer ${this.getToken()}` } : {}),
             ...(options.body ? { 'Content-Type': 'application/json' } : {}),
             ...(options.headers || {})
           },
@@ -60,6 +62,41 @@
         return payload;
       } finally {
         timeout.done();
+      }
+    }
+
+
+    getToken() {
+      try { return window.localStorage.getItem(this.tokenKey); } catch (_error) { return null; }
+    }
+
+    setToken(token) {
+      try {
+        if (token) window.localStorage.setItem(this.tokenKey, token);
+        else window.localStorage.removeItem(this.tokenKey);
+      } catch (_error) {}
+    }
+
+    async login(email, password) {
+      const payload = await this.request('/api/v1/auth/login', {
+        method: 'POST',
+        body: { email, password }
+      });
+      if (payload.token && payload.token.access_token) {
+        this.setToken(payload.token.access_token);
+      }
+      return payload;
+    }
+
+    async me() {
+      return this.request('/api/v1/auth/me');
+    }
+
+    async logout() {
+      try {
+        return await this.request('/api/v1/auth/logout', { method: 'POST' });
+      } finally {
+        this.setToken(null);
       }
     }
 

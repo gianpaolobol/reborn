@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+use Reborn\Identity\Application\AuthContext;
+use Reborn\Identity\Domain\User;
+use Reborn\Identity\Presentation\AuthController;
 use Reborn\Repair\Presentation\RepairController;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
 use Reborn\Shared\Http\Router;
 
-return static function (Router $router, RepairController $repairController, PDO $pdo): void {
+return static function (Router $router, RepairController $repairController, AuthController $authController, AuthContext $auth, PDO $pdo): void {
     $router->get('/api/health', static function (Request $request): JsonResponse {
         return JsonResponse::ok([
             'status' => 'ok',
@@ -21,10 +24,17 @@ return static function (Router $router, RepairController $repairController, PDO 
                 'provider_matching',
                 'knowledge_nodes',
                 'repair_attachments',
+                'identity_access_mvp',
+                'role_based_authorization',
                 'domain_events',
             ],
         ], $request->requestId());
     });
+
+    $router->post('/api/v1/auth/register', [$authController, 'register']);
+    $router->post('/api/v1/auth/login', [$authController, 'login']);
+    $router->get('/api/v1/auth/me', [$authController, 'me']);
+    $router->post('/api/v1/auth/logout', [$authController, 'logout']);
 
     $router->get('/api/v1/repair-cases', [$repairController, 'index']);
     $router->post('/api/v1/repair-cases', [$repairController, 'store']);
@@ -69,7 +79,8 @@ return static function (Router $router, RepairController $repairController, PDO 
         }, $stmt->fetchAll(PDO::FETCH_ASSOC))], $request->requestId());
     });
 
-    $router->get('/api/v1/domain-events', static function (Request $request) use ($pdo): JsonResponse {
+    $router->get('/api/v1/domain-events', static function (Request $request) use ($pdo, $auth): JsonResponse {
+        $auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(100, (int) $request->query('limit', 50)));
         $stmt = $pdo->prepare('SELECT id, name, payload, occurred_at FROM domain_events ORDER BY occurred_at DESC LIMIT :limit');
         $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
@@ -79,5 +90,11 @@ return static function (Router $router, RepairController $repairController, PDO 
             $row['payload'] = json_decode($row['payload'] ?: '{}', true);
             return $row;
         }, $stmt->fetchAll(PDO::FETCH_ASSOC))], $request->requestId());
+    });
+
+    $router->get('/api/v1/admin/users', static function (Request $request) use ($pdo, $auth): JsonResponse {
+        $auth->requireRole($request, [User::ROLE_ADMIN]);
+        $stmt = $pdo->query('SELECT id, email, name, role, status, email_verified_at, created_at, updated_at, last_login_at FROM users ORDER BY created_at DESC');
+        return JsonResponse::ok(['users' => $stmt->fetchAll(PDO::FETCH_ASSOC)], $request->requestId());
     });
 };

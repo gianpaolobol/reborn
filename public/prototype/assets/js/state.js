@@ -4,6 +4,11 @@ window.REBORN_STATE = {
   uploaded: false,
   role: 'customer',
   busy: false,
+  auth: {
+    status: 'guest',
+    user: null,
+    tokenStored: false
+  },
   api: {
     status: 'checking',
     mode: 'unknown',
@@ -20,6 +25,10 @@ window.REBORN_STATE = {
   set(key, value) {
     this[key] = value;
     window.dispatchEvent(new CustomEvent('reborn:state', { detail: { key, value } }));
+  },
+  setAuth(patch) {
+    this.auth = { ...this.auth, ...patch };
+    window.dispatchEvent(new CustomEvent('reborn:state', { detail: { key: 'auth', value: this.auth } }));
   },
   setApi(patch) {
     this.api = { ...this.api, ...patch };

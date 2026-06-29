@@ -248,3 +248,32 @@ php scripts/setup-dev.php
 php scripts/run-feature-tests.php
 php -S 127.0.0.1:8080 -t public public/index.php
 ```
+
+
+## Step 8 — Identity & Access MVP
+
+The MVP backend now includes the first authentication and authorization layer:
+
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
+- `POST /api/v1/auth/logout`
+- bearer token sessions stored hashed in SQLite
+- role model: `repair_user`, `maker`, `provider`, `enterprise`, `admin`
+- admin-only route examples: `/api/v1/admin/users`, `/api/v1/domain-events`
+
+Demo accounts after `php scripts/setup-dev.php`:
+
+| Role | Email | Password |
+|---|---|---|
+| repair_user | repair.user@reborn.local | password |
+| maker | maker@reborn.local | password |
+| provider | provider@reborn.local | password |
+| enterprise | enterprise@reborn.local | password |
+| admin | admin@reborn.local | password |
+
+Run the identity smoke test with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-identity-access.ps1
+```

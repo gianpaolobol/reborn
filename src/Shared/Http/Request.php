@@ -11,6 +11,7 @@ final class Request
      * @param array<string, mixed> $body
      * @param array<string, string|null> $routeParams
      * @param array<string, mixed> $files
+     * @param array<string, string> $headers
      */
     public function __construct(
         private readonly string $method,
@@ -21,6 +22,7 @@ final class Request
         private readonly array $files = [],
         private readonly ?string $jsonError = null,
         private readonly string $requestId = '',
+        private readonly array $headers = [],
     ) {
     }
 
@@ -48,7 +50,8 @@ final class Request
             }
         }
 
-        $requestId = (string) ($_SERVER['HTTP_X_REQUEST_ID'] ?? '');
+        $headers = self::normalizeHeaders($_SERVER);
+        $requestId = $headers['x-request-id'] ?? '';
         if ($requestId === '') {
             $requestId = bin2hex(random_bytes(8));
         }
@@ -61,7 +64,8 @@ final class Request
             $routeParams,
             self::normalizeFiles($_FILES),
             $jsonError,
-            $requestId
+            $requestId,
+            $headers
         );
     }
 
@@ -78,6 +82,31 @@ final class Request
         }
 
         return $normalized;
+    }
+
+    /** @param array<string, mixed> $server @return array<string, string> */
+    private static function normalizeHeaders(array $server): array
+    {
+        $headers = [];
+
+        foreach ($server as $key => $value) {
+            if (!is_string($value)) {
+                continue;
+            }
+
+            if (str_starts_with($key, 'HTTP_')) {
+                $name = strtolower(str_replace('_', '-', substr($key, 5)));
+                $headers[$name] = $value;
+                continue;
+            }
+
+            if (in_array($key, ['CONTENT_TYPE', 'CONTENT_LENGTH'], true)) {
+                $name = strtolower(str_replace('_', '-', $key));
+                $headers[$name] = $value;
+            }
+        }
+
+        return $headers;
     }
 
     public function method(): string
@@ -132,5 +161,41 @@ final class Request
     {
         $file = $this->files[$key] ?? null;
         return is_array($file) ? $file : null;
+    }
+
+    public function header(string $name, ?string $default = null): ?string
+    {
+        return $this->headers[strtolower($name)] ?? $default;
+    }
+
+    /** @return array<string, string> */
+    public function headers(): array
+    {
+        return $this->headers;
+    }
+
+    public function bearerToken(): ?string
+    {
+        $authorization = trim((string) $this->header('authorization', ''));
+        if ($authorization === '') {
+            return null;
+        }
+
+        if (!preg_match('/^Bearer\s+(.+)$/i', $authorization, $matches)) {
+            return null;
+        }
+
+        $token = trim($matches[1]);
+        return $token === '' ? null : $token;
+    }
+
+    public function ipAddress(): ?string
+    {
+        return $_SERVER['REMOTE_ADDR'] ?? null;
+    }
+
+    public function userAgent(): ?string
+    {
+        return $this->header('user-agent');
     }
 }

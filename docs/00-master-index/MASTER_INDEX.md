@@ -125,3 +125,7 @@ This index is the map of the Re-born repository as a product operating system.
 - `docs/14-roadmap/SPRINT_PLAN.md`
 - `docs/14-roadmap/RELEASE_CRITERIA.md`
 - `docs/18-delivery/MVP_DELIVERY_README.md`
+
+- [Step 8 — Identity & Access MVP](../18-delivery/STEP8_IDENTITY_ACCESS_MVP.md)
+- [Identity API Contract](../09-api/IDENTITY_API_CONTRACT.md)
+- [Identity Access Security](../10-security/IDENTITY_ACCESS_SECURITY.md)
