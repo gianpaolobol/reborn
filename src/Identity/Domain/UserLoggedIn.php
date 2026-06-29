@@ -8,8 +8,11 @@ use Reborn\Shared\Domain\DomainEvent;
 
 final class UserLoggedIn implements DomainEvent
 {
-    public function __construct(private readonly User $user, private readonly string $sessionId)
-    {
+    public function __construct(
+        private readonly User $user,
+        private readonly string $sessionId,
+        private readonly ?string $occurredAt = null,
+    ) {
     }
 
     public function name(): string
@@ -25,5 +28,10 @@ final class UserLoggedIn implements DomainEvent
             'role' => $this->user->role,
             'session_id' => $this->sessionId,
         ];
+    }
+
+    public function occurredAt(): string
+    {
+        return $this->occurredAt ?? gmdate('c');
     }
 }
