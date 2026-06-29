@@ -135,3 +135,20 @@ git remote add origin https://github.com/gianpaolobol/reborn.git
 git branch -M main
 git push -u origin main
 ```
+
+---
+
+## Step 3 — MVP Delivery Pack
+
+This repository now includes the first execution layer of the Re-born OS:
+
+- locked MVP boundaries;
+- epics and ticket-ready user stories;
+- priority backlog;
+- textual wireframes for the repair journey;
+- API route map and endpoint contract;
+- database implementation plan;
+- sprint plan and release criteria;
+- GitHub issue templates and a script to create issues with GitHub CLI.
+
+The next product phase is **designing the clickable prototype** from the MVP wireframes before writing production backend code.

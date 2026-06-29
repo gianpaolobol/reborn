@@ -1,0 +1,21 @@
+id,title,priority,epic,domain
+RBN-001,Create account,P0,EPIC-01,identity
+RBN-002,Login,P0,EPIC-01,identity
+RBN-003,Start repair case,P0,EPIC-02,repair
+RBN-004,Upload repair photos,P0,EPIC-02,repair
+RBN-005,Guided issue description,P0,EPIC-02,repair
+RBN-006,Submit case for classification,P0,EPIC-03,repair
+RBN-007,Manual classification console,P0,EPIC-03,admin
+RBN-008,Repair diagnosis summary,P0,EPIC-04,repair
+RBN-009,Repair path comparison,P0,EPIC-04,repair
+RBN-010,Provider profile,P1,EPIC-06,provider
+RBN-011,Provider quote request,P0,EPIC-06,provider
+RBN-012,Provider quote response,P0,EPIC-06,provider
+RBN-013,Maker profile,P1,EPIC-05,maker
+RBN-014,Model metadata contribution,P1,EPIC-05,maker
+RBN-015,Maker bounty request,P1,EPIC-04,marketplace
+RBN-016,Admin model approval,P1,EPIC-07,admin
+RBN-017,Outcome confirmation,P0,EPIC-08,knowledge
+RBN-018,Knowledge Graph signal writer,P0,EPIC-08,knowledge
+RBN-019,Restricted/risky item flag,P0,EPIC-09,safety
+RBN-020,MVP metrics dashboard,P1,EPIC-10,metrics

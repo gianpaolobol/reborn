@@ -105,3 +105,23 @@ This index is the map of the Re-born repository as a product operating system.
 
 - `MASTER_HANDOFF.md`
 - `NEXT_AGENT_HANDOFF.md`
+
+
+---
+
+## Step 3 MVP Delivery Pack
+
+- `docs/03-prd/MVP_LOCK_v0.1.md`
+- `docs/03-prd/EPICS.md`
+- `docs/03-prd/MVP_TICKETS.md`
+- `docs/03-prd/TRACEABILITY_MATRIX.md`
+- `docs/04-ux-bible/MVP_INFORMATION_ARCHITECTURE.md`
+- `docs/04-ux-bible/MVP_USER_FLOWS.md`
+- `docs/06-wireframes/MVP_WIREFRAMES.md`
+- `docs/07-architecture/IMPLEMENTATION_PLAN.md`
+- `docs/07-architecture/ROUTE_MAP.md`
+- `docs/08-database/MVP_SQLITE_SCHEMA.sql`
+- `docs/09-api/MVP_API_ENDPOINTS.md`
+- `docs/14-roadmap/SPRINT_PLAN.md`
+- `docs/14-roadmap/RELEASE_CRITERIA.md`
+- `docs/18-delivery/MVP_DELIVERY_README.md`

@@ -363,3 +363,25 @@ L’ordine corretto è:
 10. integrazioni AI, wallet e provider.
 
 Non iniziare dal codice prima che Product Book, PRD e UX Bible siano abbastanza chiari.
+
+
+---
+
+## Execution Doctrine
+
+Re-born must not become a repository-first product. The first MVP must prove that a repair problem can become structured intelligence.
+
+The development order is:
+
+1. capture the repair case;
+2. structure the Repair DNA;
+3. route the case to a useful path;
+4. collect outcome feedback;
+5. update the Knowledge Graph;
+6. only then optimize marketplace liquidity, credits and automation.
+
+Every feature must be judged against this question:
+
+> Does this help a broken object become repaired, or does it strengthen the intelligence needed to repair the next object?
+
+If the answer is no, it is not MVP-critical.
