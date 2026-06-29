@@ -8,6 +8,7 @@ final class RepairCase
 {
     public function __construct(
         public readonly string $id,
+        public readonly ?string $ownerId,
         public readonly string $title,
         public readonly string $description,
         public readonly string $category,
@@ -25,6 +26,7 @@ final class RepairCase
     {
         return new self(
             (string) $row['id'],
+            isset($row['owner_id']) && $row['owner_id'] !== null ? (string) $row['owner_id'] : null,
             (string) $row['title'],
             (string) $row['description'],
             (string) $row['category'],
@@ -42,6 +44,7 @@ final class RepairCase
     {
         return [
             'id' => $this->id,
+            'owner_id' => $this->ownerId,
             'title' => $this->title,
             'description' => $this->description,
             'category' => $this->category,

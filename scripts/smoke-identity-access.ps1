@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 
 $BaseUrl = if ($env:REBORN_BASE_URL) { $env:REBORN_BASE_URL } else { "http://127.0.0.1:8080" }
 
@@ -65,42 +65,19 @@ $users = Invoke-RestMethod `
   -Uri "$BaseUrl/api/v1/admin/users" `
   -Headers $headers
 
-Write-Host "Admin users raw response:" -ForegroundColor Yellow
-$users | ConvertTo-Json -Depth 10
-
-$usersCount = 0
-if ($users.users) {
-  $usersCount = $users.users.Count
-} elseif ($users.data.users) {
-  $usersCount = $users.data.users.Count
-}
-
-Write-Host "Admin users endpoint: $usersCount users" -ForegroundColor Green
+Write-Host "Admin users endpoint: $($users.users.Count) users" -ForegroundColor Green
 
 $events = Invoke-RestMethod `
   -Method GET `
   -Uri "$BaseUrl/api/v1/domain-events?limit=5" `
   -Headers $headers
 
-Write-Host "Domain events raw response:" -ForegroundColor Yellow
-$events | ConvertTo-Json -Depth 10
-
-$eventsCount = 0
-if ($events.domain_events) {
-  $eventsCount = $events.domain_events.Count
-} elseif ($events.data.domain_events) {
-  $eventsCount = $events.data.domain_events.Count
-}
-
-Write-Host "Admin domain events endpoint: $eventsCount events" -ForegroundColor Green
+Write-Host "Admin domain events endpoint: $($events.domain_events.Count) events" -ForegroundColor Green
 
 $logout = Invoke-RestMethod `
   -Method POST `
   -Uri "$BaseUrl/api/v1/auth/logout" `
   -Headers $headers
-
-Write-Host "Logout raw response:" -ForegroundColor Yellow
-$logout | ConvertTo-Json -Depth 10
 
 Write-Host "Logout: ok" -ForegroundColor Green
 

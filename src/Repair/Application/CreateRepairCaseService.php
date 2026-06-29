@@ -14,10 +14,10 @@ final class CreateRepairCaseService
     {
     }
 
-    public function handle(array $data): array
+    public function handle(array $data, string $ownerId): array
     {
-        $case = $this->repository->create($data);
-        $this->eventBus->publish(new RepairCaseCreated($case->id, $case->category, gmdate('c')));
+        $case = $this->repository->create($data + ['owner_id' => $ownerId]);
+        $this->eventBus->publish(new RepairCaseCreated($case->id, $case->category, $ownerId, gmdate('c')));
 
         return $case->toArray();
     }

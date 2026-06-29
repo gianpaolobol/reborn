@@ -15,8 +15,16 @@ final class SqliteRepairCaseRepository implements RepairCaseRepository
     {
     }
 
-    public function list(int $limit = 50): array
+    public function list(int $limit = 50, ?string $ownerId = null): array
     {
+        if ($ownerId !== null) {
+            $stmt = $this->pdo->prepare('SELECT * FROM repair_cases WHERE owner_id = :owner_id ORDER BY created_at DESC LIMIT :limit');
+            $stmt->bindValue('owner_id', $ownerId);
+            $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            return array_map(static fn(array $row): RepairCase => RepairCase::fromRow($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+        }
+
         $stmt = $this->pdo->prepare('SELECT * FROM repair_cases ORDER BY created_at DESC LIMIT :limit');
         $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
@@ -30,7 +38,7 @@ final class SqliteRepairCaseRepository implements RepairCaseRepository
         $stmt->execute(['id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $row ? RepairCase::fromRow($row) : null;
+        return is_array($row) ? RepairCase::fromRow($row) : null;
     }
 
     public function create(array $data): RepairCase
@@ -38,9 +46,10 @@ final class SqliteRepairCaseRepository implements RepairCaseRepository
         $id = Uuid::v4();
         $now = gmdate('c');
 
-        $stmt = $this->pdo->prepare('INSERT INTO repair_cases (id, title, description, category, status, recognized_product, recognized_component, confidence_score, created_at, updated_at) VALUES (:id, :title, :description, :category, :status, NULL, NULL, 0, :created_at, :updated_at)');
+        $stmt = $this->pdo->prepare('INSERT INTO repair_cases (id, owner_id, title, description, category, status, recognized_product, recognized_component, confidence_score, created_at, updated_at) VALUES (:id, :owner_id, :title, :description, :category, :status, NULL, NULL, 0, :created_at, :updated_at)');
         $stmt->execute([
             'id' => $id,
+            'owner_id' => $data['owner_id'] ?? null,
             'title' => $data['title'],
             'description' => $data['description'],
             'category' => $data['category'],
@@ -49,7 +58,12 @@ final class SqliteRepairCaseRepository implements RepairCaseRepository
             'updated_at' => $now,
         ]);
 
-        return $this->find($id);
+        $case = $this->find($id);
+        if ($case === null) {
+            throw new \RuntimeException('Repair case creation failed.');
+        }
+
+        return $case;
     }
 
     public function updateDiagnosis(string $id, array $diagnosis): RepairCase
@@ -64,6 +78,11 @@ final class SqliteRepairCaseRepository implements RepairCaseRepository
             'updated_at' => gmdate('c'),
         ]);
 
-        return $this->find($id);
+        $case = $this->find($id);
+        if ($case === null) {
+            throw new \RuntimeException('Repair case diagnosis update failed.');
+        }
+
+        return $case;
     }
 }

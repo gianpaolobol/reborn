@@ -147,6 +147,15 @@
       return this.request('/api/v1/knowledge/nodes');
     }
 
+    async dashboard() {
+      return this.request('/api/v1/dashboard');
+    }
+
+    async roleDashboard(role) {
+      return this.request(`/api/v1/dashboards/${encodeURIComponent(role)}`);
+    }
+
+
     async bootstrap() {
       if (!this.canUseApi()) {
         return {

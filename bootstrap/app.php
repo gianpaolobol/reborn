@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Reborn\AI\Application\RecognitionEngine;
+use Reborn\Dashboard\Application\UserDashboardService;
+use Reborn\Dashboard\Presentation\DashboardController;
 use Reborn\Identity\Application\AuthContext;
 use Reborn\Identity\Application\LoginUserService;
 use Reborn\Identity\Application\PasswordHasher;
@@ -20,6 +22,7 @@ use Reborn\Repair\Application\DiagnoseRepairCaseService;
 use Reborn\Repair\Application\GetRepairCaseService;
 use Reborn\Repair\Application\ListRepairAttachmentsService;
 use Reborn\Repair\Application\ListRepairCasesService;
+use Reborn\Repair\Application\RepairCaseAccessPolicy;
 use Reborn\Repair\Infrastructure\SqliteRepairAttachmentRepository;
 use Reborn\Repair\Infrastructure\SqliteRepairCaseRepository;
 use Reborn\Repair\Presentation\RepairController;
@@ -54,6 +57,11 @@ $authController = new AuthController(
     $authContext
 );
 
+$dashboardController = new DashboardController(
+    $authContext,
+    new UserDashboardService($pdo)
+);
+
 $repairRepository = new SqliteRepairCaseRepository($pdo);
 $attachmentRepository = new SqliteRepairAttachmentRepository($pdo);
 $knowledgeEngine = new KnowledgeEngine($pdo);
@@ -74,11 +82,13 @@ $repairController = new RepairController(
         $eventBus
     ),
     new AddRepairAttachmentService($repairRepository, $attachmentRepository, $fileStorage, $eventBus),
-    new ListRepairAttachmentsService($repairRepository, $attachmentRepository)
+    new ListRepairAttachmentsService($repairRepository, $attachmentRepository),
+    $authContext,
+    new RepairCaseAccessPolicy()
 );
 
 $router = new Router();
-(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $authContext, $pdo);
+(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $authContext, $pdo);
 
 return [
     'router' => $router,

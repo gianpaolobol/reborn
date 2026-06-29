@@ -8,8 +8,12 @@ use Reborn\Shared\Domain\DomainEvent;
 
 final class RepairCaseCreated implements DomainEvent
 {
-    public function __construct(private readonly string $repairCaseId, private readonly string $category, private readonly string $occurredAt)
-    {
+    public function __construct(
+        private readonly string $repairCaseId,
+        private readonly string $category,
+        private readonly ?string $ownerId,
+        private readonly string $occurredAt,
+    ) {
     }
 
     public function name(): string
@@ -21,6 +25,7 @@ final class RepairCaseCreated implements DomainEvent
     {
         return [
             'repair_case_id' => $this->repairCaseId,
+            'owner_id' => $this->ownerId,
             'category' => $this->category,
         ];
     }

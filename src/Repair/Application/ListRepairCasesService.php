@@ -12,8 +12,8 @@ final class ListRepairCasesService
     {
     }
 
-    public function handle(int $limit = 50): array
+    public function handle(int $limit = 50, ?string $ownerId = null): array
     {
-        return array_map(static fn($case) => $case->toArray(), $this->repository->list($limit));
+        return array_map(static fn($case) => $case->toArray(), $this->repository->list($limit, $ownerId));
     }
 }

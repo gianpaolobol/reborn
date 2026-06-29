@@ -277,3 +277,8 @@ Run the identity smoke test with:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\smoke-identity-access.ps1
 ```
+
+
+## Step 9 — Repair Case Ownership & User Dashboards
+
+The backend now supports authenticated repair case ownership and role dashboards. Run `scripts/smoke-ownership-dashboards.ps1` after starting the PHP dev server to validate repair user ownership, admin dashboard preview and provider restrictions.

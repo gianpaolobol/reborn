@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Reborn\Dashboard\Presentation\DashboardController;
 use Reborn\Identity\Application\AuthContext;
 use Reborn\Identity\Domain\User;
 use Reborn\Identity\Presentation\AuthController;
@@ -10,7 +11,7 @@ use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
 use Reborn\Shared\Http\Router;
 
-return static function (Router $router, RepairController $repairController, AuthController $authController, AuthContext $auth, PDO $pdo): void {
+return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, AuthContext $auth, PDO $pdo): void {
     $router->get('/api/health', static function (Request $request): JsonResponse {
         return JsonResponse::ok([
             'status' => 'ok',
@@ -25,6 +26,8 @@ return static function (Router $router, RepairController $repairController, Auth
                 'knowledge_nodes',
                 'repair_attachments',
                 'identity_access_mvp',
+                'repair_case_ownership',
+                'role_dashboards',
                 'role_based_authorization',
                 'domain_events',
             ],
@@ -35,6 +38,13 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->post('/api/v1/auth/login', [$authController, 'login']);
     $router->get('/api/v1/auth/me', [$authController, 'me']);
     $router->post('/api/v1/auth/logout', [$authController, 'logout']);
+
+    $router->get('/api/v1/dashboard', [$dashboardController, 'me']);
+    $router->get('/api/v1/dashboards/repair-user', [$dashboardController, 'repairUser']);
+    $router->get('/api/v1/dashboards/maker', [$dashboardController, 'maker']);
+    $router->get('/api/v1/dashboards/provider', [$dashboardController, 'provider']);
+    $router->get('/api/v1/dashboards/enterprise', [$dashboardController, 'enterprise']);
+    $router->get('/api/v1/dashboards/admin', [$dashboardController, 'admin']);
 
     $router->get('/api/v1/repair-cases', [$repairController, 'index']);
     $router->post('/api/v1/repair-cases', [$repairController, 'store']);
