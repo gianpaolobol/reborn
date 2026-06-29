@@ -22,6 +22,7 @@ use Reborn\Platform\Application\GeometryPrintabilityService;
 use Reborn\Platform\Application\ProviderRoutingGovernanceService;
 use Reborn\Platform\Application\FulfilmentDispatchGovernanceService;
 use Reborn\Platform\Application\CustomerCareGovernanceService;
+use Reborn\Platform\Application\SustainabilityImpactService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -46,6 +47,7 @@ final class PlatformController
         private readonly ProviderRoutingGovernanceService $routing,
         private readonly FulfilmentDispatchGovernanceService $dispatch,
         private readonly CustomerCareGovernanceService $customerCare,
+        private readonly SustainabilityImpactService $sustainability,
         private readonly AuthContext $auth,
     ) {
     }
@@ -1388,6 +1390,88 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['post_repair_audit_log' => $this->customerCare->auditLog($limit)], $request->requestId());
+    }
+
+
+    public function sustainabilityImpact(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['sustainability_impact' => $this->sustainability->dashboard()], $request->requestId());
+    }
+
+    public function sustainabilityFactors(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        return JsonResponse::ok(['sustainability_factors' => $this->sustainability->sustainabilityFactors($status)], $request->requestId());
+    }
+
+    public function repairImpactRecords(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['repair_impact_records' => $this->sustainability->impactRecords($status, $limit)], $request->requestId());
+    }
+
+    public function createRepairImpactRecord(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['repair_impact_record' => $this->sustainability->createImpactRecord($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function calculateRepairImpactRecord(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['repair_impact_record' => $this->sustainability->calculateImpactRecord((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function circularitySnapshots(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['circularity_snapshots' => $this->sustainability->circularitySnapshots($limit)], $request->requestId());
+    }
+
+    public function createCircularitySnapshot(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['circularity_snapshot' => $this->sustainability->createCircularitySnapshot($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function repairOutcomeInsights(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['repair_outcome_insights' => $this->sustainability->outcomeInsights($status, $limit)], $request->requestId());
+    }
+
+    public function evaluateRepairOutcomeInsights(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['repair_outcome_insight_evaluation' => $this->sustainability->evaluateOutcomeInsights($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function impactReviewItems(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['impact_review_items' => $this->sustainability->impactReviewItems($status, $limit)], $request->requestId());
+    }
+
+    public function reviewImpactItem(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['impact_review_item' => $this->sustainability->reviewImpactItem((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function sustainabilityAuditLog(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['sustainability_audit_log' => $this->sustainability->auditLog($limit)], $request->requestId());
     }
 
 }

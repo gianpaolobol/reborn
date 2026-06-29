@@ -110,7 +110,8 @@ function stepper(active) {
     ['geometry-printability', '23', 'Geometry'],
     ['provider-routing', '24', 'Routing'],
     ['dispatch-governance', '25', 'Dispatch'],
-    ['customer-care', '26', 'Care']
+    ['customer-care', '26', 'Care'],
+    ['sustainability-impact', '27', 'Impact']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -3147,6 +3148,115 @@ async function resolvePostRepairReview(id) {
   }
 }
 
+
+function sustainabilityImpactDashboard() {
+  setActiveNav('sustainability-impact');
+  if (!S.auth.user) {
+    return layout('Sustainability Impact', authRequiredPanel('the Step 36 sustainability impact console'), { currentStep: 'sustainability-impact' });
+  }
+
+  const dashboard = S.api.sustainabilityImpact || {};
+  const summary = dashboard.summary || {};
+  const factors = S.api.sustainabilityFactors || dashboard.factors || [];
+  const impacts = S.api.repairImpactRecords || dashboard.latest_impacts || [];
+  const snapshots = S.api.circularitySnapshots || dashboard.latest_snapshots || [];
+  const insights = S.api.repairOutcomeInsights || dashboard.open_insights || [];
+  const reviews = S.api.impactReviewItems || dashboard.open_reviews || [];
+  const audit = S.api.sustainabilityAuditLog || [];
+
+  const fmt = value => Number(value || 0).toFixed(2);
+  const impactRows = impacts.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'calculated' || item.status === 'accepted' ? 'green' : item.status === 'needs_review' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.impact_code)}</td><td>${safe(item.category)}</td><td>${fmt(item.co2e_avoided_kg)} kg</td><td>${fmt(item.waste_diverted_kg)} kg</td><td>${safe(item.repair_score ?? 0)}</td><td><button class="mini-button" onclick="calculateFirstImpact('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Calculate</button></td></tr>`).join('') || '<tr><td colspan="7">No impact records yet.</td></tr>';
+  const snapshotRows = snapshots.slice(0, 8).map(item => `<tr><td><span class="badge blue">${safe(item.status)}</span></td><td>${safe(item.snapshot_code)}</td><td>${safe(item.objects_saved)}</td><td>${fmt(item.co2e_avoided_kg)} kg</td><td>${fmt(item.waste_diverted_kg)} kg</td><td>${safe(item.impact_score)}</td></tr>`).join('') || '<tr><td colspan="6">No circularity snapshots yet.</td></tr>';
+  const factorRows = factors.slice(0, 8).map(item => `<li><strong>${safe(item.name)}</strong> — ${safe(item.default_value)} ${safe(item.unit)} <span class="muted">${safe(item.category)}</span></li>`).join('') || '<li>No active sustainability factors.</li>';
+  const insightRows = insights.slice(0, 8).map(item => `<tr><td><span class="badge ${item.severity === 'warning' ? 'orange' : 'blue'}">${safe(item.severity)}</span></td><td>${safe(item.insight_type)}</td><td>${safe(item.title)}</td><td>${safe(item.recommended_action)}</td></tr>`).join('') || '<tr><td colspan="4">No active outcome insights.</td></tr>';
+  const reviewRows = reviews.slice(0, 8).map(item => `<tr><td>${safe(item.priority)}</td><td>${safe(item.related_entity_type)}</td><td>${safe(item.review_reason)}</td><td><button class="mini-button" onclick="resolveImpactReview('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Resolve</button></td></tr>`).join('') || '<tr><td colspan="4">No impact reviews pending.</td></tr>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No sustainability audit entries yet.</li>';
+
+  return layout('Sustainability Impact', `
+    <section class="section-head"><div><p class="eyebrow">Step 36 · Sustainability Impact, Circularity Metrics & Repair Outcome Intelligence</p><h2>Measure objects saved, CO₂e avoided, waste diverted and outcome intelligence from accepted repairs.</h2></div><p class="muted">Step 36 is a local/pilot impact layer. It does not create certified environmental claims, LCA reports or public sustainability statements.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.objects_saved ?? 0)}</strong><span>Objects saved</span></div><div class="metric"><strong>${fmt(summary.co2e_avoided_kg)} kg</strong><span>CO₂e avoided</span></div><div class="metric"><strong>${fmt(summary.waste_diverted_kg)} kg</strong><span>Waste diverted</span></div><div class="metric"><strong>${safe(summary.open_insights ?? 0)}</strong><span>Open insights</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createImpactFromLatestAcceptance()" ${S.busy ? 'disabled' : ''}>Create impact record</button><button class="btn secondary" onclick="snapshotCircularityMetrics()" ${S.busy ? 'disabled' : ''}>Create circularity snapshot</button><button class="btn secondary" onclick="evaluateImpactInsights()" ${S.busy ? 'disabled' : ''}>Evaluate insights</button><a class="btn secondary" href="#/customer-care">Customer care</a></div><p class="muted small">Impact metrics remain qualified as pilot estimates until lifecycle factors and legal language are validated.</p></section>
+    <section class="section grid two"><div class="panel stack"><h3>Repair impact records</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Category</th><th>CO₂e</th><th>Waste</th><th>Score</th><th>Action</th></tr>${impactRows}</table></div><div class="panel stack"><h3>Sustainability factors</h3><ul class="muted small">${factorRows}</ul></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Circularity snapshots</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Objects</th><th>CO₂e</th><th>Waste</th><th>Score</th></tr>${snapshotRows}</table></div><div class="panel stack"><h3>Outcome insights</h3><table class="table"><tr><th>Severity</th><th>Type</th><th>Title</th><th>Action</th></tr>${insightRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Impact reviews</h3><table class="table"><tr><th>Priority</th><th>Entity</th><th>Reason</th><th>Action</th></tr>${reviewRows}</table></div><div class="panel stack"><h3>Sustainability audit</h3><ul class="muted small">${auditRows}</ul></div></section>
+  `, { currentStep: 'sustainability-impact' });
+}
+
+async function createImpactFromLatestAcceptance() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create impact records.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.createRepairImpactRecord({ category: 'plastic_part', object_weight_kg: 0.45, estimated_lifespan_months: 24, evidence: { source: 'prototype_step_36', public_claims_allowed: false } });
+    toast('Repair impact record created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Impact creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function calculateFirstImpact(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to calculate impact.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.calculateRepairImpactRecord(id, { category: 'plastic_part', object_weight_kg: 0.45, estimated_lifespan_months: 24 });
+    toast('Impact calculated.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Impact calculation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function snapshotCircularityMetrics() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to snapshot impact.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.createCircularitySnapshot({ scope: 'pilot', status: 'draft' });
+    toast('Circularity snapshot created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Snapshot failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function evaluateImpactInsights() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate insights.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.evaluateRepairOutcomeInsights({ source: 'prototype_step_36' });
+    toast('Outcome insights evaluated.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Insight evaluation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function resolveImpactReview(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to resolve reviews.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.reviewImpactItem(id, { decision: 'accepted_for_internal_reporting', notes: 'Accepted as internal pilot estimate. Not for public claims.' });
+    toast('Impact review resolved.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Impact review failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -3177,6 +3287,7 @@ const routes = {
   '/provider-routing': providerRoutingDashboard,
   '/dispatch-governance': dispatchGovernanceDashboard,
   '/customer-care': customerCareDashboard,
+  '/sustainability-impact': sustainabilityImpactDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -3378,6 +3489,13 @@ async function refreshApiData(options = {}) {
       customerFeedbackRecords: bootstrap.customer_feedback_records || S.api.customerFeedbackRecords || [],
       postRepairReviewItems: bootstrap.post_repair_review_items || S.api.postRepairReviewItems || [],
       postRepairAuditLog: bootstrap.post_repair_audit_log || S.api.postRepairAuditLog || [],
+      sustainabilityImpact: bootstrap.sustainability_impact || S.api.sustainabilityImpact || null,
+      sustainabilityFactors: bootstrap.sustainability_factors || S.api.sustainabilityFactors || [],
+      repairImpactRecords: bootstrap.repair_impact_records || S.api.repairImpactRecords || [],
+      circularitySnapshots: bootstrap.circularity_snapshots || S.api.circularitySnapshots || [],
+      repairOutcomeInsights: bootstrap.repair_outcome_insights || S.api.repairOutcomeInsights || [],
+      impactReviewItems: bootstrap.impact_review_items || S.api.impactReviewItems || [],
+      sustainabilityAuditLog: bootstrap.sustainability_audit_log || S.api.sustainabilityAuditLog || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {

@@ -1331,6 +1331,55 @@
       return this.request(`/api/v1/platform/post-repair-audit-log?limit=${encodeURIComponent(limit)}`);
     }
 
+
+    async getSustainabilityImpact() {
+      return this.request('/api/v1/platform/sustainability-impact');
+    }
+
+    async getSustainabilityFactors(status = 'active') {
+      return this.request(`/api/v1/platform/sustainability-factors?status=${encodeURIComponent(status)}`);
+    }
+
+    async getRepairImpactRecords(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/repair-impact-records?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createRepairImpactRecord(payload = {}) {
+      return this.request('/api/v1/platform/repair-impact-records', { method: 'POST', body: payload });
+    }
+
+    async calculateRepairImpactRecord(id, payload = {}) {
+      return this.request(`/api/v1/platform/repair-impact-records/${encodeURIComponent(id)}/calculate`, { method: 'POST', body: payload });
+    }
+
+    async getCircularitySnapshots(limit = 50) {
+      return this.request(`/api/v1/platform/circularity-snapshots?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createCircularitySnapshot(payload = {}) {
+      return this.request('/api/v1/platform/circularity-snapshots', { method: 'POST', body: payload });
+    }
+
+    async getRepairOutcomeInsights(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/repair-outcome-insights?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async evaluateRepairOutcomeInsights(payload = {}) {
+      return this.request('/api/v1/platform/repair-outcome-insights/evaluate', { method: 'POST', body: payload });
+    }
+
+    async getImpactReviewItems(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/impact-review-items?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async reviewImpactItem(id, payload = {}) {
+      return this.request(`/api/v1/platform/impact-review-items/${encodeURIComponent(id)}/review`, { method: 'POST', body: payload });
+    }
+
+    async getSustainabilityAuditLog(limit = 50) {
+      return this.request(`/api/v1/platform/sustainability-audit-log?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -1645,6 +1694,13 @@
       let customerFeedbackRecords = { customer_feedback_records: [] };
       let postRepairReviewItems = { post_repair_review_items: [] };
       let postRepairAuditLog = { post_repair_audit_log: [] };
+      let sustainabilityImpact = { sustainability_impact: null };
+      let sustainabilityFactors = { sustainability_factors: [] };
+      let repairImpactRecords = { repair_impact_records: [] };
+      let circularitySnapshots = { circularity_snapshots: [] };
+      let repairOutcomeInsights = { repair_outcome_insights: [] };
+      let impactReviewItems = { impact_review_items: [] };
+      let sustainabilityAuditLog = { sustainability_audit_log: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -2294,6 +2350,42 @@
           postRepairAuditLog = { post_repair_audit_log: [] };
         }
 
+        try {
+          sustainabilityImpact = await this.getSustainabilityImpact();
+        } catch (_error) {
+          sustainabilityImpact = { sustainability_impact: null };
+        }
+        try {
+          sustainabilityFactors = await this.getSustainabilityFactors('active');
+        } catch (_error) {
+          sustainabilityFactors = { sustainability_factors: [] };
+        }
+        try {
+          repairImpactRecords = await this.getRepairImpactRecords('all', 30);
+        } catch (_error) {
+          repairImpactRecords = { repair_impact_records: [] };
+        }
+        try {
+          circularitySnapshots = await this.getCircularitySnapshots(30);
+        } catch (_error) {
+          circularitySnapshots = { circularity_snapshots: [] };
+        }
+        try {
+          repairOutcomeInsights = await this.getRepairOutcomeInsights('active', 30);
+        } catch (_error) {
+          repairOutcomeInsights = { repair_outcome_insights: [] };
+        }
+        try {
+          impactReviewItems = await this.getImpactReviewItems('active', 30);
+        } catch (_error) {
+          impactReviewItems = { impact_review_items: [] };
+        }
+        try {
+          sustainabilityAuditLog = await this.getSustainabilityAuditLog(30);
+        } catch (_error) {
+          sustainabilityAuditLog = { sustainability_audit_log: [] };
+        }
+
       }
 
       if (latestCase && this.getToken()) {
@@ -2524,7 +2616,14 @@
         post_repair_support_tickets: postRepairSupportTickets.post_repair_support_tickets || [],
         customer_feedback_records: customerFeedbackRecords.customer_feedback_records || [],
         post_repair_review_items: postRepairReviewItems.post_repair_review_items || [],
-        post_repair_audit_log: postRepairAuditLog.post_repair_audit_log || []
+        post_repair_audit_log: postRepairAuditLog.post_repair_audit_log || [],
+        sustainability_impact: sustainabilityImpact.sustainability_impact || null,
+        sustainability_factors: sustainabilityFactors.sustainability_factors || [],
+        repair_impact_records: repairImpactRecords.repair_impact_records || [],
+        circularity_snapshots: circularitySnapshots.circularity_snapshots || [],
+        repair_outcome_insights: repairOutcomeInsights.repair_outcome_insights || [],
+        impact_review_items: impactReviewItems.impact_review_items || [],
+        sustainability_audit_log: sustainabilityAuditLog.sustainability_audit_log || []
       };
     }
   }

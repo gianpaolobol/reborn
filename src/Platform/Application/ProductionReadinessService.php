@@ -46,6 +46,7 @@ final class ProductionReadinessService
             'provider_routing' => $this->providerRoutingCheck(),
             'dispatch_governance' => $this->dispatchGovernanceCheck(),
             'customer_care_governance' => $this->customerCareGovernanceCheck(),
+            'sustainability_impact' => $this->sustainabilityImpactCheck(),
         ];
 
         $status = 'ready';
@@ -97,7 +98,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v16_step35',
+            'checklist_version' => 'production_readiness_v17_step36',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -117,6 +118,7 @@ final class ProductionReadinessService
                 'CAD/geometry validation, printability findings and human review decisions are completed before provider routing or maker publication',
                 'provider routing, dispatch tracking and proof-of-repair governance are reviewed before real fulfilment operations',
                 'customer acceptance, warranty placeholders and post-repair support workflows are reviewed before beta customer commitments',
+                'sustainability impact, circularity factors and repair outcome intelligence are reviewed before external environmental claims',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
@@ -133,6 +135,7 @@ final class ProductionReadinessService
             'step_33_status' => 'Provider capability, machine profile and fulfilment routing governance v1 implemented.',
             'step_34_status' => 'Fulfilment dispatch, shipment tracking and proof-of-repair governance v1 implemented.',
             'step_35_status' => 'Customer acceptance, warranty placeholder and post-repair support governance v1 implemented.',
+            'step_36_status' => 'Sustainability impact, circularity metrics and repair outcome intelligence v1 implemented.',
         ];
     }
 
@@ -874,6 +877,46 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Customer care governance checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function sustainabilityImpactCheck(): array
+    {
+        try {
+            $tables = ['platform_sustainability_factors', 'platform_repair_impact_records', 'platform_circularity_metric_snapshots', 'platform_repair_outcome_insights', 'platform_impact_review_items', 'platform_sustainability_audit_log'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $factors = 0;
+            $impacts = 0;
+            $snapshots = 0;
+            $insights = 0;
+            if ($missing === []) {
+                $factors = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_sustainability_factors WHERE status = 'active'")->fetchColumn();
+                $impacts = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_repair_impact_records')->fetchColumn();
+                $snapshots = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_circularity_metric_snapshots')->fetchColumn();
+                $insights = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_repair_outcome_insights WHERE status IN ('open','investigating')")->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? ($factors > 0 ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Sustainability impact, circularity metrics and repair outcome intelligence tables are available. Public environmental claims remain out of scope until methodology is validated.' : 'Sustainability impact tables are not fully migrated yet.',
+                'sustainability_factors' => $factors,
+                'repair_impact_records' => $impacts,
+                'circularity_snapshots' => $snapshots,
+                'open_insights' => $insights,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Sustainability impact checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 

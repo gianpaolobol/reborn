@@ -142,6 +142,10 @@ return static function (Router $router, RepairController $repairController, Auth
                 'post_repair_support',
                 'customer_feedback_loop',
                 'post_repair_human_review',
+                'sustainability_impact',
+                'circularity_metrics',
+                'repair_outcome_intelligence',
+                'impact_review_governance',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -357,6 +361,20 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/platform/post-repair-review-items', [$platformController, 'postRepairReviewItems']);
     $router->post('/api/v1/platform/post-repair-review-items/{id}/review', [$platformController, 'reviewPostRepairItem']);
     $router->get('/api/v1/platform/post-repair-audit-log', [$platformController, 'postRepairAuditLog']);
+
+
+    $router->get('/api/v1/platform/sustainability-impact', [$platformController, 'sustainabilityImpact']);
+    $router->get('/api/v1/platform/sustainability-factors', [$platformController, 'sustainabilityFactors']);
+    $router->get('/api/v1/platform/repair-impact-records', [$platformController, 'repairImpactRecords']);
+    $router->post('/api/v1/platform/repair-impact-records', [$platformController, 'createRepairImpactRecord']);
+    $router->post('/api/v1/platform/repair-impact-records/{id}/calculate', [$platformController, 'calculateRepairImpactRecord']);
+    $router->get('/api/v1/platform/circularity-snapshots', [$platformController, 'circularitySnapshots']);
+    $router->post('/api/v1/platform/circularity-snapshots', [$platformController, 'createCircularitySnapshot']);
+    $router->get('/api/v1/platform/repair-outcome-insights', [$platformController, 'repairOutcomeInsights']);
+    $router->post('/api/v1/platform/repair-outcome-insights/evaluate', [$platformController, 'evaluateRepairOutcomeInsights']);
+    $router->get('/api/v1/platform/impact-review-items', [$platformController, 'impactReviewItems']);
+    $router->post('/api/v1/platform/impact-review-items/{id}/review', [$platformController, 'reviewImpactItem']);
+    $router->get('/api/v1/platform/sustainability-audit-log', [$platformController, 'sustainabilityAuditLog']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

@@ -649,3 +649,21 @@ Prototype route:
 ```
 
 This step does not create legal warranty terms, refunds, real CRM tickets or external customer notifications. It records the governance workflow needed before beta customer commitments can be handled safely.
+
+### Step 36 — Sustainability Impact, Circularity Metrics & Repair Outcome Intelligence v1
+
+Step 36 turns accepted repairs and proof-of-repair evidence into local/pilot impact records, circularity snapshots and repair outcome insights. It adds sustainability factors, calculated impact records, internal circularity reporting, impact review items and sustainability audit logging.
+
+Smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-sustainability-impact-circularity.ps1
+```
+
+Prototype route:
+
+```text
+/prototype/index.html#/sustainability-impact
+```
+
+This step does not create certified LCA reports, legal environmental claims, ESG reporting or public sustainability statements. It records the governance workflow and pilot estimates needed before external impact claims can be reviewed and validated.
