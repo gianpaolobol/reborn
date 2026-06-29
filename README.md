@@ -224,3 +224,27 @@ http://127.0.0.1:8080/prototype/index.html
 
 If the prototype is opened directly from disk, it automatically uses mock data.
 
+
+
+## Current delivery step
+
+**Step 7 — Backend Persistence Hardening** is included.
+
+New backend capabilities:
+
+- uniform JSON error model with `meta.request_id`;
+- malformed JSON detection;
+- stronger repair-case validation;
+- attachment upload persistence for repair photos/CAD/PDF evidence;
+- `repair_attachments` and `audit_log` tables;
+- domain-events inspection endpoint;
+- backend feature/smoke test scripts.
+
+Run locally:
+
+```powershell
+php scripts/doctor.php
+php scripts/setup-dev.php
+php scripts/run-feature-tests.php
+php -S 127.0.0.1:8080 -t public public/index.php
+```

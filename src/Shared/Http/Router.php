@@ -37,13 +37,15 @@ final class Router
     {
         $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
         $path = rtrim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/', '/') ?: '/';
+        $methodMatches = [];
 
         foreach ($this->routes as $route) {
-            if ($route['method'] !== $method) {
+            if (!preg_match($route['regex'], $path, $matches)) {
                 continue;
             }
 
-            if (!preg_match($route['regex'], $path, $matches)) {
+            $methodMatches[] = $route['method'];
+            if ($route['method'] !== $method) {
                 continue;
             }
 
@@ -52,19 +54,43 @@ final class Router
                 $params[$name] = $matches[$name] ?? null;
             }
 
+            $request = Request::fromGlobals($params);
+            if ($request->jsonError() !== null) {
+                return JsonResponse::badRequest('Malformed JSON body.', ['json_error' => $request->jsonError()], $request->requestId());
+            }
+
             try {
-                $response = ($route['handler'])(Request::fromGlobals($params));
-                return $response instanceof JsonResponse ? $response : JsonResponse::ok(['data' => $response]);
+                $response = ($route['handler'])($request);
+                return $response instanceof JsonResponse ? $response : JsonResponse::ok(['data' => $response], $request->requestId());
+            } catch (ValidationException $exception) {
+                $fields = $exception->details()['fields'] ?? [];
+                return JsonResponse::validation(is_array($fields) ? $fields : [], $request->requestId());
+            } catch (ApiException $exception) {
+                return JsonResponse::error(
+                    $exception->errorCode(),
+                    $exception->getMessage(),
+                    $exception->statusCode(),
+                    $exception->details(),
+                    $request->requestId()
+                );
             } catch (Throwable $exception) {
+                $this->logException($exception, $request);
                 if (($_ENV['APP_DEBUG'] ?? 'true') === 'true') {
-                    return JsonResponse::serverError($exception->getMessage());
+                    return JsonResponse::serverError($exception->getMessage(), $request->requestId());
                 }
 
-                return JsonResponse::serverError();
+                return JsonResponse::serverError('Unexpected server error.', $request->requestId());
             }
         }
 
-        return JsonResponse::notFound('API route not found.');
+        $request = Request::fromGlobals();
+        if ($methodMatches !== []) {
+            return JsonResponse::error('METHOD_NOT_ALLOWED', 'HTTP method not allowed for this route.', 405, [
+                'allowed_methods' => array_values(array_unique($methodMatches)),
+            ], $request->requestId());
+        }
+
+        return JsonResponse::notFound('API route not found.', $request->requestId());
     }
 
     /** @return array{string, list<string>} */
@@ -77,5 +103,27 @@ final class Router
         }, rtrim($pattern, '/') ?: '/');
 
         return ['#^' . $regex . '$#', $params];
+    }
+
+    private function logException(Throwable $exception, Request $request): void
+    {
+        $root = dirname(__DIR__, 3);
+        $logDir = $root . '/storage/logs';
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0775, true);
+        }
+
+        $line = json_encode([
+            'occurred_at' => gmdate('c'),
+            'request_id' => $request->requestId(),
+            'method' => $request->method(),
+            'path' => $request->path(),
+            'exception' => $exception::class,
+            'message' => $exception->getMessage(),
+            'file' => $exception->getFile(),
+            'line' => $exception->getLine(),
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        file_put_contents($logDir . '/api-' . gmdate('Y-m-d') . '.log', $line . PHP_EOL, FILE_APPEND);
     }
 }

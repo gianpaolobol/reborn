@@ -13,48 +13,63 @@ final class JsonResponse
     ) {
     }
 
-    public static function ok(array $payload = []): self
+    public static function ok(array $payload = [], ?string $requestId = null): self
     {
-        return new self(['success' => true] + $payload, 200);
+        return new self(self::withMeta(['success' => true] + $payload, $requestId), 200);
     }
 
-    public static function created(array $payload = []): self
+    public static function created(array $payload = [], ?string $requestId = null): self
     {
-        return new self(['success' => true] + $payload, 201);
+        return new self(self::withMeta(['success' => true] + $payload, $requestId), 201);
     }
 
-    public static function validation(array $errors): self
+    /** @param array<string, list<string>> $errors */
+    public static function validation(array $errors, ?string $requestId = null): self
     {
-        return new self([
+        return self::error('VALIDATION_ERROR', 'The request contains invalid or missing fields.', 422, ['fields' => $errors], $requestId);
+    }
+
+    public static function badRequest(string $message = 'Bad request.', array $details = [], ?string $requestId = null): self
+    {
+        return self::error('BAD_REQUEST', $message, 400, $details, $requestId);
+    }
+
+    public static function notFound(string $message = 'Resource not found.', ?string $requestId = null): self
+    {
+        return self::error('NOT_FOUND', $message, 404, [], $requestId);
+    }
+
+    /** @param array<string, mixed> $details */
+    public static function error(string $code, string $message, int $status = 500, array $details = [], ?string $requestId = null): self
+    {
+        $payload = [
             'success' => false,
             'error' => [
-                'code' => 'VALIDATION_ERROR',
-                'message' => 'The request contains invalid or missing fields.',
-                'fields' => $errors,
-            ],
-        ], 422);
-    }
-
-    public static function notFound(string $message = 'Resource not found.'): self
-    {
-        return new self([
-            'success' => false,
-            'error' => [
-                'code' => 'NOT_FOUND',
+                'code' => $code,
                 'message' => $message,
             ],
-        ], 404);
+        ];
+
+        if ($details !== []) {
+            $payload['error']['details'] = $details;
+        }
+
+        return new self(self::withMeta($payload, $requestId), $status);
     }
 
-    public static function serverError(string $message = 'Unexpected server error.'): self
+    public static function serverError(string $message = 'Unexpected server error.', ?string $requestId = null): self
     {
-        return new self([
-            'success' => false,
-            'error' => [
-                'code' => 'SERVER_ERROR',
-                'message' => $message,
-            ],
-        ], 500);
+        return self::error('SERVER_ERROR', $message, 500, [], $requestId);
+    }
+
+    /** @param array<string, mixed> $payload @return array<string, mixed> */
+    private static function withMeta(array $payload, ?string $requestId): array
+    {
+        if ($requestId !== null && $requestId !== '') {
+            $payload['meta'] = ['request_id' => $requestId];
+        }
+
+        return $payload;
     }
 
     public function send(): void
