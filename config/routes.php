@@ -16,8 +16,9 @@ use Reborn\Repair\Presentation\RepairController;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
 use Reborn\Shared\Http\Router;
+use Reborn\Trust\Presentation\TrustController;
 
-return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, ProviderMatchController $providerMatchController, RepairOrderController $repairOrderController, RepairFulfilmentController $repairFulfilmentController, LearningController $learningController, AuthContext $auth, PDO $pdo): void {
+return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, ProviderMatchController $providerMatchController, RepairOrderController $repairOrderController, RepairFulfilmentController $repairFulfilmentController, LearningController $learningController, TrustController $trustController, AuthContext $auth, PDO $pdo): void {
     $router->get('/api/health', static function (Request $request): JsonResponse {
         return JsonResponse::ok([
             'status' => 'ok',
@@ -47,6 +48,9 @@ return static function (Router $router, RepairController $repairController, Auth
                 'repair_completion_reports',
                 'repair_learning_events',
                 'knowledge_graph_feedback',
+                'trust_reviews',
+                'provider_quality_scoring',
+                'provider_trust_signals',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -100,6 +104,13 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/completion-reports/{id}', [$learningController, 'showCompletionReport']);
     $router->get('/api/v1/repair-cases/{id}/learning-events', [$learningController, 'learningEventsForCase']);
     $router->get('/api/v1/learning-events/{id}', [$learningController, 'showLearningEvent']);
+
+    $router->post('/api/v1/completion-reports/{id}/trust-reviews', [$trustController, 'storeReviewForCompletionReport']);
+    $router->get('/api/v1/completion-reports/{id}/trust-reviews', [$trustController, 'reviewsForCompletionReport']);
+    $router->get('/api/v1/provider-quality-scores', [$trustController, 'providerQualityScores']);
+    $router->get('/api/v1/providers/{id}/quality-score', [$trustController, 'providerQualityScore']);
+    $router->get('/api/v1/providers/{id}/trust-signals', [$trustController, 'providerTrustSignals']);
+    $router->get('/api/v1/providers/{id}/trust-reviews', [$trustController, 'providerTrustReviews']);
 
     $router->get('/api/v1/providers', static function (Request $request) use ($pdo): JsonResponse {
         $stmt = $pdo->query('SELECT id, name, city, country, capabilities, rating, average_lead_time_days FROM providers ORDER BY rating DESC, name ASC');

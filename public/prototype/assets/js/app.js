@@ -83,7 +83,8 @@ function stepper(active) {
     ['repair-paths', '04', 'Decide'],
     ['checkout', '05', 'Order'],
     ['fulfilment', '06', 'Fulfil'],
-    ['learning', '07', 'Learn']
+    ['learning', '07', 'Learn'],
+    ['trust', '08', 'Trust']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -467,6 +468,22 @@ function activeLearningEvent() {
   return S.api.learningEvent || activeLearningEvents()[0] || null;
 }
 
+function activeTrustReviews() {
+  return Array.isArray(S.api.trustReviews) ? S.api.trustReviews : [];
+}
+
+function activeTrustReview() {
+  return S.api.trustReview || activeTrustReviews()[0] || null;
+}
+
+function activeProviderQualityScore() {
+  return S.api.providerQualityScore || (Array.isArray(S.api.providerQualityScores) ? S.api.providerQualityScores[0] : null) || null;
+}
+
+function activeProviderTrustSignals() {
+  return Array.isArray(S.api.providerTrustSignals) ? S.api.providerTrustSignals : [];
+}
+
 function mockRecognitionResult() {
   return {
     object_guess: { label: 'appliance knob / plastic cover / hinge / wearable case', confidence: 0.72 },
@@ -635,6 +652,65 @@ function mockLearningEvent(report = null) {
     event_type: 'repair_outcome_confirmed',
     signal_json: { source: 'mock_completion_report', outcome_status: completionReport.outcome_status, functional_result: completionReport.functional_result, object_saved: completionReport.object_saved, co2_avoided_grams: completionReport.co2_avoided_grams },
     confidence_delta: 0.08,
+    created_at: new Date().toISOString()
+  };
+}
+
+function mockTrustReview(report = null) {
+  const completionReport = report || activeCompletionReport() || mockCompletionReport();
+  return {
+    id: 'mock-trust-review',
+    completion_report_id: completionReport.id,
+    fulfilment_id: completionReport.fulfilment_id,
+    repair_case_id: completionReport.repair_case_id,
+    provider_id: completionReport.provider_id,
+    reviewer_id: S.auth.user?.id || 'mock-repair-user',
+    reviewer_role: S.auth.user?.role || 'repair_user',
+    status: 'published',
+    rating_overall: 5,
+    rating_quality: 5,
+    rating_communication: 4,
+    rating_timeliness: 5,
+    would_recommend: true,
+    issue_resolved: true,
+    comment: 'Mock trust signal: repair outcome confirmed and provider quality validated.',
+    signals_json: { source: 'mock_trust_review', outcome_status: completionReport.outcome_status, object_saved: completionReport.object_saved, issue_resolved: true },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+}
+
+function mockProviderQualityScore(review = null) {
+  const trustReview = review || activeTrustReview() || mockTrustReview();
+  return {
+    provider_id: trustReview.provider_id,
+    review_count: 1,
+    completed_repairs_count: 1,
+    successful_repairs_count: 1,
+    average_rating: 5,
+    quality_score: 100,
+    reliability_score: 100,
+    communication_score: 80,
+    timeliness_score: 100,
+    overall_score: 97,
+    trust_tier: 'trusted',
+    last_review_id: trustReview.id,
+    score_json: { formula_version: 'trust_v1', interpretation: 'Mock provider has a confirmed repair outcome and high trust signal.' },
+    updated_at: new Date().toISOString()
+  };
+}
+
+function mockProviderTrustSignal(review = null) {
+  const trustReview = review || activeTrustReview() || mockTrustReview();
+  return {
+    id: 'mock-provider-trust-signal',
+    provider_id: trustReview.provider_id,
+    repair_case_id: trustReview.repair_case_id,
+    completion_report_id: trustReview.completion_report_id,
+    trust_review_id: trustReview.id,
+    event_type: 'completion_review_scored',
+    signal_json: { source: 'mock_provider_trust_review', rating_overall: trustReview.rating_overall, issue_resolved: trustReview.issue_resolved },
+    score_delta: 0.15,
     created_at: new Date().toISOString()
   };
 }
@@ -929,12 +1005,34 @@ function learning() {
   return layout('Learning', html`
     <section class="section-head"><div><p class="eyebrow">Step 16 · Completion Learning</p><h2>Close the loop: repair outcome becomes reusable intelligence.</h2></div><p class="muted">Re-born learns from completed repairs only after a provider confirms the object returned to function. This strengthens the Knowledge Graph without becoming an STL marketplace.</p></section>
     <section class="grid two">
-      <div class="panel stack"><h3>Completion report</h3><table class="table"><tr><th>Fulfilment</th><td>${safe(fulfilment?.id ? String(fulfilment.id).slice(0, 8) : 'missing')}</td></tr><tr><th>Fulfilment status</th><td>${safe(fulfilment?.status || 'not_completed')}</td></tr><tr><th>Report</th><td>${safe(report?.status || 'not_recorded')}</td></tr><tr><th>Outcome</th><td>${safe(report?.outcome_status || 'pending')}</td></tr><tr><th>CO₂ avoided</th><td>${safe(report ? `${report.co2_avoided_grams || 0} g` : 'pending')}</td></tr></table><div class="actions"><button class="btn green" onclick="recordCompletionLearning()" ${S.busy || !canCreate ? 'disabled' : ''}>Record completion learning</button><a class="btn secondary" href="#/fulfilment">Back to fulfilment</a><button class="btn secondary" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh</button></div><p class="muted small">Provider/admin records outcome. Repair user can view the learning once it exists.</p></div>
+      <div class="panel stack"><h3>Completion report</h3><table class="table"><tr><th>Fulfilment</th><td>${safe(fulfilment?.id ? String(fulfilment.id).slice(0, 8) : 'missing')}</td></tr><tr><th>Fulfilment status</th><td>${safe(fulfilment?.status || 'not_completed')}</td></tr><tr><th>Report</th><td>${safe(report?.status || 'not_recorded')}</td></tr><tr><th>Outcome</th><td>${safe(report?.outcome_status || 'pending')}</td></tr><tr><th>CO₂ avoided</th><td>${safe(report ? `${report.co2_avoided_grams || 0} g` : 'pending')}</td></tr></table><div class="actions"><button class="btn green" onclick="recordCompletionLearning()" ${S.busy || !canCreate ? 'disabled' : ''}>Record completion learning</button><a class="btn secondary" href="#/trust">Trust score</a><a class="btn secondary" href="#/fulfilment">Back to fulfilment</a><button class="btn secondary" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh</button></div><p class="muted small">Provider/admin records outcome. Repair user can view the learning once it exists.</p></div>
       <aside class="panel dark-panel stack"><h3>Knowledge feedback</h3>${badges(feedback)}${report ? `<p class="muted">${safe(report.outcome_json?.summary || 'Repair outcome recorded.')}</p><div class="grid two">${metric(report.customer_confirmed ? 'Yes' : 'No', 'Customer confirmed')}${metric(String(report.co2_avoided_grams || 0), 'CO₂ grams avoided')}${metric(learningEvent?.event_type || 'learning event', 'Learning signal')}${metric(String(learningEvent?.confidence_delta || 0), 'Confidence delta')}</div>` : '<p class="muted">Complete the fulfilment, then record the outcome to create a learning event and Knowledge Graph node.</p>'}</aside>
     </section>
     <section class="section panel stack"><h3>Learning events</h3><div class="timeline">${learningRows}</div></section>
     <section class="section panel stack"><h3>Repair Intelligence loop</h3><div class="timeline"><div class="timeline-row"><div class="timeline-time">1</div><div class="timeline-content"><strong>Outcome confirmed</strong><p class="muted small">Provider reports whether the object returned to function.</p></div></div><div class="timeline-row"><div class="timeline-time">2</div><div class="timeline-content"><strong>Learning event recorded</strong><p class="muted small">A structured signal captures method, result, object saved and quality checks.</p></div></div><div class="timeline-row"><div class="timeline-time">3</div><div class="timeline-content"><strong>Knowledge Graph feedback applied</strong><p class="muted small">Re-born creates repair outcome knowledge for future diagnosis, decisions and provider matching.</p></div></div></div></section>
   `, { currentStep: 'learning' });
+}
+
+function trust() {
+  setActiveNav('trust');
+  const report = activeCompletionReport();
+  const review = activeTrustReview();
+  const score = activeProviderQualityScore();
+  const signals = activeProviderTrustSignals();
+  const canReview = ['repair_user', 'enterprise', 'admin'].includes(S.auth.user?.role || '');
+  const canCreate = report && canReview && !review;
+  const scoreBadges = score ? [[score.trust_tier || 'unrated', score.overall_score >= 75 ? 'green' : 'orange'], [`${score.overall_score || 0}/100`, 'blue'], [`${score.review_count || 0} reviews`, '']] : [['unrated', 'orange'], ['waiting review', 'blue']];
+  const signalRows = signals.length ? signals.map((signal, index) => `<div class="timeline-row"><div class="timeline-time">${index + 1}</div><div class="timeline-content"><strong>${safe(String(signal.event_type || '').replaceAll('_', ' '))}</strong><p class="muted small">Delta ${safe(String(signal.score_delta || 0))} · provider ${safe(String(signal.provider_id || '').slice(0, 12))}</p><p class="muted small">${safe(signal.created_at ? new Date(signal.created_at).toLocaleString('it-IT') : '')}</p></div></div>`).join('') : '<p class="muted small">No provider trust signals recorded yet.</p>';
+
+  return layout('Trust', html`
+    <section class="section-head"><div><p class="eyebrow">Step 17 · Trust & Provider Quality</p><h2>Provider reputation is earned from completed repairs.</h2></div><p class="muted">Trust is not a generic star rating. It combines completion reports, customer confirmation, object saved signals, quality, communication and timeliness.</p></section>
+    <section class="grid two">
+      <div class="panel stack"><h3>Trust review</h3><table class="table"><tr><th>Completion report</th><td>${safe(report?.id ? String(report.id).slice(0, 8) : 'missing')}</td></tr><tr><th>Provider</th><td>${safe(report?.provider_id || review?.provider_id || 'pending')}</td></tr><tr><th>Review</th><td>${safe(review?.status || 'not_recorded')}</td></tr><tr><th>Overall rating</th><td>${safe(review ? `${review.rating_overall}/5` : 'pending')}</td></tr><tr><th>Issue resolved</th><td>${safe(review ? (review.issue_resolved ? 'yes' : 'no') : 'pending')}</td></tr></table><div class="actions"><button class="btn green" onclick="recordProviderTrustReview()" ${S.busy || !canCreate ? 'disabled' : ''}>Record trust review</button><button class="btn secondary" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh</button><a class="btn secondary" href="#/learning">Back to learning</a></div><p class="muted small">Repair user/admin submits the review only after the provider records completion learning.</p></div>
+      <aside class="panel dark-panel stack"><h3>Provider quality score</h3>${badges(scoreBadges)}${score ? `<div class="grid two">${metric(String(score.quality_score || 0), 'Quality')}${metric(String(score.reliability_score || 0), 'Reliability')}${metric(String(score.communication_score || 0), 'Communication')}${metric(String(score.timeliness_score || 0), 'Timeliness')}</div><p class="muted small">${safe(score.score_json?.interpretation || 'Trust formula v1 score calculated from completed repair signals.')}</p>` : '<p class="muted">Create a trust review after completion learning to score this provider.</p>'}</aside>
+    </section>
+    <section class="section panel stack"><h3>Trust signals</h3><div class="timeline">${signalRows}</div></section>
+    <section class="section panel stack"><h3>Why this matters</h3><p class="muted">Future provider matching can weight not only proximity and capability, but real repair outcomes. This is a core Re-born asset: trust derived from objects saved.</p></section>
+  `, { currentStep: 'trust' });
 }
 
 function aiGeneration() {
@@ -984,6 +1082,7 @@ const routes = {
   '/checkout': checkout,
   '/fulfilment': fulfilment,
   '/learning': learning,
+  '/trust': trust,
   '/ai-generation': aiGeneration,
   '/login': login,
   '/account': account,
@@ -1049,6 +1148,15 @@ async function refreshApiData(options = {}) {
       paymentIntent: (bootstrap.payment_intents || [])[0] || S.api.paymentIntent,
       fulfilments: bootstrap.fulfilments || [],
       fulfilment: (bootstrap.fulfilments || [])[0] || S.api.fulfilment,
+      completionReports: bootstrap.completion_reports || [],
+      completionReport: (bootstrap.completion_reports || [])[0] || S.api.completionReport,
+      learningEvents: bootstrap.learning_events || [],
+      learningEvent: (bootstrap.learning_events || [])[0] || S.api.learningEvent,
+      trustReviews: bootstrap.trust_reviews || [],
+      trustReview: (bootstrap.trust_reviews || [])[0] || S.api.trustReview,
+      providerQualityScores: bootstrap.provider_quality_scores || [],
+      providerQualityScore: bootstrap.provider_quality_score || (bootstrap.provider_quality_scores || [])[0] || S.api.providerQualityScore,
+      providerTrustSignals: bootstrap.provider_trust_signals || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
@@ -1741,6 +1849,61 @@ async function recordCompletionLearning() {
   }
 }
 
+async function recordProviderTrustReview() {
+  const report = activeCompletionReport();
+  if (!report) {
+    toast('Record completion learning first.');
+    return;
+  }
+
+  const data = {
+    rating_overall: 5,
+    rating_quality: 5,
+    rating_communication: 4,
+    rating_timeliness: 5,
+    would_recommend: true,
+    issue_resolved: true,
+    comment: 'Repair outcome confirmed: object returned to function and provider quality was validated.'
+  };
+
+  if (S.api.status !== 'live') {
+    const review = mockTrustReview(report);
+    const qualityScore = mockProviderQualityScore(review);
+    const signal = mockProviderTrustSignal(review);
+    S.setApi({ trustReview: review, trustReviews: [review], providerQualityScore: qualityScore, providerQualityScores: [qualityScore], providerTrustSignals: [signal] });
+    toast('Mock provider trust review recorded.');
+    render();
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.createTrustReview(report.id, data);
+    const reviews = await window.REBORN_API.getTrustReviews(report.id).catch(() => ({ trust_reviews: [payload.trust_review] }));
+    const score = await window.REBORN_API.getProviderQualityScore(payload.trust_review.provider_id).catch(() => ({ quality_score: payload.quality_score }));
+    const signals = await window.REBORN_API.getProviderTrustSignals(payload.trust_review.provider_id).catch(() => ({ trust_signals: [payload.trust_signal] }));
+    const allScores = await window.REBORN_API.getProviderQualityScores().catch(() => ({ quality_scores: [payload.quality_score] }));
+    S.setApi({
+      trustReview: payload.trust_review,
+      trustReviews: reviews.trust_reviews || [payload.trust_review],
+      providerQualityScore: score.quality_score || payload.quality_score,
+      providerQualityScores: allScores.quality_scores || [payload.quality_score],
+      providerTrustSignals: signals.trust_signals || [payload.trust_signal],
+      message: 'Provider quality score updated from completion trust review.',
+      status: 'live',
+      lastError: null,
+      lastSyncAt: new Date().toISOString()
+    });
+    toast('Provider trust review recorded.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Trust review failed: ${error.message}`, lastError: error.message });
+    toast(`Trust review failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 async function bootAuthSession() {
   if (!window.REBORN_API?.getToken()) {
     S.setAuth({ status: 'guest', user: null, tokenStored: false });
@@ -1796,7 +1959,7 @@ async function handleLogout() {
     if (S.auth.status === 'authenticated') await window.REBORN_API.logout();
     else window.REBORN_API.setToken(null);
     S.setAuth({ status: 'guest', user: null, tokenStored: false, lastLoginAt: null });
-    S.setApi({ dashboard: null, roleDashboards: {}, repairCases: [], repairCase: null, repairPaths: [], repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, repairOrders: [], repairOrder: null, paymentIntents: [], paymentIntent: null, fulfilments: [], fulfilment: null });
+    S.setApi({ dashboard: null, roleDashboards: {}, repairCases: [], repairCase: null, repairPaths: [], repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, repairOrders: [], repairOrder: null, paymentIntents: [], paymentIntent: null, fulfilments: [], fulfilment: null, completionReports: [], completionReport: null, learningEvents: [], learningEvent: null, trustReviews: [], trustReview: null, providerQualityScores: [], providerQualityScore: null, providerTrustSignals: [] });
     toast('Logged out.');
     location.hash = '#/login';
   } catch (error) {
@@ -1874,6 +2037,8 @@ window.runMockRepairOrder = runMockRepairOrder;
 window.createPaymentIntent = createPaymentIntent;
 window.runMockPaymentIntent = runMockPaymentIntent;
 window.confirmMockPaymentIntent = confirmMockPaymentIntent;
+window.recordCompletionLearning = recordCompletionLearning;
+window.recordProviderTrustReview = recordProviderTrustReview;
 window.handleLogin = handleLogin;
 window.loginAsDemo = loginAsDemo;
 window.handleLogout = handleLogout;

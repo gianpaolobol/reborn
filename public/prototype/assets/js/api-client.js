@@ -314,6 +314,33 @@
       return this.request(`/api/v1/learning-events/${encodeURIComponent(learningEventId)}`);
     }
 
+    async createTrustReview(completionReportId, data = {}) {
+      return this.request(`/api/v1/completion-reports/${encodeURIComponent(completionReportId)}/trust-reviews`, {
+        method: 'POST',
+        body: data
+      });
+    }
+
+    async getTrustReviews(completionReportId) {
+      return this.request(`/api/v1/completion-reports/${encodeURIComponent(completionReportId)}/trust-reviews`);
+    }
+
+    async getProviderQualityScore(providerId) {
+      return this.request(`/api/v1/providers/${encodeURIComponent(providerId)}/quality-score`);
+    }
+
+    async getProviderQualityScores() {
+      return this.request('/api/v1/provider-quality-scores');
+    }
+
+    async getProviderTrustSignals(providerId) {
+      return this.request(`/api/v1/providers/${encodeURIComponent(providerId)}/trust-signals`);
+    }
+
+    async getProviderTrustReviews(providerId) {
+      return this.request(`/api/v1/providers/${encodeURIComponent(providerId)}/trust-reviews`);
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -353,7 +380,11 @@
           payment_intents: [],
           fulfilments: [],
           completion_reports: [],
-          learning_events: []
+          learning_events: [],
+          trust_reviews: [],
+          provider_quality_scores: [],
+          provider_quality_score: null,
+          provider_trust_signals: []
         };
       }
 
@@ -379,6 +410,18 @@
       let fulfilments = { fulfilments: [] };
       let completionReports = { completion_reports: [] };
       let learningEvents = { learning_events: [] };
+      let trustReviews = { trust_reviews: [] };
+      let providerQualityScores = { quality_scores: [] };
+      let providerQualityScore = { quality_score: null };
+      let providerTrustSignals = { trust_signals: [] };
+
+      if (this.getToken()) {
+        try {
+          providerQualityScores = await this.getProviderQualityScores();
+        } catch (_error) {
+          providerQualityScores = { quality_scores: [] };
+        }
+      }
 
       if (latestCase && this.getToken()) {
         try {
@@ -435,6 +478,24 @@
             } catch (_error) {
               completionReports = { completion_reports: [] };
             }
+            const latestReport = (completionReports.completion_reports || [])[0] || null;
+            if (latestReport) {
+              try {
+                trustReviews = await this.getTrustReviews(latestReport.id);
+              } catch (_error) {
+                trustReviews = { trust_reviews: [] };
+              }
+              try {
+                providerQualityScore = await this.getProviderQualityScore(latestReport.provider_id);
+              } catch (_error) {
+                providerQualityScore = { quality_score: null };
+              }
+              try {
+                providerTrustSignals = await this.getProviderTrustSignals(latestReport.provider_id);
+              } catch (_error) {
+                providerTrustSignals = { trust_signals: [] };
+              }
+            }
           }
         }
         try {
@@ -460,7 +521,11 @@
         payment_intents: paymentIntents.payment_intents || [],
         fulfilments: fulfilments.fulfilments || [],
         completion_reports: completionReports.completion_reports || [],
-        learning_events: learningEvents.learning_events || []
+        learning_events: learningEvents.learning_events || [],
+        trust_reviews: trustReviews.trust_reviews || [],
+        provider_quality_scores: providerQualityScores.quality_scores || [],
+        provider_quality_score: providerQualityScore.quality_score || null,
+        provider_trust_signals: providerTrustSignals.trust_signals || []
       };
     }
   }

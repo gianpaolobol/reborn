@@ -80,6 +80,13 @@ use Reborn\Shared\Domain\EventBus;
 use Reborn\Shared\Http\Router;
 use Reborn\Shared\Storage\LocalFileStorage;
 use Reborn\Shared\Support\Env;
+use Reborn\Trust\Application\CreateTrustReviewService;
+use Reborn\Trust\Application\GetProviderQualityScoreService;
+use Reborn\Trust\Application\ListProviderQualityScoresService;
+use Reborn\Trust\Application\ListProviderTrustSignalsService;
+use Reborn\Trust\Application\ListTrustReviewsService;
+use Reborn\Trust\Infrastructure\SqliteProviderTrustRepository;
+use Reborn\Trust\Presentation\TrustController;
 
 require_once __DIR__ . '/autoload.php';
 
@@ -122,6 +129,7 @@ $paymentIntentRepository = new SqlitePaymentIntentRepository($pdo);
 $repairFulfilmentRepository = new SqliteRepairFulfilmentRepository($pdo);
 $repairCompletionReportRepository = new SqliteRepairCompletionReportRepository($pdo);
 $repairLearningEventRepository = new SqliteRepairLearningEventRepository($pdo);
+$providerTrustRepository = new SqliteProviderTrustRepository($pdo);
 $knowledgeEngine = new KnowledgeEngine($pdo);
 $recognitionEngine = new RecognitionEngine($knowledgeEngine);
 $decisionService = new RepairPathDecisionService($pdo);
@@ -245,8 +253,20 @@ $learningController = new LearningController(
     new RepairCaseAccessPolicy()
 );
 
+$trustController = new TrustController(
+    new CreateTrustReviewService($repairCompletionReportRepository, $providerTrustRepository, $eventBus),
+    new ListTrustReviewsService($providerTrustRepository),
+    new GetProviderQualityScoreService($providerTrustRepository),
+    new ListProviderQualityScoresService($providerTrustRepository),
+    new ListProviderTrustSignalsService($providerTrustRepository),
+    new GetCompletionReportService($repairCompletionReportRepository),
+    new GetRepairCaseService($repairRepository),
+    $authContext,
+    new RepairCaseAccessPolicy()
+);
+
 $router = new Router();
-(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $repairFulfilmentController, $learningController, $authContext, $pdo);
+(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $repairFulfilmentController, $learningController, $trustController, $authContext, $pdo);
 
 return [
     'router' => $router,
