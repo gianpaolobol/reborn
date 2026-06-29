@@ -133,6 +133,7 @@ final class OperationalTelemetryService
                         'storage/uploads retention policy is documented',
                         'operator can inspect API logs and readiness snapshots',
                         'operator can evaluate alerts and update the local/pilot status page',
+                        'operator can dispatch Step 23 mock notifications and start escalation runs',
                     ],
                 ],
                 [
@@ -141,6 +142,7 @@ final class OperationalTelemetryService
                         'readiness is ready or degraded only for accepted warnings',
                         'observability dashboard shows no repeated 500 errors',
                         'Step 22 alert evaluation has been run and no unresolved critical incident blocks the release',
+                        'Step 23 notification dispatch has no failed mandatory deliveries',
                         'admin ops workflow still works after deploy',
                         'known mocks are explicitly disclosed in demo or pilot notes',
                     ],
@@ -181,6 +183,7 @@ final class OperationalTelemetryService
             'smoke-production-readiness.ps1' => 'Production readiness',
             'smoke-observability-ops.ps1' => 'Step 21 observability ops',
             'smoke-incident-response-status.ps1' => 'Step 22 incident response status',
+            'smoke-notification-escalation.ps1' => 'Step 23 notification escalation',
         ];
 
         $rows = [];

@@ -77,6 +77,11 @@ return static function (Router $router, RepairController $repairController, Auth
                 'alert_rules',
                 'status_page',
                 'maintenance_windows',
+                'notification_center',
+                'notification_channels',
+                'notification_dispatch',
+                'escalation_policies',
+                'escalation_runs',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -112,6 +117,16 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/platform/maintenance-windows', [$platformController, 'maintenanceWindows']);
     $router->post('/api/v1/platform/maintenance-windows', [$platformController, 'createMaintenanceWindow']);
     $router->post('/api/v1/platform/maintenance-windows/{id}/close', [$platformController, 'closeMaintenanceWindow']);
+    $router->get('/api/v1/platform/notification-center', [$platformController, 'notificationCenter']);
+    $router->get('/api/v1/platform/notification-channels', [$platformController, 'notificationChannels']);
+    $router->post('/api/v1/platform/notification-channels', [$platformController, 'createNotificationChannel']);
+    $router->get('/api/v1/platform/notification-rules', [$platformController, 'notificationRules']);
+    $router->get('/api/v1/platform/notification-deliveries', [$platformController, 'notificationDeliveries']);
+    $router->post('/api/v1/platform/notifications/dispatch', [$platformController, 'dispatchNotifications']);
+    $router->post('/api/v1/platform/notification-deliveries/{id}/status', [$platformController, 'markNotificationDelivery']);
+    $router->get('/api/v1/platform/escalation-policies', [$platformController, 'escalationPolicies']);
+    $router->get('/api/v1/platform/escalation-runs', [$platformController, 'escalationRuns']);
+    $router->post('/api/v1/platform/incidents/{id}/escalate', [$platformController, 'escalateIncident']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

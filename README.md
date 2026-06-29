@@ -361,3 +361,31 @@ Open the admin console:
 ```text
 http://127.0.0.1:8080/prototype/index.html#/incidents
 ```
+
+## Step 23 — Notification Center & Escalation Workflow v1
+
+Step 23 connects observability and incident response to auditable operator action.
+
+It adds:
+
+- SQLite-backed notification channels;
+- notification rules mapped to alerts, incidents, status updates and maintenance windows;
+- mock notification delivery records with queued/sent/failed/cancelled lifecycle;
+- escalation policies for incident severity levels;
+- escalation runs linked to incidents;
+- admin prototype console at `#/notifications`;
+- smoke test `scripts/smoke-notification-escalation.ps1`.
+
+Important: Step 23 does **not** send real email, SMS, Slack or webhook messages. It creates auditable local/mock delivery records so the pilot workflow is testable without pretending external transports are production-ready.
+
+Run after Step 20/21/22 checks:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-notification-escalation.ps1
+```
+
+Open the admin console:
+
+```text
+http://127.0.0.1:8080/prototype/index.html#/notifications
+```

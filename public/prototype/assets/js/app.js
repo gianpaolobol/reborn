@@ -97,7 +97,8 @@ function stepper(active) {
     ['ops', '10', 'Ops'],
     ['readiness', '11', 'Ready'],
     ['observability', '12', 'Observe'],
-    ['incidents', '13', 'Respond']
+    ['incidents', '13', 'Respond'],
+    ['notifications', '14', 'Notify']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -1535,6 +1536,124 @@ function adminOps() {
   return roleDashboardView('admin');
 }
 
+
+function notificationCenterDashboard() {
+  setActiveNav('notifications');
+  if (S.auth.user?.role !== 'admin') {
+    return layout('Notification Center', authRequiredPanel('the Step 23 notification and escalation console'), { currentStep: 'notifications' });
+  }
+
+  const center = S.api.notificationCenter || {};
+  const channels = S.api.notificationChannels || center.channels || [];
+  const rules = S.api.notificationRules || center.rules || [];
+  const deliveries = S.api.notificationDeliveries || center.recent_deliveries || [];
+  const policies = S.api.escalationPolicies || center.escalation_policies || [];
+  const runs = S.api.escalationRuns || center.active_escalations || [];
+  const pending = deliveries.filter(d => d.status === 'queued');
+  const incidents = S.api.incidents || [];
+
+  const channelRows = channels.slice(0, 8).map(channel => `<tr><td>${safe(channel.name)}</td><td>${safe(channel.type)}</td><td>${safe(channel.target)}</td><td>${safe(channel.status)}</td><td>${safe(channel.last_used_at || 'never')}</td></tr>`).join('') || '<tr><td colspan="5">No channels configured.</td></tr>';
+  const ruleRows = rules.slice(0, 8).map(rule => `<div class="timeline-row"><div class="timeline-time">${safe(rule.trigger_type)}</div><div class="timeline-content"><strong>${safe(rule.name)}</strong><p class="muted small">min severity ${safe(rule.min_severity)} · ${safe(rule.channel_name || rule.channel_id)} · ${rule.enabled ? 'enabled' : 'disabled'}</p></div></div>`).join('') || '<p class="muted small">No notification rules available.</p>';
+  const deliveryRows = deliveries.slice(0, 10).map(delivery => `<tr><td><span class="badge ${delivery.severity === 'critical' || delivery.severity === 'high' ? 'danger' : delivery.severity === 'medium' ? 'orange' : 'blue'}">${safe(delivery.severity)}</span></td><td>${safe(delivery.subject)}</td><td>${safe(delivery.channel_name || delivery.transport)}</td><td>${safe(delivery.status)}</td><td>${safe(delivery.dispatched_at)}</td><td><button class="mini-button" onclick="markDeliverySent('${safe(delivery.id)}')">Sent</button> <button class="mini-button" onclick="markDeliveryFailed('${safe(delivery.id)}')">Fail</button></td></tr>`).join('') || '<tr><td colspan="6">No notification deliveries yet.</td></tr>';
+  const policyRows = policies.slice(0, 6).map(policy => `<div class="timeline-row"><div class="timeline-time">${safe(policy.severity)}</div><div class="timeline-content"><strong>${safe(policy.name)}</strong><p class="muted small">${safe((policy.steps || []).length)} steps · ${policy.enabled ? 'enabled' : 'disabled'}</p></div></div>`).join('') || '<p class="muted small">No escalation policies available.</p>';
+  const runRows = runs.slice(0, 6).map(run => `<div class="timeline-row"><div class="timeline-time">${safe(run.status)}</div><div class="timeline-content"><strong>${safe(run.incident_title || run.summary)}</strong><p class="muted small">${safe(run.policy_name)} · step ${safe(run.current_step)} · ${safe(run.created_at)}</p></div></div>`).join('') || '<p class="muted small">No active escalation runs.</p>';
+
+  return layout('Notification Center', html`
+    <section class="section-head"><div><p class="eyebrow">Step 23 · Notification Center & Escalation Workflow</p><h2>Make operations actionable.</h2></div><p class="muted">Step 23 turns alerts and incidents into auditable operator notifications, mock delivery records and escalation runs. External transports remain intentionally mocked until production integrations are chosen.</p></section>
+    <section class="grid four">
+      ${metric(channels.length, 'Channels')}
+      ${metric(pending.length, 'Queued deliveries')}
+      ${metric(runs.length, 'Active escalations')}
+      ${metric(center.delivery_summary?.failed || 0, 'Failed deliveries')}
+    </section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="dispatchOperationalNotifications()" ${S.busy ? 'disabled' : ''}>Dispatch notifications</button><button class="btn secondary" onclick="createDemoNotificationChannel()" ${S.busy ? 'disabled' : ''}>Create demo channel</button><button class="btn secondary" onclick="escalateFirstIncident()" ${S.busy || incidents.length === 0 ? 'disabled' : ''}>Escalate first incident</button><a class="btn secondary" href="#/incidents">Open incidents</a></div><p class="muted small">This does not send real email/SMS/webhooks. Deliveries are stored in SQLite as operational records for pilot/demo governance.</p></section>
+    <section class="section grid two"><div class="panel stack"><h3>Notification channels</h3><table class="table"><tr><th>Name</th><th>Type</th><th>Target</th><th>Status</th><th>Last used</th></tr>${channelRows}</table></div><div class="panel stack"><h3>Notification rules</h3><div class="timeline">${ruleRows}</div></div></section>
+    <section class="section panel stack"><h3>Recent deliveries</h3><table class="table"><tr><th>Severity</th><th>Subject</th><th>Channel</th><th>Status</th><th>Dispatched</th><th>Action</th></tr>${deliveryRows}</table></section>
+    <section class="section grid two"><div class="panel stack"><h3>Escalation policies</h3><div class="timeline">${policyRows}</div></div><div class="panel stack"><h3>Active escalation runs</h3><div class="timeline">${runRows}</div></div></section>
+  `, { currentStep: 'notifications' });
+}
+
+async function dispatchOperationalNotifications() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to dispatch notifications.');
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.dispatchNotifications({ target_type: 'active_operations' });
+    toast(`Notification dispatch created ${payload.notification_dispatch.created_count} delivery record(s).`);
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Notification dispatch failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function createDemoNotificationChannel() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create channels.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.createNotificationChannel({
+      name: `Demo webhook ${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`,
+      type: 'webhook',
+      target: 'https://example.invalid/reborn-ops-webhook',
+      status: 'active',
+      config: { mock: true, purpose: 'Step 23 local validation' }
+    });
+    toast('Demo notification channel created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Channel creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function markDeliverySent(id) {
+  setBusy(true);
+  try {
+    await window.REBORN_API.markNotificationDelivery(id, 'sent', 'Mock delivery completed by operator.');
+    toast('Delivery marked as sent.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Delivery update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function markDeliveryFailed(id) {
+  setBusy(true);
+  try {
+    await window.REBORN_API.markNotificationDelivery(id, 'failed', 'Mock delivery failed during operator validation.');
+    toast('Delivery marked as failed.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Delivery update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function escalateFirstIncident() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to escalate incidents.');
+  const incident = (S.api.incidents || [])[0];
+  if (!incident) return toast('Create an incident first from the Step 22 console.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.escalateIncident(incident.id, { note: 'Escalated from Step 23 prototype console.' });
+    toast('Incident escalation started.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Escalation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -1552,6 +1671,7 @@ const routes = {
   '/readiness': productionReadiness,
   '/observability': observabilityDashboard,
   '/incidents': incidentResponseDashboard,
+  '/notifications': notificationCenterDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -1656,6 +1776,12 @@ async function refreshApiData(options = {}) {
       incidents: bootstrap.incidents || S.api.incidents || [],
       statusUpdates: bootstrap.status_updates || S.api.statusUpdates || [],
       maintenanceWindows: bootstrap.maintenance_windows || S.api.maintenanceWindows || [],
+      notificationCenter: bootstrap.notification_center || S.api.notificationCenter,
+      notificationChannels: bootstrap.notification_channels || S.api.notificationChannels || [],
+      notificationRules: bootstrap.notification_rules || S.api.notificationRules || [],
+      notificationDeliveries: bootstrap.notification_deliveries || S.api.notificationDeliveries || [],
+      escalationPolicies: bootstrap.escalation_policies || S.api.escalationPolicies || [],
+      escalationRuns: bootstrap.escalation_runs || S.api.escalationRuns || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {

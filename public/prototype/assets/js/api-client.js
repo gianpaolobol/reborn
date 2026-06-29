@@ -568,6 +568,59 @@
       return this.request(`/api/v1/platform/maintenance-windows/${encodeURIComponent(id)}/close`, { method: 'POST' });
     }
 
+
+    async getNotificationCenter() {
+      return this.request('/api/v1/platform/notification-center');
+    }
+
+    async getNotificationChannels() {
+      return this.request('/api/v1/platform/notification-channels');
+    }
+
+    async createNotificationChannel(payload) {
+      return this.request('/api/v1/platform/notification-channels', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getNotificationRules() {
+      return this.request('/api/v1/platform/notification-rules');
+    }
+
+    async getNotificationDeliveries(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/notification-deliveries?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async dispatchNotifications(payload = {}) {
+      return this.request('/api/v1/platform/notifications/dispatch', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async markNotificationDelivery(id, status = 'sent', message = '') {
+      return this.request(`/api/v1/platform/notification-deliveries/${encodeURIComponent(id)}/status`, {
+        method: 'POST',
+        body: { status, message }
+      });
+    }
+
+    async getEscalationPolicies() {
+      return this.request('/api/v1/platform/escalation-policies');
+    }
+
+    async getEscalationRuns(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/escalation-runs?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async escalateIncident(id, payload = {}) {
+      return this.request(`/api/v1/platform/incidents/${encodeURIComponent(id)}/escalate`, {
+        method: 'POST',
+        body: payload
+      });
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -640,7 +693,13 @@
           alerts: [],
           incidents: [],
           status_updates: [],
-          maintenance_windows: []
+          maintenance_windows: [],
+          notification_center: null,
+          notification_channels: [],
+          notification_rules: [],
+          notification_deliveries: [],
+          escalation_policies: [],
+          escalation_runs: []
         };
       }
 
@@ -668,6 +727,12 @@
       let incidents = { incidents: [] };
       let statusUpdates = { status_updates: [] };
       let maintenanceWindows = { maintenance_windows: [] };
+      let notificationCenter = { notification_center: null };
+      let notificationChannels = { notification_channels: [] };
+      let notificationRules = { notification_rules: [] };
+      let notificationDeliveries = { notification_deliveries: [] };
+      let escalationPolicies = { escalation_policies: [] };
+      let escalationRuns = { escalation_runs: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -822,6 +887,36 @@
         } catch (_error) {
           maintenanceWindows = { maintenance_windows: [] };
         }
+        try {
+          notificationCenter = await this.getNotificationCenter();
+        } catch (_error) {
+          notificationCenter = { notification_center: null };
+        }
+        try {
+          notificationChannels = await this.getNotificationChannels();
+        } catch (_error) {
+          notificationChannels = { notification_channels: [] };
+        }
+        try {
+          notificationRules = await this.getNotificationRules();
+        } catch (_error) {
+          notificationRules = { notification_rules: [] };
+        }
+        try {
+          notificationDeliveries = await this.getNotificationDeliveries('all', 30);
+        } catch (_error) {
+          notificationDeliveries = { notification_deliveries: [] };
+        }
+        try {
+          escalationPolicies = await this.getEscalationPolicies();
+        } catch (_error) {
+          escalationPolicies = { escalation_policies: [] };
+        }
+        try {
+          escalationRuns = await this.getEscalationRuns();
+        } catch (_error) {
+          escalationRuns = { escalation_runs: [] };
+        }
 
       }
 
@@ -956,7 +1051,13 @@
         alerts: alerts.alerts || [],
         incidents: incidents.incidents || [],
         status_updates: statusUpdates.status_updates || [],
-        maintenance_windows: maintenanceWindows.maintenance_windows || []
+        maintenance_windows: maintenanceWindows.maintenance_windows || [],
+        notification_center: notificationCenter.notification_center || null,
+        notification_channels: notificationChannels.notification_channels || [],
+        notification_rules: notificationRules.notification_rules || [],
+        notification_deliveries: notificationDeliveries.notification_deliveries || [],
+        escalation_policies: escalationPolicies.escalation_policies || [],
+        escalation_runs: escalationRuns.escalation_runs || []
       };
     }
   }

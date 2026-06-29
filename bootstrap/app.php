@@ -77,6 +77,7 @@ use Reborn\Operations\Presentation\AdminOperationsController;
 use Reborn\Platform\Application\BackupService;
 use Reborn\Platform\Application\IncidentResponseService;
 use Reborn\Platform\Application\ObservabilityRecorder;
+use Reborn\Platform\Application\NotificationCenterService;
 use Reborn\Platform\Application\OperationalTelemetryService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Platform\Presentation\PlatformController;
@@ -337,6 +338,7 @@ $productionReadinessService = new ProductionReadinessService(
 );
 $backupService = new BackupService($pdo, $config['database'], dirname(__DIR__));
 $incidentResponseService = new IncidentResponseService($pdo, $productionReadinessService, $backupService);
+$notificationCenterService = new NotificationCenterService($pdo);
 $operationalTelemetryService = new OperationalTelemetryService(
     $pdo,
     $productionReadinessService,
@@ -349,6 +351,7 @@ $platformController = new PlatformController(
     $operationalTelemetryService,
     $backupService,
     $incidentResponseService,
+    $notificationCenterService,
     $authContext
 );
 

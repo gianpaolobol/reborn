@@ -9,6 +9,7 @@ use Reborn\Identity\Domain\User;
 use Reborn\Platform\Application\BackupService;
 use Reborn\Platform\Application\IncidentResponseService;
 use Reborn\Platform\Application\OperationalTelemetryService;
+use Reborn\Platform\Application\NotificationCenterService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -20,6 +21,7 @@ final class PlatformController
         private readonly OperationalTelemetryService $telemetry,
         private readonly BackupService $backups,
         private readonly IncidentResponseService $incidents,
+        private readonly NotificationCenterService $notifications,
         private readonly AuthContext $auth,
     ) {
     }
@@ -205,6 +207,74 @@ final class PlatformController
     {
         $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         return JsonResponse::ok(['maintenance_window' => $this->incidents->closeMaintenanceWindow((string) $request->param('id'), $user->id)], $request->requestId());
+    }
+
+
+    public function notificationCenter(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['notification_center' => $this->notifications->dashboard()], $request->requestId());
+    }
+
+    public function notificationChannels(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['notification_channels' => $this->notifications->channels()], $request->requestId());
+    }
+
+    public function createNotificationChannel(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['notification_channel' => $this->notifications->createChannel($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function notificationRules(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['notification_rules' => $this->notifications->notificationRules()], $request->requestId());
+    }
+
+    public function notificationDeliveries(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['notification_deliveries' => $this->notifications->deliveries($status, $limit)], $request->requestId());
+    }
+
+    public function dispatchNotifications(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['notification_dispatch' => $this->notifications->dispatch($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function markNotificationDelivery(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $body = $request->body();
+        $status = trim((string) ($body['status'] ?? 'sent'));
+        $message = isset($body['message']) ? trim((string) $body['message']) : null;
+        return JsonResponse::ok(['notification_delivery' => $this->notifications->markDelivery((string) $request->param('id'), $status, $message)], $request->requestId());
+    }
+
+    public function escalationPolicies(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['escalation_policies' => $this->notifications->escalationPolicies()], $request->requestId());
+    }
+
+    public function escalationRuns(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['escalation_runs' => $this->notifications->escalationRuns($status, $limit)], $request->requestId());
+    }
+
+    public function escalateIncident(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['incident_escalation' => $this->notifications->escalateIncident((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
     }
 
 }
