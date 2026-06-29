@@ -125,6 +125,67 @@ $Results = @()
 Write-Host "Running Re-born full CI smoke suite against $BaseUrl" -ForegroundColor Cyan
 Write-Host "Smoke scripts: $($SmokeTests.Count)" -ForegroundColor Cyan
 
+function Invoke-CiPhpScript([string]$Script) {
+    $scriptPath = Join-Path $Root $Script
+    if (-not (Test-Path $scriptPath)) {
+        throw "Required CI helper not found: $Script"
+    }
+
+    Write-Host "Running CI helper: $Script" -ForegroundColor Cyan
+    $output = & php $scriptPath 2>&1
+    $exitCode = $LASTEXITCODE
+    if ($output) { $output | ForEach-Object { Write-Host $_ } }
+    if ($exitCode -ne 0) {
+        throw "CI helper failed with exit code ${exitCode}: $Script"
+    }
+}
+
+function Assert-CiAdminLogin() {
+    $loginBody = @{ email = "admin@reborn.local"; password = "password" } | ConvertTo-Json -Compress
+    try {
+        $login = Invoke-RestMethod -Method POST -Uri "$BaseUrl/api/v1/auth/login" -ContentType "application/json" -Body $loginBody -TimeoutSec 20
+    } catch {
+        $failure = [ordered]@{
+            checked_at = (Get-Date).ToUniversalTime().ToString("o")
+            stage = "ci-smoke-suite-auth-guard"
+            base_url = $BaseUrl
+            error = $_.Exception.Message
+            position = $_.InvocationInfo.PositionMessage
+            demo_credentials_verification = (& php (Join-Path $Root "scripts/verify-demo-credentials.php") 2>&1) -join "`n"
+            ready = Try-JsonGet "$BaseUrl/api/ready"
+            health = Try-JsonGet "$BaseUrl/api/health"
+            server_log_tail = @()
+        }
+        if (Test-Path $ServerLog) {
+            $failure.server_log_tail = Get-Content $ServerLog -Tail 200
+        }
+        $failurePath = Join-Path $LogsRoot "ci-smoke-auth-guard-failure.json"
+        $failure | ConvertTo-Json -Depth 12 | Out-File -Encoding UTF8 $failurePath
+        throw "CI auth guard failed before smoke suite. See storage/logs/ci-smoke-auth-guard-failure.json"
+    }
+
+    $token = $null
+    if ($login.token -and $login.token.access_token) { $token = $login.token.access_token }
+    if (-not $token -and $login.access_token) { $token = $login.access_token }
+    if (-not $token -and $login.data -and $login.data.token -and $login.data.token.access_token) { $token = $login.data.token.access_token }
+    if (-not $token -and $login.data -and $login.data.access_token) { $token = $login.data.access_token }
+
+    if (-not $token) {
+        throw "CI auth guard login succeeded but did not return an access token."
+    }
+
+    Write-Host "CI auth guard login passed." -ForegroundColor Green
+}
+
+# Harden CI against stale persisted demo hashes or partially applied seed fixes.
+# This runs inside the same workflow step as the smoke suite, immediately before the first API login.
+if ($env:CI) {
+    Invoke-CiPhpScript "scripts/reset-demo-credentials.php"
+    Invoke-CiPhpScript "scripts/verify-demo-credentials.php"
+    Assert-CiAdminLogin
+}
+
+
 foreach ($SmokeTest in $SmokeTests) {
     $ScriptPath = Join-Path $ScriptsRoot $SmokeTest
     if (-not (Test-Path $ScriptPath)) {

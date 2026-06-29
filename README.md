@@ -735,3 +735,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\ci-smoke-tests.ps1 -BaseUrl h
 
 This step does not deploy Re-born. It adds repeatable verification so future steps can be validated on GitHub instead of relying only on the local Windows environment or assistant sandbox.
 
+
+### CI auth hardening note
+
+The GitHub Actions smoke pipeline now resets and verifies the deterministic demo credentials inside `scripts/ci-smoke-tests.ps1` immediately before the full smoke suite. The CI environment also enables `DEMO_AUTH_FALLBACK_ENABLED=true` for the five demo accounts only; keep this disabled in production.

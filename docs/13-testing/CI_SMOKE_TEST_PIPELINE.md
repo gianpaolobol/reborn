@@ -183,3 +183,9 @@ If this preflight fails, the workflow writes:
 - `storage/logs/ci-php-server.log`
 
 These artifacts identify whether the failure is a database seed issue, an API auth issue, or a server runtime issue.
+
+## Demo credential guard
+
+The CI smoke suite performs a demo credential reset and verification immediately before executing the API smoke scripts. This is deliberately duplicated inside `scripts/ci-smoke-tests.ps1`, not only in the workflow YAML, so that manual invocations of the suite also get the same deterministic auth setup.
+
+`DEMO_AUTH_FALLBACK_ENABLED=true` is set only in `.env.ci.example`. Production environments must not enable this flag.
