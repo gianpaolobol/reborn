@@ -182,6 +182,21 @@
       return this.request(`/api/v1/recognition-jobs/${encodeURIComponent(jobId)}`);
     }
 
+    async requestRepairPathDecision(caseId, recognitionJobId = null) {
+      return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/repair-path-decisions`, {
+        method: 'POST',
+        body: recognitionJobId ? { recognition_job_id: recognitionJobId } : {}
+      });
+    }
+
+    async getRepairPathDecisions(caseId) {
+      return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/repair-path-decisions`);
+    }
+
+    async getRepairPathDecision(decisionId) {
+      return this.request(`/api/v1/repair-path-decisions/${encodeURIComponent(decisionId)}`);
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -213,7 +228,8 @@
           knowledge_nodes: [],
           repair_paths: [],
           repair_attachments: [],
-          recognition_jobs: []
+          recognition_jobs: [],
+          repair_path_decisions: []
         };
       }
 
@@ -231,6 +247,7 @@
       let paths = { repair_paths: [] };
       let attachments = { attachments: [] };
       let recognitionJobs = { recognition_jobs: [] };
+      let repairPathDecisions = { repair_path_decisions: [] };
 
       if (latestCase && this.getToken()) {
         try {
@@ -248,6 +265,11 @@
         } catch (_error) {
           recognitionJobs = { recognition_jobs: [] };
         }
+        try {
+          repairPathDecisions = await this.getRepairPathDecisions(latestCase.id);
+        } catch (_error) {
+          repairPathDecisions = { repair_path_decisions: [] };
+        }
       }
 
       return {
@@ -258,7 +280,8 @@
         knowledge_nodes: knowledge.nodes || [],
         repair_paths: paths.repair_paths || [],
         repair_attachments: attachments.attachments || [],
-        recognition_jobs: recognitionJobs.recognition_jobs || []
+        recognition_jobs: recognitionJobs.recognition_jobs || [],
+        repair_path_decisions: repairPathDecisions.repair_path_decisions || []
       };
     }
   }

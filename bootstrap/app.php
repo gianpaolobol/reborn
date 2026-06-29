@@ -19,7 +19,13 @@ use Reborn\Identity\Infrastructure\SqliteAuthSessionRepository;
 use Reborn\Identity\Infrastructure\SqliteUserRepository;
 use Reborn\Identity\Presentation\AuthController;
 use Reborn\Knowledge\Application\KnowledgeEngine;
+use Reborn\Marketplace\Application\GetRepairPathDecisionService;
+use Reborn\Marketplace\Application\ListRepairPathDecisionsService;
+use Reborn\Marketplace\Application\RepairPathDecisionEngine;
 use Reborn\Marketplace\Application\RepairPathDecisionService;
+use Reborn\Marketplace\Application\RequestRepairPathDecisionService;
+use Reborn\Marketplace\Infrastructure\SqliteRepairPathDecisionRepository;
+use Reborn\Marketplace\Presentation\RepairPathDecisionController;
 use Reborn\Provider\Application\ProviderMatchingService;
 use Reborn\Repair\Application\AddRepairAttachmentService;
 use Reborn\Repair\Application\CreateRepairCaseService;
@@ -70,6 +76,7 @@ $dashboardController = new DashboardController(
 $repairRepository = new SqliteRepairCaseRepository($pdo);
 $attachmentRepository = new SqliteRepairAttachmentRepository($pdo);
 $recognitionJobRepository = new SqliteRecognitionJobRepository($pdo);
+$repairPathDecisionRepository = new SqliteRepairPathDecisionRepository($pdo);
 $knowledgeEngine = new KnowledgeEngine($pdo);
 $recognitionEngine = new RecognitionEngine($knowledgeEngine);
 $decisionService = new RepairPathDecisionService($pdo);
@@ -103,8 +110,24 @@ $recognitionJobController = new RecognitionJobController(
     new RepairCaseAccessPolicy()
 );
 
+$repairPathDecisionController = new RepairPathDecisionController(
+    new RequestRepairPathDecisionService(
+        $repairRepository,
+        $recognitionJobRepository,
+        $repairPathDecisionRepository,
+        new RepairPathDecisionEngine(),
+        $eventBus,
+        $pdo
+    ),
+    new ListRepairPathDecisionsService($repairRepository, $repairPathDecisionRepository),
+    new GetRepairPathDecisionService($repairPathDecisionRepository),
+    new GetRepairCaseService($repairRepository),
+    $authContext,
+    new RepairCaseAccessPolicy()
+);
+
 $router = new Router();
-(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $authContext, $pdo);
+(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $authContext, $pdo);
 
 return [
     'router' => $router,

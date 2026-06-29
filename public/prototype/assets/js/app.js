@@ -378,6 +378,14 @@ function activeRecognitionJob() {
   return S.api.recognitionJob || activeRecognitionJobs()[0] || null;
 }
 
+function activeRepairPathDecisions() {
+  return Array.isArray(S.api.repairPathDecisions) ? S.api.repairPathDecisions : [];
+}
+
+function activeRepairPathDecision() {
+  return S.api.repairPathDecision || activeRepairPathDecisions()[0] || null;
+}
+
 function mockRecognitionResult() {
   return {
     object_guess: { label: 'appliance knob / plastic cover / hinge / wearable case', confidence: 0.72 },
@@ -385,6 +393,19 @@ function mockRecognitionResult() {
     recommended_next_step: { path: 'ask_more_photos', reason: 'Mock fallback suggests adding more angles before choosing a repair path.' },
     suggested_inputs: ['Add one photo from the side', 'Measure the broken part width', 'Upload any existing CAD or manual'],
     repair_notes: ['This is a preliminary AI diagnosis.', 'Final manufacturability must be verified before production.']
+  };
+}
+
+function mockRepairPathDecisionResult() {
+  return {
+    decision_factors: { recognition_confidence: 0.72, repairability_score: 0.78, damage_type: 'broken_part', severity: 'medium', category: 'consumer_electronics', dimensional_risk: false },
+    recommended_path: 'generate_part',
+    ranked_paths: [
+      { type: 'generate_part', title: 'Generate a repair model with AI fallback', description: 'Use AI-assisted CAD after dimensional validation.', score: 0.82, estimated_price_cents: 2490, estimated_days: 5, next_actions: ['Create constrained CAD draft', 'Check wall thickness and tolerances', 'Require provider validation'], risk_flags: { human_validation_required: true } },
+      { type: 'find_provider', title: 'Find a local repair provider', description: 'Match the case to a local provider for inspection, material choice and production.', score: 0.79, estimated_price_cents: 2990, estimated_days: 4, next_actions: ['Select provider by capability', 'Validate material constraints', 'Quote repair order'], risk_flags: { provider_quote_required: true } },
+      { type: 'identify_part', title: 'Find an existing verified part', description: 'Search verified sources before creating new geometry.', score: 0.74, estimated_price_cents: 1200, estimated_days: 3, next_actions: ['Check graph match', 'Compare dimensions'], risk_flags: { fit_unknown: true } }
+    ],
+    guardrails: ['Do not sell a file before the repair path is validated.', 'AI geometry is a draft until checks confirm dimensions.']
   };
 }
 
@@ -426,17 +447,42 @@ function recognitionResultPanel() {
   </div>`;
 }
 
+function repairPathDecisionPanel() {
+  const decision = activeRepairPathDecision();
+  const result = decision?.result_json;
+  if (!decision || !result) {
+    return html`<div class="panel stack"><h3>Repair Path Decision Engine</h3><p class="muted">After AI recognition, ask Re-born to rank concrete repair paths by feasibility, cost, risk, ETA and learning value.</p><div class="actions"><button class="btn green" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Generate repair paths</button><a class="btn secondary" href="#/repair-paths">Open repair paths</a></div></div>`;
+  }
+
+  const paths = Array.isArray(result.ranked_paths) ? result.ranked_paths : [];
+  const top = paths[0] || {};
+  return html`<div class="panel stack decision-result">
+    <div class="section-head"><div><p class="eyebrow">Decision Engine v1</p><h3>${safe(top.title || result.recommended_path || 'Recommended repair path')}</h3></div><span class="badge green">Score ${Math.round(Number(top.score || 0) * 100)}</span></div>
+    <p class="muted">Recommended path: <strong>${safe(result.recommended_path || 'review')}</strong>. Re-born ranked this as a repair action, not as a file purchase.</p>
+    <div class="grid three">
+      ${metric(result.decision_factors?.damage_type || 'unknown', 'Damage')}
+      ${metric(result.decision_factors?.severity || 'review', 'Severity')}
+      ${metric(result.decision_factors?.repairability_score || '-', 'Repairability')}
+    </div>
+    <div class="path-mini-list">${paths.slice(0, 4).map(path => `<div class="attachment-row"><div><strong>${safe(path.title)}</strong><span>${safe(path.description)}</span></div><code>${Math.round(Number(path.score || 0) * 100)}</code></div>`).join('')}</div>
+    <div class="actions"><a class="btn green" href="#/repair-paths">Review ranked paths</a><button class="btn secondary" onclick="runRepairPathDecision()" ${S.busy ? 'disabled' : ''}>Re-run decision</button></div>
+  </div>`;
+}
+
 function diagnosisTimeline() {
   const repairCase = S.api.repairCase;
   const attachments = activeAttachments();
   const job = activeRecognitionJob();
   const result = job?.result_json;
+  const decision = activeRepairPathDecision();
+  const decisionResult = decision?.result_json;
   const rows = [
     ['1', 'Case created', repairCase ? `Repair DNA draft ${String(repairCase.id).slice(0, 8)}` : 'Create or select a repair case first.', repairCase ? 'done' : ''],
     ['2', 'Files uploaded', attachments.length ? `${attachments.length} attachment(s) linked to the repair case.` : 'Add photos, manuals or CAD files.', attachments.length ? 'done' : ''],
     ['3', 'AI recognition requested', job ? `Job ${String(job.id).slice(0, 8)} is ${job.status}.` : 'Run recognition from uploaded evidence.', job ? 'done' : ''],
     ['4', 'Preliminary diagnosis completed', result ? `${result.object_guess?.label || 'Object guessed'} with repairability score ${result.damage_assessment?.repairability_score || '-'}.` : 'Waiting for recognition result.', result ? 'done' : ''],
-    ['5', 'Next repair action suggested', result ? `${result.recommended_next_step?.path}: ${result.recommended_next_step?.reason}` : 'Re-born will suggest the next action after diagnosis.', result ? 'done' : '']
+    ['5', 'Next repair action suggested', result ? `${result.recommended_next_step?.path}: ${result.recommended_next_step?.reason}` : 'Re-born will suggest the next action after diagnosis.', result ? 'done' : ''],
+    ['6', 'Repair paths ranked', decisionResult ? `Recommended: ${decisionResult.recommended_path}` : 'Run the Decision Engine to rank repair options.', decisionResult ? 'done' : '']
   ];
 
   return `<div class="timeline diagnosis-timeline">${rows.map(([num, title, text, state]) => `<div class="timeline-row ${state}"><div class="timeline-time">${safe(num)}</div><div class="timeline-content"><strong>${safe(title)}</strong><p class="muted small">${safe(text)}</p></div></div>`).join('')}</div>`;
@@ -458,7 +504,7 @@ function capture() {
         </div>
         <aside class="panel stack"><h3>Diagnosis timeline</h3>${diagnosisTimeline()}</aside>
       </section>
-      <section class="section">${recognitionResultPanel()}</section>
+      <section class="section grid two">${recognitionResultPanel()}${repairPathDecisionPanel()}</section>
     `, { currentStep: 'capture' });
   }
 
@@ -500,6 +546,7 @@ function capture() {
     <section class="section grid two">
       <div class="panel stack"><h3>Diagnosis timeline</h3>${diagnosisTimeline()}</div>
       ${recognitionResultPanel()}
+      ${repairPathDecisionPanel()}
     </section>
   `, { currentStep: 'capture' });
 }
@@ -528,12 +575,15 @@ function diagnosis() {
 
 function repairPaths() {
   const paths = getActiveRepairPaths();
+  const decision = activeRepairPathDecision();
+  const decisionResult = decision?.result_json;
   return layout('Repair paths', html`
-    <section class="section-head"><div><p class="eyebrow">Decision Engine</p><h2>Choose the best way to make it work again.</h2></div><p class="muted">Re-born ranks options by feasibility, price, ETA, trust and learning value.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Decision Engine v1</p><h2>Choose the best way to make it work again.</h2></div><p class="muted">Re-born ranks options by feasibility, price, ETA, trust and learning value. It is ranking a repair journey, not a file catalogue.</p></section>
+    ${decisionResult ? `<section class="panel stack"><div class="section-head"><div><p class="eyebrow">Latest decision</p><h3>Recommended: ${safe(decisionResult.recommended_path)}</h3></div><span class="badge green">${safe(String((decisionResult.ranked_paths || []).length))} paths ranked</span></div><p class="muted">Decision ${safe(String(decision.id || '').slice(0, 8))} was generated from ${safe(decision.recognition_job_id ? 'AI recognition evidence' : 'repair case intake evidence')}.</p></section>` : `<section class="panel stack"><h3>Generate ranked repair paths</h3><p class="muted">Run the Step 12 Decision Engine after AI recognition to create persisted repair paths for the active case.</p><div class="actions"><button class="btn green" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Generate repair paths</button><a class="btn secondary" href="#/capture">Back to evidence</a></div></section>`}
     <section class="grid three">
-      ${paths.map(path => `<article class="card interactive ${S.selectedPath === path.id ? 'selected' : ''}" onclick="REBORN_STATE.set('selectedPath', '${safe(path.id)}'); toast('${safe(path.title)} selected.'); render();"><div class="section-head"><h3>${safe(path.title)}</h3><span class="badge ${path.id === 'print' || path.id === 'provider_assisted_repair' ? 'green' : path.id === 'ai' || path.id === 'ai_generated_cad' ? 'orange' : 'blue'}">Score ${safe(path.score)}</span></div><p class="muted">${safe(path.recommendation)}</p><table class="table"><tr><th>Cost</th><td>${safe(path.cost)}</td></tr><tr><th>ETA</th><td>${safe(path.eta)}</td></tr><tr><th>Impact</th><td>${safe(path.impact)}</td></tr></table></article>`).join('')}
+      ${paths.map(path => `<article class="card interactive ${S.selectedPath === path.id ? 'selected' : ''}" onclick="REBORN_STATE.set('selectedPath', '${safe(path.id)}'); toast('${safe(path.title)} selected.'); render();"><div class="section-head"><h3>${safe(path.title)}</h3><span class="badge ${path.id === 'find_provider' || path.id === 'print' || path.id === 'provider_assisted_repair' ? 'green' : path.id === 'generate_part' || path.id === 'ai' || path.id === 'ai_generated_cad' ? 'orange' : 'blue'}">Score ${safe(path.score)}</span></div><p class="muted">${safe(path.recommendation)}</p><table class="table"><tr><th>Cost</th><td>${safe(path.cost)}</td></tr><tr><th>ETA</th><td>${safe(path.eta)}</td></tr><tr><th>Impact</th><td>${safe(path.impact)}</td></tr></table></article>`).join('')}
     </section>
-    <section class="section panel stack"><h3>Recommended plan</h3><p class="muted">For the MVP journey, local production with a verified model creates marketplace liquidity, validates provider fulfilment and updates the Knowledge Graph after completion.</p><div class="actions"><a class="btn green" href="#/part-detail">Continue with repair model</a><a class="btn secondary" href="#/ai-generation">Generate with AI instead</a></div></section>
+    <section class="section panel stack"><h3>Recommended plan</h3><p class="muted">The MVP path should move from evidence to validation to fulfilment. Existing parts are preferred when verified; AI generation and maker work remain repair fallbacks with explicit validation.</p><div class="actions"><a class="btn green" href="#/part-detail">Continue with repair model</a><a class="btn secondary" href="#/ai-generation">Generate with AI instead</a><button class="btn secondary" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Re-run decision</button></div></section>
   `, { currentStep: 'repair-paths' });
 }
 
@@ -666,6 +716,8 @@ async function refreshApiData(options = {}) {
       repairAttachments: bootstrap.repair_attachments || [],
       recognitionJobs: bootstrap.recognition_jobs || [],
       recognitionJob: (bootstrap.recognition_jobs || [])[0] || S.api.recognitionJob,
+      repairPathDecisions: bootstrap.repair_path_decisions || [],
+      repairPathDecision: (bootstrap.repair_path_decisions || [])[0] || S.api.repairPathDecision,
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
@@ -724,7 +776,7 @@ async function createRepairCaseFromValues(payload) {
   try {
     const result = await window.REBORN_API.createRepairCase(payload);
     const repairCase = result.repair_case;
-    S.setApi({ repairCase, repairCases: [repairCase, ...S.api.repairCases], repairPaths: [], repairAttachments: [], recognitionJobs: [], recognitionJob: null, diagnosis: null, lastSyncAt: new Date().toISOString() });
+    S.setApi({ repairCase, repairCases: [repairCase, ...S.api.repairCases], repairPaths: [], repairAttachments: [], recognitionJobs: [], recognitionJob: null, repairPathDecisions: [], repairPathDecision: null, diagnosis: null, lastSyncAt: new Date().toISOString() });
     toast('Live repair case created.');
     location.hash = '#/capture';
     return repairCase;
@@ -866,6 +918,9 @@ async function runAIRecognition() {
     S.setApi({
       recognitionJob: payload.recognition_job,
       recognitionJobs: jobs.recognition_jobs || [payload.recognition_job],
+      repairPathDecision: null,
+      repairPathDecisions: [],
+      repairPaths: [],
       lastSyncAt: new Date().toISOString(),
       message: 'AI recognition completed from uploaded repair evidence.',
       status: 'live',
@@ -896,6 +951,75 @@ function runMockRecognition() {
   };
   S.setApi({ recognitionJob: job, recognitionJobs: [job], repairAttachments: activeAttachments().length ? activeAttachments() : [{ id: 'mock-attachment', original_filename: 'mock-photo.png', mime_type: 'image/png', size_bytes: 2048 }] });
   toast('Mock AI recognition completed.');
+  render();
+}
+
+
+async function runRepairPathDecision() {
+  if (S.api.status !== 'live') {
+    runMockRepairPathDecision();
+    return;
+  }
+
+  const repairCase = S.api.repairCase;
+  const recognitionJob = activeRecognitionJob();
+  if (!repairCase || !recognitionJob) {
+    toast('Run AI recognition before generating repair paths.');
+    location.hash = '#/capture';
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.requestRepairPathDecision(repairCase.id, recognitionJob.id);
+    const decisions = await window.REBORN_API.getRepairPathDecisions(repairCase.id).catch(() => ({ repair_path_decisions: [payload.decision] }));
+    const paths = await window.REBORN_API.listRepairPaths(repairCase.id).catch(() => ({ repair_paths: payload.repair_paths || [] }));
+    S.setApi({
+      repairPathDecision: payload.decision,
+      repairPathDecisions: decisions.repair_path_decisions || [payload.decision],
+      repairPaths: paths.repair_paths || payload.repair_paths || [],
+      message: 'Repair Path Decision Engine ranked concrete repair paths.',
+      status: 'live',
+      lastError: null,
+      lastSyncAt: new Date().toISOString()
+    });
+    toast('Repair paths ranked.');
+    location.hash = '#/repair-paths';
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Repair path decision failed: ${error.message}`, lastError: error.message });
+    toast(`Decision failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+function runMockRepairPathDecision() {
+  const result = mockRepairPathDecisionResult();
+  const decision = {
+    id: 'mock-path-decision',
+    repair_case_id: S.api.repairCase?.id || 'mock-case',
+    recognition_job_id: activeRecognitionJob()?.id || 'mock-recognition-job',
+    requested_by: S.auth.user?.id || 'mock-user',
+    status: 'completed',
+    result_json: result,
+    created_at: new Date().toISOString(),
+    completed_at: new Date().toISOString()
+  };
+  const paths = result.ranked_paths.map(path => ({
+    id: path.type,
+    repair_case_id: decision.repair_case_id,
+    type: path.type,
+    title: path.title,
+    description: path.description,
+    confidence_score: path.score,
+    estimated_price_cents: path.estimated_price_cents,
+    estimated_days: path.estimated_days,
+    created_at: new Date().toISOString()
+  }));
+  S.setApi({ repairPathDecision: decision, repairPathDecisions: [decision], repairPaths: paths });
+  toast('Mock repair paths ranked.');
+  location.hash = '#/repair-paths';
   render();
 }
 
@@ -954,7 +1078,7 @@ async function handleLogout() {
     if (S.auth.status === 'authenticated') await window.REBORN_API.logout();
     else window.REBORN_API.setToken(null);
     S.setAuth({ status: 'guest', user: null, tokenStored: false, lastLoginAt: null });
-    S.setApi({ dashboard: null, roleDashboards: {}, repairCases: [], repairCase: null, repairPaths: [] });
+    S.setApi({ dashboard: null, roleDashboards: {}, repairCases: [], repairCase: null, repairPaths: [], repairPathDecisions: [], repairPathDecision: null });
     toast('Logged out.');
     location.hash = '#/login';
   } catch (error) {
@@ -1023,6 +1147,8 @@ window.handleRepairFilesSelected = handleRepairFilesSelected;
 window.uploadSelectedRepairFiles = uploadSelectedRepairFiles;
 window.runAIRecognition = runAIRecognition;
 window.runMockRecognition = runMockRecognition;
+window.runRepairPathDecision = runRepairPathDecision;
+window.runMockRepairPathDecision = runMockRepairPathDecision;
 window.handleLogin = handleLogin;
 window.loginAsDemo = loginAsDemo;
 window.handleLogout = handleLogout;

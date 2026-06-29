@@ -136,3 +136,24 @@ docs/11-frontend/STATIC_PROTOTYPE_IMPLEMENTATION.md
 docs/13-testing/PROTOTYPE_QA_CHECKLIST.md
 docs/17-handoff/NEXT_AGENT_HANDOFF_STEP4.md
 ```
+
+## Step 12 additions
+
+```text
+database/migrations/006_repair_path_decision_engine.sql
+src/Marketplace/Application/RepairPathDecisionEngine.php
+src/Marketplace/Application/RequestRepairPathDecisionService.php
+src/Marketplace/Application/ListRepairPathDecisionsService.php
+src/Marketplace/Application/GetRepairPathDecisionService.php
+src/Marketplace/Domain/RepairPathDecision.php
+src/Marketplace/Domain/RepairPathDecisionRepository.php
+src/Marketplace/Domain/RepairPathDecisionRequested.php
+src/Marketplace/Domain/RepairPathDecisionCompleted.php
+src/Marketplace/Infrastructure/SqliteRepairPathDecisionRepository.php
+src/Marketplace/Presentation/RepairPathDecisionController.php
+scripts/smoke-repair-path-decision.ps1
+docs/18-delivery/STEP12_REPAIR_PATH_DECISION_ENGINE.md
+docs/11-frontend/PROTOTYPE_REPAIR_PATH_DECISION_UI.md
+docs/13-testing/REPAIR_PATH_DECISION_QA_CHECKLIST.md
+docs/17-handoff/NEXT_AGENT_HANDOFF_STEP12.md
+```

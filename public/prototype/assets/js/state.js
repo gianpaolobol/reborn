@@ -23,6 +23,8 @@ window.REBORN_STATE = {
     repairAttachments: [],
     recognitionJobs: [],
     recognitionJob: null,
+    repairPathDecisions: [],
+    repairPathDecision: null,
     providers: [],
     knowledgeNodes: [],
     lastSyncAt: null,
