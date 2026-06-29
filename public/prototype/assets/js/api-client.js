@@ -341,6 +341,44 @@
       return this.request(`/api/v1/providers/${encodeURIComponent(providerId)}/trust-reviews`);
     }
 
+
+    async createProviderRankingSnapshot() {
+      return this.request('/api/v1/governance/ranking-snapshots', {
+        method: 'POST'
+      });
+    }
+
+    async getProviderRankings() {
+      return this.request('/api/v1/governance/provider-rankings');
+    }
+
+    async getLatestProviderRankingSnapshot() {
+      return this.request('/api/v1/governance/ranking-snapshots/latest');
+    }
+
+    async recordProviderGovernanceAction(providerId, data = {}) {
+      return this.request(`/api/v1/providers/${encodeURIComponent(providerId)}/governance-actions`, {
+        method: 'POST',
+        body: data
+      });
+    }
+
+    async getProviderGovernanceActions(providerId, activeOnly = false) {
+      return this.request(`/api/v1/providers/${encodeURIComponent(providerId)}/governance-actions${activeOnly ? '?active_only=1' : ''}`);
+    }
+
+    async getGovernanceActions() {
+      return this.request('/api/v1/governance/actions');
+    }
+
+    async getGovernanceSummary() {
+      return this.request('/api/v1/governance/summary');
+    }
+
+    async getGovernancePolicies() {
+      return this.request('/api/v1/governance/policies');
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -384,7 +422,12 @@
           trust_reviews: [],
           provider_quality_scores: [],
           provider_quality_score: null,
-          provider_trust_signals: []
+          provider_trust_signals: [],
+          governance_summary: null,
+          governance_policy: null,
+          provider_rankings: [],
+          provider_ranking_snapshot: null,
+          governance_actions: []
         };
       }
 
@@ -414,12 +457,30 @@
       let providerQualityScores = { quality_scores: [] };
       let providerQualityScore = { quality_score: null };
       let providerTrustSignals = { trust_signals: [] };
+      let governanceSummary = { summary: null, policy: null };
+      let providerRankings = { provider_rankings: [], ranking_snapshot: null };
+      let governanceActions = { governance_actions: [] };
 
       if (this.getToken()) {
         try {
           providerQualityScores = await this.getProviderQualityScores();
         } catch (_error) {
           providerQualityScores = { quality_scores: [] };
+        }
+        try {
+          providerRankings = await this.getProviderRankings();
+        } catch (_error) {
+          providerRankings = { provider_rankings: [], ranking_snapshot: null };
+        }
+        try {
+          governanceSummary = await this.getGovernanceSummary();
+        } catch (_error) {
+          governanceSummary = { summary: null, policy: null };
+        }
+        try {
+          governanceActions = await this.getGovernanceActions();
+        } catch (_error) {
+          governanceActions = { governance_actions: [] };
         }
       }
 
@@ -525,7 +586,12 @@
         trust_reviews: trustReviews.trust_reviews || [],
         provider_quality_scores: providerQualityScores.quality_scores || [],
         provider_quality_score: providerQualityScore.quality_score || null,
-        provider_trust_signals: providerTrustSignals.trust_signals || []
+        provider_trust_signals: providerTrustSignals.trust_signals || [],
+        governance_summary: governanceSummary.summary || null,
+        governance_policy: governanceSummary.policy || null,
+        provider_rankings: providerRankings.provider_rankings || [],
+        provider_ranking_snapshot: providerRankings.ranking_snapshot || null,
+        governance_actions: governanceActions.governance_actions || []
       };
     }
   }

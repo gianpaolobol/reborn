@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Reborn\AI\Presentation\RecognitionJobController;
 use Reborn\Dashboard\Presentation\DashboardController;
 use Reborn\Fulfilment\Presentation\RepairFulfilmentController;
+use Reborn\Governance\Presentation\GovernanceController;
 use Reborn\Identity\Application\AuthContext;
 use Reborn\Learning\Presentation\LearningController;
 use Reborn\Identity\Domain\User;
@@ -18,7 +19,7 @@ use Reborn\Shared\Http\Request;
 use Reborn\Shared\Http\Router;
 use Reborn\Trust\Presentation\TrustController;
 
-return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, ProviderMatchController $providerMatchController, RepairOrderController $repairOrderController, RepairFulfilmentController $repairFulfilmentController, LearningController $learningController, TrustController $trustController, AuthContext $auth, PDO $pdo): void {
+return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, ProviderMatchController $providerMatchController, RepairOrderController $repairOrderController, RepairFulfilmentController $repairFulfilmentController, LearningController $learningController, TrustController $trustController, GovernanceController $governanceController, AuthContext $auth, PDO $pdo): void {
     $router->get('/api/health', static function (Request $request): JsonResponse {
         return JsonResponse::ok([
             'status' => 'ok',
@@ -51,6 +52,9 @@ return static function (Router $router, RepairController $repairController, Auth
                 'trust_reviews',
                 'provider_quality_scoring',
                 'provider_trust_signals',
+                'provider_ranking_governance',
+                'marketplace_governance_actions',
+                'governance_audit',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -111,6 +115,14 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/providers/{id}/quality-score', [$trustController, 'providerQualityScore']);
     $router->get('/api/v1/providers/{id}/trust-signals', [$trustController, 'providerTrustSignals']);
     $router->get('/api/v1/providers/{id}/trust-reviews', [$trustController, 'providerTrustReviews']);
+    $router->post('/api/v1/governance/ranking-snapshots', [$governanceController, 'createRankingSnapshot']);
+    $router->get('/api/v1/governance/ranking-snapshots/latest', [$governanceController, 'latestRankingSnapshot']);
+    $router->get('/api/v1/governance/provider-rankings', [$governanceController, 'providerRankings']);
+    $router->post('/api/v1/providers/{id}/governance-actions', [$governanceController, 'recordProviderAction']);
+    $router->get('/api/v1/providers/{id}/governance-actions', [$governanceController, 'providerActions']);
+    $router->get('/api/v1/governance/actions', [$governanceController, 'actions']);
+    $router->get('/api/v1/governance/summary', [$governanceController, 'summary']);
+    $router->get('/api/v1/governance/policies', [$governanceController, 'policies']);
 
     $router->get('/api/v1/providers', static function (Request $request) use ($pdo): JsonResponse {
         $stmt = $pdo->query('SELECT id, name, city, country, capabilities, rating, average_lead_time_days FROM providers ORDER BY rating DESC, name ASC');

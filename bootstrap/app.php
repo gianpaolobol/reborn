@@ -26,6 +26,15 @@ use Reborn\Learning\Application\ListLearningEventsService;
 use Reborn\Learning\Infrastructure\SqliteRepairCompletionReportRepository;
 use Reborn\Learning\Infrastructure\SqliteRepairLearningEventRepository;
 use Reborn\Learning\Presentation\LearningController;
+use Reborn\Governance\Application\CreateProviderRankingSnapshotService;
+use Reborn\Governance\Application\GovernanceSummaryService;
+use Reborn\Governance\Application\ListGovernanceActionsService;
+use Reborn\Governance\Application\ListProviderRankingsService;
+use Reborn\Governance\Application\MarketplaceGovernancePolicy;
+use Reborn\Governance\Application\ProviderRankingEngine;
+use Reborn\Governance\Application\RecordProviderGovernanceActionService;
+use Reborn\Governance\Infrastructure\SqliteMarketplaceGovernanceRepository;
+use Reborn\Governance\Presentation\GovernanceController;
 use Reborn\Identity\Application\AuthContext;
 use Reborn\Identity\Application\LoginUserService;
 use Reborn\Identity\Application\PasswordHasher;
@@ -130,6 +139,8 @@ $repairFulfilmentRepository = new SqliteRepairFulfilmentRepository($pdo);
 $repairCompletionReportRepository = new SqliteRepairCompletionReportRepository($pdo);
 $repairLearningEventRepository = new SqliteRepairLearningEventRepository($pdo);
 $providerTrustRepository = new SqliteProviderTrustRepository($pdo);
+$marketplaceGovernanceRepository = new SqliteMarketplaceGovernanceRepository($pdo);
+$marketplaceGovernancePolicy = new MarketplaceGovernancePolicy();
 $knowledgeEngine = new KnowledgeEngine($pdo);
 $recognitionEngine = new RecognitionEngine($knowledgeEngine);
 $decisionService = new RepairPathDecisionService($pdo);
@@ -265,8 +276,24 @@ $trustController = new TrustController(
     new RepairCaseAccessPolicy()
 );
 
+
+$governanceController = new GovernanceController(
+    new CreateProviderRankingSnapshotService(
+        new ProviderRankingEngine($pdo, $marketplaceGovernanceRepository),
+        $marketplaceGovernanceRepository,
+        $marketplaceGovernancePolicy,
+        $eventBus
+    ),
+    new ListProviderRankingsService($marketplaceGovernanceRepository),
+    new RecordProviderGovernanceActionService($marketplaceGovernanceRepository, $eventBus),
+    new ListGovernanceActionsService($marketplaceGovernanceRepository),
+    new GovernanceSummaryService($marketplaceGovernanceRepository, $marketplaceGovernancePolicy),
+    $marketplaceGovernancePolicy,
+    $authContext
+);
+
 $router = new Router();
-(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $repairFulfilmentController, $learningController, $trustController, $authContext, $pdo);
+(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $repairFulfilmentController, $learningController, $trustController, $governanceController, $authContext, $pdo);
 
 return [
     'router' => $router,

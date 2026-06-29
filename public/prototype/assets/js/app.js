@@ -84,7 +84,8 @@ function stepper(active) {
     ['checkout', '05', 'Order'],
     ['fulfilment', '06', 'Fulfil'],
     ['learning', '07', 'Learn'],
-    ['trust', '08', 'Trust']
+    ['trust', '08', 'Trust'],
+    ['governance', '09', 'Govern']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -482,6 +483,18 @@ function activeProviderQualityScore() {
 
 function activeProviderTrustSignals() {
   return Array.isArray(S.api.providerTrustSignals) ? S.api.providerTrustSignals : [];
+}
+
+function activeProviderRankings() {
+  return Array.isArray(S.api.providerRankings) ? S.api.providerRankings : [];
+}
+
+function activeGovernanceActions() {
+  return Array.isArray(S.api.governanceActions) ? S.api.governanceActions : [];
+}
+
+function activeGovernanceSummary() {
+  return S.api.governanceSummary || null;
 }
 
 function mockRecognitionResult() {
@@ -1035,6 +1048,80 @@ function trust() {
   `, { currentStep: 'trust' });
 }
 
+
+function mockProviderRankingSnapshot() {
+  const providers = getActiveProviders();
+  const rankings = providers.map((provider, index) => {
+    const base = provider.trust || Math.round((Number(provider.rating || 0) / 5) * 100) || 72;
+    return {
+      provider_id: provider.providerId || provider.id || `mock-provider-${index + 1}`,
+      provider_name: provider.name,
+      city: (provider.distance || 'Local, IT').split(',')[0],
+      country: 'IT',
+      base_score: base,
+      governance_adjustment: 0,
+      final_score: base,
+      rank: index + 1,
+      routing_status: base < 60 ? 'watchlist' : 'eligible',
+      trust_tier: base >= 80 ? 'trusted' : 'qualified',
+      review_count: activeProviderQualityScore()?.review_count || 0,
+      active_governance_actions: [],
+      explanation: 'Mock governance ranking generated from provider trust and seed provider data.'
+    };
+  }).sort((a, b) => b.final_score - a.final_score).map((ranking, index) => ({ ...ranking, rank: index + 1 }));
+  return {
+    id: 'mock-provider-ranking-snapshot',
+    status: 'published',
+    ranking_formula_version: 'provider_ranking_governance_v1',
+    provider_count: rankings.length,
+    ranking_json: rankings,
+    policy_json: { policy_version: 'marketplace_governance_v1', admin_only_mutations: true },
+    created_by: 'mock-admin',
+    created_at: new Date().toISOString()
+  };
+}
+
+function mockGovernanceAction(providerId) {
+  return {
+    id: 'mock-governance-action',
+    provider_id: providerId,
+    action_type: 'watchlist',
+    severity: 'medium',
+    status: 'active',
+    reason: 'Mock operational review: provider needs one more verified completion before wider routing.',
+    notes: 'This governance action demonstrates controlled marketplace routing.',
+    score_adjustment: -10,
+    expires_at: null,
+    created_by: 'mock-admin',
+    created_at: new Date().toISOString(),
+    resolved_at: null
+  };
+}
+
+
+function governance() {
+  setActiveNav('governance');
+  const rankings = activeProviderRankings();
+  const actions = activeGovernanceActions();
+  const snapshot = S.api.providerRankingSnapshot;
+  const summary = activeGovernanceSummary();
+  const policy = S.api.governancePolicy || {};
+  const isAdmin = S.auth.user?.role === 'admin';
+  const rankingRows = rankings.length ? rankings.map(ranking => `<tr><td>${safe(ranking.rank || '-')}</td><td><strong>${safe(ranking.provider_name || ranking.provider_id)}</strong><br><span class="muted small">${safe(ranking.city || '')} · ${safe(ranking.trust_tier || 'unrated')}</span></td><td>${safe(String(ranking.final_score || 0))}</td><td>${badges([[ranking.routing_status || 'eligible', ranking.routing_status === 'eligible' ? 'green' : ranking.routing_status === 'suppressed' ? 'danger' : 'orange']])}</td><td class="muted small">${safe(ranking.explanation || '')}</td></tr>`).join('') : '<tr><td colspan="5" class="muted">No provider ranking snapshot yet. Admin can generate one.</td></tr>';
+  const actionRows = actions.length ? actions.slice(0, 6).map(action => `<div class="timeline-row"><div class="timeline-time">${safe(action.severity || 'med')}</div><div class="timeline-content"><strong>${safe(String(action.action_type || '').replaceAll('_', ' '))}</strong><p class="muted small">Provider ${safe(String(action.provider_id || '').slice(0, 18))} · adjustment ${safe(String(action.score_adjustment || 0))} · ${safe(action.status || '')}</p><p class="muted small">${safe(action.reason || '')}</p></div></div>`).join('') : '<p class="muted small">No active governance actions recorded yet.</p>';
+  const counts = summary?.routing_status_counts || {};
+
+  return layout('Governance', html`
+    <section class="section-head"><div><p class="eyebrow">Step 18 · Marketplace Governance</p><h2>Provider ranking must be governable before real routing.</h2></div><p class="muted">Re-born now separates trust signals from operational governance: admins can create ranking snapshots, watchlist providers, suppress risky routing and audit marketplace decisions.</p></section>
+    <section class="grid two">
+      <div class="panel stack"><h3>Governance control panel</h3><div class="grid two">${metric(summary?.active_governance_actions ?? actions.length, 'Active actions')}${metric(summary?.provider_count ?? rankings.length, 'Ranked providers')}${metric(counts.eligible ?? rankings.filter(r => r.routing_status === 'eligible').length, 'Eligible')}${metric(counts.watchlist ?? rankings.filter(r => r.routing_status === 'watchlist').length, 'Watchlist')}</div><div class="actions"><button class="btn green" onclick="createProviderRankingSnapshot()" ${S.busy || !isAdmin ? 'disabled' : ''}>Create ranking snapshot</button><button class="btn orange" onclick="recordProviderGovernanceAction()" ${S.busy || !isAdmin ? 'disabled' : ''}>Watchlist top provider</button><button class="btn secondary" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh</button></div><p class="muted small">Admin-only mutations. Non-admin roles can consume the current ranking where allowed by API policy.</p></div>
+      <aside class="panel dark-panel stack"><h3>Policy v1</h3>${badges([[policy.policy_version || 'marketplace_governance_v1', 'blue'], [policy.admin_only_mutations ? 'admin mutations' : 'policy visible', 'green'], [snapshot ? 'snapshot published' : 'no snapshot', snapshot ? 'green' : 'orange']])}<p class="muted small">Latest snapshot: ${safe(snapshot?.id ? String(snapshot.id).slice(0, 8) : 'none')} · ${safe(snapshot?.created_at ? new Date(snapshot.created_at).toLocaleString('it-IT') : 'not generated')}</p><p class="muted small">Ranking formula combines provider quality, reliability, communication, timeliness, seed profile and active governance adjustment.</p></aside>
+    </section>
+    <section class="section panel stack"><h3>Provider rankings</h3><table class="table"><tr><th>Rank</th><th>Provider</th><th>Score</th><th>Status</th><th>Reason</th></tr>${rankingRows}</table></section>
+    <section class="section panel stack"><h3>Governance actions</h3><div class="timeline">${actionRows}</div></section>
+  `, { currentStep: 'governance' });
+}
+
 function aiGeneration() {
   return layout('AI generation', html`
     <section class="grid two"><div class="panel stack"><p class="eyebrow">AI repair model</p><h2>Generate only when repair knowledge is missing.</h2><p class="muted">AI generation is positioned as a repair fallback, not as the product. Generated models need validation before becoming verified graph assets.</p><div class="timeline"><div class="timeline-row"><div class="timeline-time">Step 1</div><div class="timeline-content"><strong>Geometry proposal</strong><p class="muted small">AI estimates shape from photos, dimensions and similar parts.</p></div></div><div class="timeline-row"><div class="timeline-time">Step 2</div><div class="timeline-content"><strong>Constraint check</strong><p class="muted small">Wall thickness, tolerance, material and mechanical risk.</p></div></div><div class="timeline-row"><div class="timeline-time">Step 3</div><div class="timeline-content"><strong>Provider validation</strong><p class="muted small">Provider flags printability before order confirmation.</p></div></div></div><div class="actions"><a class="btn orange" href="#/provider-network">Validate with provider</a><a class="btn secondary" href="#/repair-paths">Back to safer paths</a></div></div><aside class="panel stack"><h3>AI Premium trigger</h3><p class="muted">This flow consumes Repair Credits and creates potential marketplace assets if the model becomes verified.</p>${badges([['3 credits', 'orange'], ['Validation required', 'danger'], ['Learning event', 'blue']])}</aside></section>
@@ -1083,6 +1170,7 @@ const routes = {
   '/fulfilment': fulfilment,
   '/learning': learning,
   '/trust': trust,
+  '/governance': governance,
   '/ai-generation': aiGeneration,
   '/login': login,
   '/account': account,
@@ -1157,6 +1245,11 @@ async function refreshApiData(options = {}) {
       providerQualityScores: bootstrap.provider_quality_scores || [],
       providerQualityScore: bootstrap.provider_quality_score || (bootstrap.provider_quality_scores || [])[0] || S.api.providerQualityScore,
       providerTrustSignals: bootstrap.provider_trust_signals || [],
+      governanceSummary: bootstrap.governance_summary || null,
+      governancePolicy: bootstrap.governance_policy || null,
+      providerRankings: bootstrap.provider_rankings || [],
+      providerRankingSnapshot: bootstrap.provider_ranking_snapshot || null,
+      governanceActions: bootstrap.governance_actions || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
@@ -1919,6 +2012,92 @@ async function bootAuthSession() {
   }
 }
 
+
+async function createProviderRankingSnapshot() {
+  if (S.api.status !== 'live') {
+    const snapshot = mockProviderRankingSnapshot();
+    S.setApi({ providerRankingSnapshot: snapshot, providerRankings: snapshot.ranking_json, governancePolicy: snapshot.policy_json, governanceSummary: { provider_count: snapshot.provider_count, active_governance_actions: activeGovernanceActions().length }, message: 'Mock provider ranking snapshot created.' });
+    toast('Mock provider ranking snapshot created.');
+    render();
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.createProviderRankingSnapshot();
+    const summary = await window.REBORN_API.getGovernanceSummary().catch(() => ({ summary: null, policy: null }));
+    const actions = await window.REBORN_API.getGovernanceActions().catch(() => ({ governance_actions: [] }));
+    S.setApi({
+      providerRankingSnapshot: payload.ranking_snapshot,
+      providerRankings: payload.provider_rankings || payload.ranking_snapshot?.ranking_json || [],
+      governanceSummary: summary.summary || null,
+      governancePolicy: summary.policy || payload.ranking_snapshot?.policy_json || null,
+      governanceActions: actions.governance_actions || [],
+      message: 'Provider ranking snapshot published.',
+      status: 'live',
+      lastError: null,
+      lastSyncAt: new Date().toISOString()
+    });
+    toast('Provider ranking snapshot created.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Governance ranking failed: ${error.message}`, lastError: error.message });
+    toast(`Governance failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function recordProviderGovernanceAction() {
+  const ranking = activeProviderRankings()[0];
+  const providerId = ranking?.provider_id || getActiveProviders()[0]?.providerId || getActiveProviders()[0]?.id;
+  if (!providerId) {
+    toast('No provider available for governance action.');
+    return;
+  }
+  const data = {
+    action_type: 'watchlist',
+    severity: 'medium',
+    score_adjustment: -10,
+    reason: 'Operational governance review before broader marketplace routing.',
+    notes: 'Step 18 governance action: provider remains usable but should be monitored.'
+  };
+
+  if (S.api.status !== 'live') {
+    const action = mockGovernanceAction(providerId);
+    S.setApi({ governanceActions: [action, ...activeGovernanceActions()] });
+    toast('Mock governance action recorded.');
+    render();
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.recordProviderGovernanceAction(providerId, data);
+    const actions = await window.REBORN_API.getGovernanceActions().catch(() => ({ governance_actions: [payload.governance_action] }));
+    const rankingPayload = await window.REBORN_API.createProviderRankingSnapshot().catch(() => ({ ranking_snapshot: S.api.providerRankingSnapshot, provider_rankings: S.api.providerRankings }));
+    const summary = await window.REBORN_API.getGovernanceSummary().catch(() => ({ summary: null, policy: null }));
+    S.setApi({
+      governanceActions: actions.governance_actions || [payload.governance_action],
+      providerRankingSnapshot: rankingPayload.ranking_snapshot || S.api.providerRankingSnapshot,
+      providerRankings: rankingPayload.provider_rankings || S.api.providerRankings,
+      governanceSummary: summary.summary || null,
+      governancePolicy: summary.policy || S.api.governancePolicy,
+      message: 'Provider governance action recorded and ranking refreshed.',
+      status: 'live',
+      lastError: null,
+      lastSyncAt: new Date().toISOString()
+    });
+    toast('Governance action recorded.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Governance action failed: ${error.message}`, lastError: error.message });
+    toast(`Governance action failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 async function handleLogin(event) {
   event.preventDefault();
   const form = event.currentTarget;
@@ -1959,7 +2138,7 @@ async function handleLogout() {
     if (S.auth.status === 'authenticated') await window.REBORN_API.logout();
     else window.REBORN_API.setToken(null);
     S.setAuth({ status: 'guest', user: null, tokenStored: false, lastLoginAt: null });
-    S.setApi({ dashboard: null, roleDashboards: {}, repairCases: [], repairCase: null, repairPaths: [], repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, repairOrders: [], repairOrder: null, paymentIntents: [], paymentIntent: null, fulfilments: [], fulfilment: null, completionReports: [], completionReport: null, learningEvents: [], learningEvent: null, trustReviews: [], trustReview: null, providerQualityScores: [], providerQualityScore: null, providerTrustSignals: [] });
+    S.setApi({ dashboard: null, roleDashboards: {}, repairCases: [], repairCase: null, repairPaths: [], repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, repairOrders: [], repairOrder: null, paymentIntents: [], paymentIntent: null, fulfilments: [], fulfilment: null, completionReports: [], completionReport: null, learningEvents: [], learningEvent: null, trustReviews: [], trustReview: null, providerQualityScores: [], providerQualityScore: null, providerTrustSignals: [], governanceSummary: null, governancePolicy: null, providerRankings: [], providerRankingSnapshot: null, governanceActions: [] });
     toast('Logged out.');
     location.hash = '#/login';
   } catch (error) {
@@ -2039,6 +2218,8 @@ window.runMockPaymentIntent = runMockPaymentIntent;
 window.confirmMockPaymentIntent = confirmMockPaymentIntent;
 window.recordCompletionLearning = recordCompletionLearning;
 window.recordProviderTrustReview = recordProviderTrustReview;
+window.createProviderRankingSnapshot = createProviderRankingSnapshot;
+window.recordProviderGovernanceAction = recordProviderGovernanceAction;
 window.handleLogin = handleLogin;
 window.loginAsDemo = loginAsDemo;
 window.handleLogout = handleLogout;
