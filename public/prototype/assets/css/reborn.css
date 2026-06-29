@@ -449,3 +449,57 @@ body.is-busy::after {
 .table-wrap { width: 100%; overflow-x: auto; }
 .table thead th { background: rgba(17,19,21,.035); }
 .api-banner-actions .mini-button.link-button { color: inherit; }
+
+/* Step 11 — repair upload and AI recognition */
+.file-dropzone { min-height: 190px; }
+.file-dropzone input[type="file"] { margin-top: 14px; background: var(--paper); }
+.upload-preview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.upload-preview {
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+}
+.upload-preview strong { font-size: .9rem; overflow-wrap: anywhere; }
+.upload-preview span { color: var(--graphite-500); font-size: .78rem; }
+.upload-thumb {
+  display: grid;
+  place-items: center;
+  min-height: 92px;
+  border: 1px dashed var(--line);
+  background: #f7f5ef;
+  color: var(--graphite-500);
+  font-weight: 800;
+  overflow: hidden;
+}
+.upload-thumb img { width: 100%; height: 120px; object-fit: cover; display: block; }
+.attachment-list { display: grid; gap: 8px; }
+.attachment-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+}
+.attachment-row div { display: grid; gap: 3px; min-width: 0; }
+.attachment-row strong { overflow-wrap: anywhere; }
+.attachment-row span { color: var(--graphite-500); font-size: .8rem; }
+.attachment-row code { color: var(--electric-blue); }
+.notice {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-left: 3px solid var(--repair-green);
+  background: rgba(47, 191, 113, .08);
+  border-radius: var(--radius);
+}
+.notice.warning { border-left-color: var(--safety-orange); background: rgba(255, 122, 26, .09); }
+.notice span { color: var(--graphite-700); }
+.recognition-result .metric strong { font-size: 1.35rem; overflow-wrap: anywhere; }
+.diagnosis-timeline .timeline-row.done .timeline-content { border-left-color: var(--repair-green); }
+.diagnosis-timeline .timeline-row.done .timeline-time { color: #167243; font-weight: 800; }

@@ -2,6 +2,7 @@ window.REBORN_STATE = {
   selectedPath: 'print',
   selectedProvider: 'Bologna 3D Lab',
   uploaded: false,
+  selectedUploadFiles: [],
   role: 'customer',
   busy: false,
   auth: {
@@ -19,6 +20,9 @@ window.REBORN_STATE = {
     repairCases: [],
     diagnosis: null,
     repairPaths: [],
+    repairAttachments: [],
+    recognitionJobs: [],
+    recognitionJob: null,
     providers: [],
     knowledgeNodes: [],
     lastSyncAt: null,

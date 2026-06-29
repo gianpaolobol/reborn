@@ -2,7 +2,12 @@
 
 declare(strict_types=1);
 
+use Reborn\AI\Application\GetRecognitionJobService;
+use Reborn\AI\Application\ListRecognitionJobsService;
 use Reborn\AI\Application\RecognitionEngine;
+use Reborn\AI\Application\RequestRecognitionJobService;
+use Reborn\AI\Infrastructure\SqliteRecognitionJobRepository;
+use Reborn\AI\Presentation\RecognitionJobController;
 use Reborn\Dashboard\Application\UserDashboardService;
 use Reborn\Dashboard\Presentation\DashboardController;
 use Reborn\Identity\Application\AuthContext;
@@ -64,11 +69,12 @@ $dashboardController = new DashboardController(
 
 $repairRepository = new SqliteRepairCaseRepository($pdo);
 $attachmentRepository = new SqliteRepairAttachmentRepository($pdo);
+$recognitionJobRepository = new SqliteRecognitionJobRepository($pdo);
 $knowledgeEngine = new KnowledgeEngine($pdo);
 $recognitionEngine = new RecognitionEngine($knowledgeEngine);
 $decisionService = new RepairPathDecisionService($pdo);
 $providerMatchingService = new ProviderMatchingService($pdo);
-$fileStorage = new LocalFileStorage(dirname(__DIR__) . '/storage/app/uploads');
+$fileStorage = new LocalFileStorage(dirname(__DIR__) . '/storage/uploads');
 
 $repairController = new RepairController(
     new ListRepairCasesService($repairRepository),
@@ -87,8 +93,18 @@ $repairController = new RepairController(
     new RepairCaseAccessPolicy()
 );
 
+
+$recognitionJobController = new RecognitionJobController(
+    new RequestRecognitionJobService($repairRepository, $attachmentRepository, $recognitionJobRepository, $eventBus),
+    new ListRecognitionJobsService($repairRepository, $recognitionJobRepository),
+    new GetRecognitionJobService($recognitionJobRepository),
+    new GetRepairCaseService($repairRepository),
+    $authContext,
+    new RepairCaseAccessPolicy()
+);
+
 $router = new Router();
-(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $authContext, $pdo);
+(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $authContext, $pdo);
 
 return [
     'router' => $router,

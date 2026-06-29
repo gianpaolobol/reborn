@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Reborn\AI\Presentation\RecognitionJobController;
 use Reborn\Dashboard\Presentation\DashboardController;
 use Reborn\Identity\Application\AuthContext;
 use Reborn\Identity\Domain\User;
@@ -11,7 +12,7 @@ use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
 use Reborn\Shared\Http\Router;
 
-return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, AuthContext $auth, PDO $pdo): void {
+return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, AuthContext $auth, PDO $pdo): void {
     $router->get('/api/health', static function (Request $request): JsonResponse {
         return JsonResponse::ok([
             'status' => 'ok',
@@ -29,6 +30,8 @@ return static function (Router $router, RepairController $repairController, Auth
                 'repair_case_ownership',
                 'role_dashboards',
                 'role_based_authorization',
+                'repair_uploads',
+                'ai_recognition_jobs',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -52,6 +55,9 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->post('/api/v1/repair-cases/{id}/diagnose', [$repairController, 'diagnose']);
     $router->get('/api/v1/repair-cases/{id}/attachments', [$repairController, 'attachments']);
     $router->post('/api/v1/repair-cases/{id}/attachments', [$repairController, 'attach']);
+    $router->get('/api/v1/repair-cases/{id}/recognition-jobs', [$recognitionJobController, 'index']);
+    $router->post('/api/v1/repair-cases/{id}/recognition-jobs', [$recognitionJobController, 'store']);
+    $router->get('/api/v1/recognition-jobs/{id}', [$recognitionJobController, 'show']);
 
     $router->get('/api/v1/providers', static function (Request $request) use ($pdo): JsonResponse {
         $stmt = $pdo->query('SELECT id, name, city, country, capabilities, rating, average_lead_time_days FROM providers ORDER BY rating DESC, name ASC');

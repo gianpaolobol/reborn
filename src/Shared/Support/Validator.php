@@ -56,7 +56,7 @@ final class Validator
     }
 
     /** @param array<string, mixed>|null $file @return array<string, list<string>> */
-    public static function uploadedRepairAsset(?array $file, int $maxBytes = 10485760): array
+    public static function uploadedRepairAsset(?array $file, int $maxBytes = 15728640): array
     {
         $errors = [];
         if ($file === null) {
@@ -79,11 +79,34 @@ final class Validator
 
         $name = (string) ($file['name'] ?? '');
         $extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'stl', 'obj', 'step', 'stp', '3mf', 'pdf'];
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'pdf', 'stl', 'step', 'stp', 'obj'];
         if (!in_array($extension, $allowedExtensions, true)) {
             $errors['file'][] = 'file extension must be one of: ' . implode(', ', $allowedExtensions) . '.';
         }
 
+        $tmpName = (string) ($file['tmp_name'] ?? '');
+        $detectedMime = '';
+        if ($tmpName !== '' && is_file($tmpName) && function_exists('mime_content_type')) {
+            $detectedMime = strtolower((string) (mime_content_type($tmpName) ?: ''));
+        }
+        $declaredMime = strtolower((string) ($file['type'] ?? ''));
+        $mimeType = $detectedMime !== '' ? $detectedMime : $declaredMime;
+
+        $imageMimes = ['image/jpeg', 'image/png', 'image/webp'];
+        $documentMimes = ['application/pdf'];
+        $modelMimes = ['model/stl'];
+        $cadExtensions = ['stl', 'step', 'stp', 'obj'];
+
+        $mimeAllowed = in_array($mimeType, $imageMimes, true)
+            || in_array($mimeType, $documentMimes, true)
+            || in_array($mimeType, $modelMimes, true)
+            || ($mimeType === 'application/octet-stream' && in_array($extension, $cadExtensions, true));
+
+        if (!$mimeAllowed) {
+            $errors['file'][] = 'file MIME type must be image/jpeg, image/png, image/webp, application/pdf, model/stl, or application/octet-stream for STL/STEP/STP/OBJ files.';
+        }
+
         return $errors;
     }
+
 }

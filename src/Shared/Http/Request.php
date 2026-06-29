@@ -51,6 +51,10 @@ final class Request
             }
         }
 
+        if ($_POST !== [] && !str_contains($contentType, 'application/json')) {
+            $decodedBody = $_POST;
+        }
+
         $headers = self::normalizeHeaders($_SERVER);
         $requestId = $headers['x-request-id'] ?? '';
         if ($requestId === '') {

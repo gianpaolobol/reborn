@@ -365,19 +365,141 @@ function start() {
   `, { currentStep: 'start' });
 }
 
+
+function activeAttachments() {
+  return Array.isArray(S.api.repairAttachments) ? S.api.repairAttachments : [];
+}
+
+function activeRecognitionJobs() {
+  return Array.isArray(S.api.recognitionJobs) ? S.api.recognitionJobs : [];
+}
+
+function activeRecognitionJob() {
+  return S.api.recognitionJob || activeRecognitionJobs()[0] || null;
+}
+
+function mockRecognitionResult() {
+  return {
+    object_guess: { label: 'appliance knob / plastic cover / hinge / wearable case', confidence: 0.72 },
+    damage_assessment: { type: 'broken_part', severity: 'medium', repairability_score: 0.78 },
+    recommended_next_step: { path: 'ask_more_photos', reason: 'Mock fallback suggests adding more angles before choosing a repair path.' },
+    suggested_inputs: ['Add one photo from the side', 'Measure the broken part width', 'Upload any existing CAD or manual'],
+    repair_notes: ['This is a preliminary AI diagnosis.', 'Final manufacturability must be verified before production.']
+  };
+}
+
+function selectedFilePreview() {
+  const files = Array.isArray(S.selectedUploadFiles) ? S.selectedUploadFiles : [];
+  if (!files.length) return '<p class="muted small">No local files selected yet.</p>';
+
+  return `<div class="upload-preview-grid">${files.map((file, index) => {
+    const isImage = String(file.type || '').startsWith('image/');
+    const url = isImage ? URL.createObjectURL(file) : '';
+    return `<div class="upload-preview"><div class="upload-thumb">${isImage ? `<img src="${url}" alt="Selected upload preview ${index + 1}" />` : '▣'}</div><strong>${safe(file.name)}</strong><span>${safe(file.type || 'unknown type')} · ${Math.ceil((file.size || 0) / 1024)} KB</span></div>`;
+  }).join('')}</div>`;
+}
+
+function attachmentList() {
+  const attachments = activeAttachments();
+  if (!attachments.length) return '<p class="muted small">No uploaded attachments yet. Upload photos, manuals or CAD evidence before running recognition.</p>';
+
+  return `<div class="attachment-list">${attachments.map(attachment => `<div class="attachment-row"><div><strong>${safe(attachment.original_filename)}</strong><span>${safe(attachment.mime_type)} · ${Math.ceil(Number(attachment.size_bytes || 0) / 1024)} KB</span></div><code>${safe(String(attachment.id || '').slice(0, 8))}</code></div>`).join('')}</div>`;
+}
+
+function recognitionResultPanel() {
+  const job = activeRecognitionJob();
+  const result = job?.result_json;
+  if (!job || !result) {
+    return html`<div class="panel stack"><h3>AI recognition result</h3><p class="muted">Run AI recognition after upload to produce a preliminary repair diagnosis.</p></div>`;
+  }
+
+  return html`<div class="panel stack recognition-result">
+    <div class="section-head"><div><p class="eyebrow">AI recognition</p><h3>${safe(result.object_guess?.label || 'Preliminary object guess')}</h3></div><span class="badge green">${Math.round(Number(result.object_guess?.confidence || 0) * 100)}% confidence</span></div>
+    <div class="grid three">
+      ${metric(result.damage_assessment?.type || 'unknown', 'Damage type')}
+      ${metric(result.damage_assessment?.severity || 'review', 'Severity')}
+      ${metric(result.recommended_next_step?.path || 'ask_more_photos', 'Next path')}
+    </div>
+    <p class="muted">${safe(result.recommended_next_step?.reason || 'Recognition completed with mock AI result.')}</p>
+    <div class="badges">${(result.suggested_inputs || []).map(item => `<span class="badge blue">${safe(item)}</span>`).join('')}</div>
+    <div class="notice"><strong>MVP guardrail</strong><span>${safe((result.repair_notes || [])[1] || 'Final manufacturability must be verified before production.')}</span></div>
+  </div>`;
+}
+
+function diagnosisTimeline() {
+  const repairCase = S.api.repairCase;
+  const attachments = activeAttachments();
+  const job = activeRecognitionJob();
+  const result = job?.result_json;
+  const rows = [
+    ['1', 'Case created', repairCase ? `Repair DNA draft ${String(repairCase.id).slice(0, 8)}` : 'Create or select a repair case first.', repairCase ? 'done' : ''],
+    ['2', 'Files uploaded', attachments.length ? `${attachments.length} attachment(s) linked to the repair case.` : 'Add photos, manuals or CAD files.', attachments.length ? 'done' : ''],
+    ['3', 'AI recognition requested', job ? `Job ${String(job.id).slice(0, 8)} is ${job.status}.` : 'Run recognition from uploaded evidence.', job ? 'done' : ''],
+    ['4', 'Preliminary diagnosis completed', result ? `${result.object_guess?.label || 'Object guessed'} with repairability score ${result.damage_assessment?.repairability_score || '-'}.` : 'Waiting for recognition result.', result ? 'done' : ''],
+    ['5', 'Next repair action suggested', result ? `${result.recommended_next_step?.path}: ${result.recommended_next_step?.reason}` : 'Re-born will suggest the next action after diagnosis.', result ? 'done' : '']
+  ];
+
+  return `<div class="timeline diagnosis-timeline">${rows.map(([num, title, text, state]) => `<div class="timeline-row ${state}"><div class="timeline-time">${safe(num)}</div><div class="timeline-content"><strong>${safe(title)}</strong><p class="muted small">${safe(text)}</p></div></div>`).join('')}</div>`;
+}
+
 function capture() {
-  return layout('Capture', html`
+  setActiveNav('start');
+
+  if (S.api.status !== 'live') {
+    return layout('Upload repair evidence', html`
+      <section class="section-head"><div><p class="eyebrow">Step 11 · Mock fallback</p><h2>Upload photos for repair diagnosis</h2></div><p class="muted">Add photos, manuals or CAD files so Re-born can understand what needs to be repaired.</p></section>
+      <section class="grid two">
+        <div class="panel stack">
+          <h3>Local prototype mode</h3>
+          <p class="muted">The backend is not live, so this screen shows the Step 11 flow with local staged files and a mock recognition result.</p>
+          <input id="repairFileInput" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,.stl,.step,.stp,.obj" onchange="handleRepairFilesSelected(event)" />
+          ${selectedFilePreview()}
+          <div class="actions"><button class="btn green" onclick="runMockRecognition()">Run mock AI recognition</button><a class="btn secondary" href="#/start">Back to intake</a></div>
+        </div>
+        <aside class="panel stack"><h3>Diagnosis timeline</h3>${diagnosisTimeline()}</aside>
+      </section>
+      <section class="section">${recognitionResultPanel()}</section>
+    `, { currentStep: 'capture' });
+  }
+
+  if (S.auth.status !== 'authenticated') {
+    return layout('Upload repair evidence', authRequiredPanel('repair evidence upload'));
+  }
+
+  const repairCase = S.api.repairCase;
+  if (!repairCase) {
+    return layout('Upload repair evidence', html`
+      <section class="grid two">
+        <div class="panel stack">
+          <p class="eyebrow">Step 11</p>
+          <h2>Upload photos for repair diagnosis</h2>
+          <p class="muted">Add photos, manuals or CAD files so Re-born can understand what needs to be repaired. First create a repair case so every file is linked to a real Repair Journey.</p>
+          <div class="actions"><button class="btn green" onclick="createDemoRepairCase()" ${S.busy ? 'disabled' : ''}>Create repair case</button><a class="btn secondary" href="#/start">Open intake form</a></div>
+        </div>
+        <aside class="panel dark-panel stack"><h3>Repair-first rule</h3><p class="muted">The upload is not a generic STL library. It is evidence for a real object that must return to function.</p>${badges([['Repair case required', 'green'], ['Attachment evidence', 'blue'], ['AI recognition', 'orange']])}</aside>
+      </section>
+    `, { currentStep: 'capture' });
+  }
+
+  return layout('Upload repair evidence', html`
+    <section class="section-head"><div><p class="eyebrow">Step 11 · Repair evidence</p><h2>Upload photos for repair diagnosis</h2></div><p class="muted">Add photos, manuals or CAD files so Re-born can understand what needs to be repaired.</p></section>
     <section class="grid two">
       <div class="panel stack">
-        <p class="eyebrow">Photos and dimensions</p>
-        <h2>Capture the part, not the file.</h2>
-        <div class="dropzone" onclick="REBORN_STATE.set('uploaded', true); toast('Prototype upload accepted. No file was actually uploaded.'); render();">
-          <div><div class="dropzone-icon">▣</div><h3>${S.uploaded ? 'Photos staged for diagnosis' : 'Drop photos here'}</h3><p class="muted">Front, side, broken area, scale reference, optional STEP/STL.</p></div>
+        <div class="notice"><strong>Active repair case</strong><span>${safe(repairCase.title)} · ${safe(repairCase.category)} · ${safe(String(repairCase.id).slice(0, 8))}</span></div>
+        <div class="dropzone file-dropzone">
+          <div><div class="dropzone-icon">▣</div><h3>Select repair evidence</h3><p class="muted">JPEG, PNG, WebP, PDF, STL, STEP, STP or OBJ. MVP limit: 15 MB per file.</p><input id="repairFileInput" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,.stl,.step,.stp,.obj" onchange="handleRepairFilesSelected(event)" /></div>
         </div>
-        <div class="form-grid"><div class="field"><label>Approx. width</label><input value="36 mm" /></div><div class="field"><label>Approx. thickness</label><input value="12 mm" /></div></div>
-        <div class="actions"><button class="btn green" onclick="runLiveDiagnosis()" ${S.busy ? 'disabled' : ''}>Run live diagnosis</button><a class="btn secondary" href="#/start">Back</a></div>
+        ${selectedFilePreview()}
+        <div class="actions"><button class="btn green" onclick="uploadSelectedRepairFiles()" ${S.busy ? 'disabled' : ''}>Upload selected files</button><button class="btn orange" onclick="runAIRecognition()" ${S.busy || !activeAttachments().length ? 'disabled' : ''}>Run AI recognition</button><a class="btn secondary" href="#/start">Edit intake</a></div>
       </div>
-      <div class="prototype-frame"><div class="device-header"><div class="dots"><span></span><span></span><span></span></div><strong>AI capture preview</strong></div><div class="frame-body"><div class="scan-visual"><div class="part-shape"></div><div class="scan-box"></div><div class="scan-line"></div></div></div></div>
+      <aside class="panel stack">
+        <h3>Uploaded attachments</h3>
+        ${attachmentList()}
+      </aside>
+    </section>
+    <section class="section grid two">
+      <div class="panel stack"><h3>Diagnosis timeline</h3>${diagnosisTimeline()}</div>
+      ${recognitionResultPanel()}
     </section>
   `, { currentStep: 'capture' });
 }
@@ -541,6 +663,9 @@ async function refreshApiData(options = {}) {
       providers: bootstrap.providers,
       knowledgeNodes: bootstrap.knowledge_nodes,
       repairPaths: bootstrap.repair_paths,
+      repairAttachments: bootstrap.repair_attachments || [],
+      recognitionJobs: bootstrap.recognition_jobs || [],
+      recognitionJob: (bootstrap.recognition_jobs || [])[0] || S.api.recognitionJob,
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
@@ -599,7 +724,7 @@ async function createRepairCaseFromValues(payload) {
   try {
     const result = await window.REBORN_API.createRepairCase(payload);
     const repairCase = result.repair_case;
-    S.setApi({ repairCase, repairCases: [repairCase, ...S.api.repairCases], repairPaths: [], diagnosis: null, lastSyncAt: new Date().toISOString() });
+    S.setApi({ repairCase, repairCases: [repairCase, ...S.api.repairCases], repairPaths: [], repairAttachments: [], recognitionJobs: [], recognitionJob: null, diagnosis: null, lastSyncAt: new Date().toISOString() });
     toast('Live repair case created.');
     location.hash = '#/capture';
     return repairCase;
@@ -668,6 +793,110 @@ function submitIntakeFromPrototype(event) {
     category,
     description
   });
+}
+
+
+function handleRepairFilesSelected(event) {
+  const files = Array.from(event.currentTarget.files || []);
+  S.set('selectedUploadFiles', files);
+  toast(files.length ? `${files.length} file(s) selected.` : 'No files selected.');
+  render();
+}
+
+async function uploadSelectedRepairFiles() {
+  if (S.api.status !== 'live') {
+    toast('Backend API is not live. Use mock recognition instead.');
+    return;
+  }
+
+  if (S.auth.status !== 'authenticated') {
+    toast('Login required to upload repair evidence.');
+    location.hash = '#/login';
+    return;
+  }
+
+  const repairCase = S.api.repairCase;
+  if (!repairCase) {
+    toast('Create a repair case before uploading files.');
+    location.hash = '#/start';
+    return;
+  }
+
+  const files = Array.isArray(S.selectedUploadFiles) ? S.selectedUploadFiles : [];
+  if (!files.length) {
+    toast('Select at least one file first.');
+    return;
+  }
+
+  setBusy(true);
+  try {
+    for (const file of files) {
+      await window.REBORN_API.uploadRepairAttachment(repairCase.id, file, String(file.type || '').startsWith('image/') ? 'diagnostic_photo' : 'repair_asset');
+    }
+    const payload = await window.REBORN_API.getRepairAttachments(repairCase.id);
+    S.set('selectedUploadFiles', []);
+    S.setApi({ repairAttachments: payload.attachments || [], lastSyncAt: new Date().toISOString() });
+    toast('Repair evidence uploaded.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Upload failed: ${error.message}`, lastError: error.message });
+    toast(`Upload failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function runAIRecognition() {
+  if (S.api.status !== 'live') {
+    runMockRecognition();
+    return;
+  }
+
+  const repairCase = S.api.repairCase;
+  const attachments = activeAttachments();
+  if (!repairCase || !attachments.length) {
+    toast('Upload evidence before running AI recognition.');
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.requestRecognition(repairCase.id, attachments.map(attachment => attachment.id));
+    const jobs = await window.REBORN_API.getRecognitionJobs(repairCase.id).catch(() => ({ recognition_jobs: [payload.recognition_job] }));
+    S.setApi({
+      recognitionJob: payload.recognition_job,
+      recognitionJobs: jobs.recognition_jobs || [payload.recognition_job],
+      lastSyncAt: new Date().toISOString(),
+      message: 'AI recognition completed from uploaded repair evidence.',
+      status: 'live',
+      lastError: null
+    });
+    toast('AI recognition completed.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `AI recognition failed: ${error.message}`, lastError: error.message });
+    toast(`AI recognition failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+function runMockRecognition() {
+  const result = mockRecognitionResult();
+  const job = {
+    id: 'mock-recognition-job',
+    repair_case_id: S.api.repairCase?.id || 'mock-case',
+    requested_by: S.auth.user?.id || 'mock-user',
+    status: 'completed',
+    input_attachment_ids: ['mock-attachment'],
+    result_json: result,
+    created_at: new Date().toISOString(),
+    started_at: new Date().toISOString(),
+    completed_at: new Date().toISOString()
+  };
+  S.setApi({ recognitionJob: job, recognitionJobs: [job], repairAttachments: activeAttachments().length ? activeAttachments() : [{ id: 'mock-attachment', original_filename: 'mock-photo.png', mime_type: 'image/png', size_bytes: 2048 }] });
+  toast('Mock AI recognition completed.');
+  render();
 }
 
 async function bootAuthSession() {
@@ -790,6 +1019,10 @@ window.refreshApiData = refreshApiData;
 window.createDemoRepairCase = createDemoRepairCase;
 window.runLiveDiagnosis = runLiveDiagnosis;
 window.submitIntakeFromPrototype = submitIntakeFromPrototype;
+window.handleRepairFilesSelected = handleRepairFilesSelected;
+window.uploadSelectedRepairFiles = uploadSelectedRepairFiles;
+window.runAIRecognition = runAIRecognition;
+window.runMockRecognition = runMockRecognition;
 window.handleLogin = handleLogin;
 window.loginAsDemo = loginAsDemo;
 window.handleLogout = handleLogout;

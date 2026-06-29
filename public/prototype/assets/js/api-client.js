@@ -37,15 +37,16 @@
 
       const timeout = withTimeout(API_TIMEOUT_MS);
       try {
+        const isFormData = options.formData instanceof FormData;
         const response = await fetch(`${this.baseUrl}${path}`, {
           method: options.method || 'GET',
           headers: {
             'Accept': 'application/json',
             ...(this.getToken() ? { 'Authorization': `Bearer ${this.getToken()}` } : {}),
-            ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+            ...(options.body && !isFormData ? { 'Content-Type': 'application/json' } : {}),
             ...(options.headers || {})
           },
-          body: options.body ? JSON.stringify(options.body) : undefined,
+          body: isFormData ? options.formData : (options.body ? JSON.stringify(options.body) : undefined),
           signal: timeout.controller.signal
         });
 
@@ -152,6 +153,35 @@
       });
     }
 
+    async uploadRepairAttachment(caseId, file, kind = 'diagnostic_photo') {
+      const formData = new FormData();
+      formData.append('file', file, file.name || 'repair-upload.bin');
+      formData.append('kind', kind);
+      return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/attachments`, {
+        method: 'POST',
+        formData
+      });
+    }
+
+    async getRepairAttachments(caseId) {
+      return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/attachments`);
+    }
+
+    async requestRecognition(caseId, attachmentIds) {
+      return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/recognition-jobs`, {
+        method: 'POST',
+        body: { attachment_ids: attachmentIds }
+      });
+    }
+
+    async getRecognitionJobs(caseId) {
+      return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/recognition-jobs`);
+    }
+
+    async getRecognitionJob(jobId) {
+      return this.request(`/api/v1/recognition-jobs/${encodeURIComponent(jobId)}`);
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -181,7 +211,9 @@
           repair_cases: [],
           providers: [],
           knowledge_nodes: [],
-          repair_paths: []
+          repair_paths: [],
+          repair_attachments: [],
+          recognition_jobs: []
         };
       }
 
@@ -197,12 +229,24 @@
 
       const latestCase = (cases.repair_cases || [])[0] || null;
       let paths = { repair_paths: [] };
+      let attachments = { attachments: [] };
+      let recognitionJobs = { recognition_jobs: [] };
 
       if (latestCase && this.getToken()) {
         try {
           paths = await this.listRepairPaths(latestCase.id);
         } catch (_error) {
           paths = { repair_paths: [] };
+        }
+        try {
+          attachments = await this.getRepairAttachments(latestCase.id);
+        } catch (_error) {
+          attachments = { attachments: [] };
+        }
+        try {
+          recognitionJobs = await this.getRecognitionJobs(latestCase.id);
+        } catch (_error) {
+          recognitionJobs = { recognition_jobs: [] };
         }
       }
 
@@ -212,7 +256,9 @@
         repair_cases: cases.repair_cases || [],
         providers: providers.providers || [],
         knowledge_nodes: knowledge.nodes || [],
-        repair_paths: paths.repair_paths || []
+        repair_paths: paths.repair_paths || [],
+        repair_attachments: attachments.attachments || [],
+        recognition_jobs: recognitionJobs.recognition_jobs || []
       };
     }
   }
