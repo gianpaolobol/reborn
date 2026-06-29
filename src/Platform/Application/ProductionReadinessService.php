@@ -36,6 +36,7 @@ final class ProductionReadinessService
             'notification_center' => $this->notificationCenterCheck(),
             'service_governance' => $this->serviceGovernanceCheck(),
             'privacy_governance' => $this->privacyGovernanceCheck(),
+            'release_management' => $this->releaseManagementCheck(),
         ];
 
         $status = 'ready';
@@ -87,7 +88,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v6_step25',
+            'checklist_version' => 'production_readiness_v7_step26',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -98,12 +99,14 @@ final class ProductionReadinessService
                 'SLA evaluation and operational policy attestations are reviewed',
                 'privacy notices, consent capture, data subject request and retention dry-run are reviewed',
                 'privacy/legal liability terms for repair outcomes are approved',
+                'feature flags, release gates and pilot cohort rules are reviewed',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
             'step_23_status' => 'Notification center, mock delivery records and escalation workflow v1 implemented.',
             'step_24_status' => 'Service level objectives, SLA evaluations and operational policy governance v1 implemented.',
             'step_25_status' => 'Privacy notices, consent ledger, processing records, retention dry-run and data subject request workflow v1 implemented.',
+            'step_26_status' => 'Beta release management, feature flags, release gates and pilot cohort readiness v1 implemented.',
         ];
     }
 
@@ -174,10 +177,10 @@ final class ProductionReadinessService
             $count = (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn();
             $latest = $this->pdo->query('SELECT filename FROM migrations ORDER BY executed_at DESC, id DESC LIMIT 1')->fetchColumn();
             return [
-                'status' => $count >= 19 ? 'ok' : 'warn',
+                'status' => $count >= 20 ? 'ok' : 'warn',
                 'executed_count' => $count,
                 'latest' => $latest ?: null,
-                'message' => $count >= 19 ? 'All MVP hardening, observability, incident-response, notification, service-governance and privacy-governance migrations are present.' : 'Some migrations may still need to run.',
+                'message' => $count >= 20 ? 'All MVP hardening, observability, incident-response, notification, service-governance, privacy-governance and release-management migrations are present.' : 'Some migrations may still need to run.',
             ];
         } catch (Throwable $exception) {
             return ['status' => 'fail', 'message' => 'Migration metadata is unavailable.', 'error' => $exception->getMessage()];
@@ -429,6 +432,43 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Privacy governance checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function releaseManagementCheck(): array
+    {
+        try {
+            $tables = ['platform_feature_flags', 'platform_releases', 'platform_release_gates', 'platform_release_decisions', 'platform_pilot_cohorts', 'platform_pilot_participants'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $flags = 0;
+            $releases = 0;
+            $cohorts = 0;
+            if ($missing === []) {
+                $flags = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_feature_flags WHERE status IN ('enabled', 'beta')")->fetchColumn();
+                $releases = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_releases WHERE status IN ('draft', 'evaluating', 'approved', 'blocked')")->fetchColumn();
+                $cohorts = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_pilot_cohorts WHERE status IN ('draft', 'recruiting', 'active')")->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? (($flags > 0 && $releases > 0 && $cohorts > 0) ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Release management and pilot readiness tables are available.' : 'Release management tables are not fully migrated yet.',
+                'enabled_or_beta_feature_flags' => $flags,
+                'active_releases' => $releases,
+                'pilot_cohorts' => $cohorts,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Release management checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 

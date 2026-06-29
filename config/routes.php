@@ -94,6 +94,12 @@ return static function (Router $router, RepairController $repairController, Auth
                 'retention_rules',
                 'data_subject_requests',
                 'data_exports',
+                'release_management',
+                'feature_flags',
+                'release_gates',
+                'beta_readiness',
+                'pilot_cohorts',
+                'pilot_participants',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -163,6 +169,22 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->post('/api/v1/platform/data-subject-requests/{id}/resolve', [$platformController, 'resolveDataSubjectRequest']);
     $router->post('/api/v1/platform/data-subject-requests/{id}/export', [$platformController, 'generateDataExport']);
     $router->get('/api/v1/platform/data-exports', [$platformController, 'dataExports']);
+
+    $router->get('/api/v1/platform/release-management', [$platformController, 'releaseManagement']);
+    $router->get('/api/v1/platform/beta-readiness', [$platformController, 'betaReadiness']);
+    $router->get('/api/v1/platform/feature-flags', [$platformController, 'featureFlags']);
+    $router->post('/api/v1/platform/feature-flags/{id}', [$platformController, 'updateFeatureFlag']);
+    $router->get('/api/v1/platform/releases', [$platformController, 'releases']);
+    $router->post('/api/v1/platform/releases', [$platformController, 'createRelease']);
+    $router->post('/api/v1/platform/releases/{id}/evaluate-gates', [$platformController, 'evaluateReleaseGates']);
+    $router->get('/api/v1/platform/releases/{id}/gates', [$platformController, 'releaseGates']);
+    $router->post('/api/v1/platform/releases/{id}/decision', [$platformController, 'decideRelease']);
+    $router->get('/api/v1/platform/release-decisions', [$platformController, 'releaseDecisions']);
+    $router->get('/api/v1/platform/pilot-cohorts', [$platformController, 'pilotCohorts']);
+    $router->post('/api/v1/platform/pilot-cohorts/{id}', [$platformController, 'updatePilotCohort']);
+    $router->get('/api/v1/platform/pilot-participants', [$platformController, 'pilotParticipants']);
+    $router->post('/api/v1/platform/pilot-participants', [$platformController, 'addPilotParticipant']);
+    $router->post('/api/v1/platform/pilot-participants/{id}', [$platformController, 'updatePilotParticipant']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

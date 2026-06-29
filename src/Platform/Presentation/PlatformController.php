@@ -12,6 +12,7 @@ use Reborn\Platform\Application\OperationalTelemetryService;
 use Reborn\Platform\Application\NotificationCenterService;
 use Reborn\Platform\Application\OperationalGovernanceService;
 use Reborn\Platform\Application\PrivacyGovernanceService;
+use Reborn\Platform\Application\ReleaseManagementService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -26,6 +27,7 @@ final class PlatformController
         private readonly NotificationCenterService $notifications,
         private readonly OperationalGovernanceService $governance,
         private readonly PrivacyGovernanceService $privacy,
+        private readonly ReleaseManagementService $releases,
         private readonly AuthContext $auth,
     ) {
     }
@@ -437,6 +439,104 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['data_exports' => $this->privacy->dataExports($limit)], $request->requestId());
+    }
+
+
+    public function releaseManagement(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['release_management' => $this->releases->dashboard()], $request->requestId());
+    }
+
+    public function betaReadiness(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['beta_readiness' => $this->releases->betaReadiness()], $request->requestId());
+    }
+
+    public function featureFlags(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        return JsonResponse::ok(['feature_flags' => $this->releases->featureFlags($status)], $request->requestId());
+    }
+
+    public function updateFeatureFlag(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['feature_flag' => $this->releases->updateFeatureFlag((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function releases(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['releases' => $this->releases->releases($status, $limit)], $request->requestId());
+    }
+
+    public function createRelease(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['release' => $this->releases->createRelease($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function evaluateReleaseGates(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['release_gate_evaluation' => $this->releases->evaluateReleaseGates((string) $request->param('id'), $user->id)], $request->requestId());
+    }
+
+    public function releaseGates(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['release_gates' => $this->releases->releaseGates((string) $request->param('id'))], $request->requestId());
+    }
+
+    public function decideRelease(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['release_decision' => $this->releases->decideRelease((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function releaseDecisions(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['release_decisions' => $this->releases->releaseDecisions($limit)], $request->requestId());
+    }
+
+    public function pilotCohorts(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        return JsonResponse::ok(['pilot_cohorts' => $this->releases->pilotCohorts($status)], $request->requestId());
+    }
+
+    public function updatePilotCohort(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['pilot_cohort' => $this->releases->updatePilotCohort((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function pilotParticipants(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['pilot_participants' => $this->releases->pilotParticipants($status, $limit)], $request->requestId());
+    }
+
+    public function addPilotParticipant(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['pilot_participant' => $this->releases->addPilotParticipant($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function updatePilotParticipant(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['pilot_participant' => $this->releases->updatePilotParticipant((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
     }
 
 }

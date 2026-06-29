@@ -80,6 +80,7 @@ use Reborn\Platform\Application\ObservabilityRecorder;
 use Reborn\Platform\Application\NotificationCenterService;
 use Reborn\Platform\Application\OperationalGovernanceService;
 use Reborn\Platform\Application\PrivacyGovernanceService;
+use Reborn\Platform\Application\ReleaseManagementService;
 use Reborn\Platform\Application\OperationalTelemetryService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Platform\Presentation\PlatformController;
@@ -343,6 +344,7 @@ $incidentResponseService = new IncidentResponseService($pdo, $productionReadines
 $notificationCenterService = new NotificationCenterService($pdo);
 $operationalGovernanceService = new OperationalGovernanceService($pdo);
 $privacyGovernanceService = new PrivacyGovernanceService($pdo);
+$releaseManagementService = new ReleaseManagementService($pdo);
 $operationalTelemetryService = new OperationalTelemetryService(
     $pdo,
     $productionReadinessService,
@@ -358,6 +360,7 @@ $platformController = new PlatformController(
     $notificationCenterService,
     $operationalGovernanceService,
     $privacyGovernanceService,
+    $releaseManagementService,
     $authContext
 );
 

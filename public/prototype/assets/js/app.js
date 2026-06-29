@@ -100,7 +100,8 @@ function stepper(active) {
     ['incidents', '13', 'Respond'],
     ['notifications', '14', 'Notify'],
     ['service-governance', '15', 'SLA'],
-    ['privacy-governance', '16', 'Privacy']
+    ['privacy-governance', '16', 'Privacy'],
+    ['release-management', '17', 'Release']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -1924,6 +1925,153 @@ async function resolveDataSubjectRequest(id) {
   }
 }
 
+
+function releaseManagementDashboard() {
+  setActiveNav('release-management');
+  if (S.auth.user?.role !== 'admin') {
+    return layout('Release Management', authRequiredPanel('the Step 26 beta release management console'), { currentStep: 'release-management' });
+  }
+
+  const management = S.api.releaseManagement || {};
+  const readiness = S.api.betaReadiness || management.beta_readiness || {};
+  const summary = management.summary || {};
+  const flags = S.api.featureFlags || management.feature_flags || [];
+  const releases = S.api.releases || management.releases || [];
+  const gates = S.api.releaseGates || management.latest_release_gates || [];
+  const cohorts = S.api.pilotCohorts || management.pilot_cohorts || [];
+  const participants = S.api.pilotParticipants || management.pilot_participants || [];
+  const latestRelease = management.latest_release || releases[0] || null;
+  const actionRows = (management.operator_actions || []).map(item => `<li>${safe(item)}</li>`).join('') || '<li>No immediate release action.</li>';
+  const gateRows = (gates.length ? gates : readiness.gates || []).slice(0, 10).map(gate => `<tr><td><span class="badge ${gate.status === 'passed' ? 'green' : gate.status === 'failed' ? 'danger' : 'orange'}">${safe(gate.status)}</span></td><td>${safe(gate.name)}</td><td>${gate.required ? 'required' : 'optional'}</td><td>${safe(gate.evaluated_at || 'computed')}</td></tr>`).join('') || '<tr><td colspan="4">No release gates evaluated yet.</td></tr>';
+  const flagRows = flags.slice(0, 10).map(flag => `<tr><td><span class="badge ${flag.status === 'enabled' ? 'green' : flag.status === 'beta' ? 'orange' : 'blue'}">${safe(flag.status)}</span></td><td>${safe(flag.flag_key)}</td><td>${safe(flag.scope)}</td><td>${safe(flag.rollout_percentage)}%</td><td><button class="mini-button" onclick="toggleFeatureFlag('${safe(flag.id)}', '${flag.status === 'enabled' ? 'disabled' : 'enabled'}')">${flag.status === 'enabled' ? 'Disable' : 'Enable'}</button></td></tr>`).join('') || '<tr><td colspan="5">No feature flags configured.</td></tr>';
+  const releaseRows = releases.slice(0, 8).map(release => `<tr><td><span class="badge ${release.status === 'approved' || release.status === 'deployed' ? 'green' : release.status === 'blocked' ? 'danger' : 'orange'}">${safe(release.status)}</span></td><td>${safe(release.release_code)}</td><td>${safe(release.version)}</td><td>${safe(release.risk_level)}</td><td><button class="mini-button" onclick="evaluateReleaseGates('${safe(release.id)}')">Evaluate</button> <button class="mini-button" onclick="approveRelease('${safe(release.id)}')">Approve</button></td></tr>`).join('') || '<tr><td colspan="5">No releases configured.</td></tr>';
+  const cohortRows = cohorts.slice(0, 8).map(cohort => `<tr><td><span class="badge ${cohort.status === 'active' ? 'green' : cohort.status === 'recruiting' ? 'orange' : 'blue'}">${safe(cohort.status)}</span></td><td>${safe(cohort.cohort_code)}</td><td>${safe(cohort.target_persona)}</td><td>${safe(cohort.size_limit)}</td><td><button class="mini-button" onclick="activatePilotCohort('${safe(cohort.id)}')">Recruit</button></td></tr>`).join('') || '<tr><td colspan="5">No pilot cohorts configured.</td></tr>';
+  const participantRows = participants.slice(0, 8).map(item => `<tr><td>${safe(item.display_name)}</td><td>${safe(item.email)}</td><td>${safe(item.cohort_code)}</td><td><span class="badge ${item.status === 'active' ? 'green' : item.status === 'invited' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.consent_status)}</td></tr>`).join('') || '<tr><td colspan="5">No pilot participants yet.</td></tr>';
+
+  return layout('Release Management', `
+    <section class="section-head"><div><p class="eyebrow">Step 26 · Beta Release Management & Pilot Readiness</p><h2>Control what can go live, for whom, and under which gates.</h2></div><p class="muted">Step 26 adds feature flags, release records, beta readiness gates and pilot cohort controls so Re-born can move toward a controlled beta without pretending risky integrations are production-ready.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(readiness.status || 'unknown')}</strong><span>Beta readiness</span></div><div class="metric"><strong>${safe(readiness.completion_percentage ?? 0)}%</strong><span>Gate completion</span></div><div class="metric"><strong>${safe(summary.feature_flags_enabled ?? 0)}</strong><span>Enabled flags</span></div><div class="metric"><strong>${safe(summary.active_pilot_participants ?? 0)}</strong><span>Active participants</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="evaluateLatestReleaseGates()" ${S.busy || !latestRelease ? 'disabled' : ''}>Evaluate latest release gates</button><button class="btn secondary" onclick="createDemoRelease()" ${S.busy ? 'disabled' : ''}>Create demo release</button><button class="btn secondary" onclick="addDemoPilotParticipant()" ${S.busy || cohorts.length === 0 ? 'disabled' : ''}>Add pilot participant</button><a class="btn secondary" href="#/privacy-governance">Open privacy</a></div><ul class="muted small">${actionRows}</ul></section>
+    <section class="section grid two"><div class="panel stack"><h3>Release gates</h3><table class="table"><tr><th>Status</th><th>Gate</th><th>Required</th><th>Evaluated</th></tr>${gateRows}</table></div><div class="panel stack"><h3>Releases</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Version</th><th>Risk</th><th>Action</th></tr>${releaseRows}</table></div></section>
+    <section class="section panel stack"><h3>Feature flags</h3><table class="table"><tr><th>Status</th><th>Flag</th><th>Scope</th><th>Rollout</th><th>Action</th></tr>${flagRows}</table><p class="muted small">Keep real AI, real payments and maker economy disabled until security, privacy, legal and cost controls are approved.</p></section>
+    <section class="section grid two"><div class="panel stack"><h3>Pilot cohorts</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Persona</th><th>Limit</th><th>Action</th></tr>${cohortRows}</table></div><div class="panel stack"><h3>Pilot participants</h3><table class="table"><tr><th>Name</th><th>Email</th><th>Cohort</th><th>Status</th><th>Consent</th></tr>${participantRows}</table></div></section>
+  `, { currentStep: 'release-management' });
+}
+
+async function evaluateLatestReleaseGates() {
+  const latest = (S.api.releaseManagement?.latest_release) || (S.api.releases || [])[0];
+  if (!latest) return toast('Create a release first.');
+  return evaluateReleaseGates(latest.id);
+}
+
+async function evaluateReleaseGates(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate release gates.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.evaluateReleaseGates(id);
+    toast('Release gates evaluated.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Release gate evaluation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function approveRelease(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to approve releases.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.decideRelease(id, 'approve', 'Approved from Step 26 console after reviewing local beta gates.');
+    toast('Release decision recorded.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Release approval failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function createDemoRelease() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create releases.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.createRelease({
+      title: 'Controlled local beta release',
+      version: '0.26.0',
+      risk_level: 'medium',
+      target_environment: 'local_pilot',
+      release_type: 'beta_readiness',
+      notes: 'Demo release created from Step 26 prototype console.'
+    });
+    toast('Demo release created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Release creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function toggleFeatureFlag(id, nextStatus) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to update feature flags.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.updateFeatureFlag(id, { status: nextStatus, rollout_percentage: nextStatus === 'enabled' ? 100 : 0, default_state: nextStatus === 'enabled', notes: 'Changed from Step 26 prototype console.' });
+    toast('Feature flag updated.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Feature flag update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function activatePilotCohort(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to update pilot cohorts.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.updatePilotCohort(id, { status: 'recruiting', notes: 'Moved to recruiting from Step 26 console.' });
+    toast('Pilot cohort moved to recruiting.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Pilot cohort update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function addDemoPilotParticipant() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to add pilot participants.');
+  const cohort = (S.api.pilotCohorts || [])[0];
+  if (!cohort) return toast('No pilot cohort available.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.addPilotParticipant({
+      cohort_id: cohort.id,
+      display_name: 'Demo Pilot User',
+      email: `pilot-${Date.now()}@reborn.local`,
+      role: cohort.target_persona || 'repair_user',
+      status: 'invited',
+      consent_status: 'pending',
+      onboarding_state: 'invited',
+      notes: 'Demo participant created from Step 26 console.'
+    });
+    toast('Demo pilot participant added.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Pilot participant creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -1944,6 +2092,7 @@ const routes = {
   '/notifications': notificationCenterDashboard,
   '/service-governance': serviceGovernanceDashboard,
   '/privacy-governance': privacyGovernanceDashboard,
+  '/release-management': releaseManagementDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -2067,6 +2216,14 @@ async function refreshApiData(options = {}) {
       retentionEvaluations: bootstrap.retention_evaluations || S.api.retentionEvaluations || [],
       dataSubjectRequests: bootstrap.data_subject_requests || S.api.dataSubjectRequests || [],
       dataExports: bootstrap.data_exports || S.api.dataExports || [],
+      releaseManagement: bootstrap.release_management || S.api.releaseManagement,
+      betaReadiness: bootstrap.beta_readiness || S.api.betaReadiness,
+      featureFlags: bootstrap.feature_flags || S.api.featureFlags || [],
+      releases: bootstrap.releases || S.api.releases || [],
+      releaseGates: bootstrap.release_gates || S.api.releaseGates || [],
+      releaseDecisions: bootstrap.release_decisions || S.api.releaseDecisions || [],
+      pilotCohorts: bootstrap.pilot_cohorts || S.api.pilotCohorts || [],
+      pilotParticipants: bootstrap.pilot_participants || S.api.pilotParticipants || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
@@ -3162,6 +3319,13 @@ window.loginAsDemo = loginAsDemo;
 window.handleLogout = handleLogout;
 window.loadMyDashboard = loadMyDashboard;
 window.loadRoleDashboard = loadRoleDashboard;
+window.evaluateLatestReleaseGates = evaluateLatestReleaseGates;
+window.evaluateReleaseGates = evaluateReleaseGates;
+window.approveRelease = approveRelease;
+window.createDemoRelease = createDemoRelease;
+window.toggleFeatureFlag = toggleFeatureFlag;
+window.activatePilotCohort = activatePilotCohort;
+window.addDemoPilotParticipant = addDemoPilotParticipant;
 window.render = render;
 
 window.addEventListener('hashchange', render);

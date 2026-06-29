@@ -446,3 +446,31 @@ Open the admin console:
 ```text
 http://127.0.0.1:8080/prototype/index.html#/privacy-governance
 ```
+
+## Step 26 — Beta Release Management & Pilot Readiness v1
+
+Step 26 turns operational/privacy governance into controlled beta readiness.
+
+It adds:
+
+- SQLite-backed feature flags for safe pilot rollout controls;
+- release records with release status, target environment, risk level and decision history;
+- release gate evaluation using local readiness, backup, incident, SLA, privacy and feature-flag evidence;
+- pilot cohorts for repair users, maker/providers and enterprise design partners;
+- pilot participant records with consent and onboarding state;
+- admin prototype console at `#/release-management`;
+- smoke test `scripts/smoke-beta-release-management.ps1`.
+
+Important: Step 26 does **not** make Re-born production-grade. It creates a local/pilot release-control layer so risky features such as real AI, real payments and maker economy can remain disabled until their privacy, legal, security and cost controls are ready.
+
+Run after Step 20/21/22/23/24/25 checks:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-beta-release-management.ps1
+```
+
+Open the admin console:
+
+```text
+http://127.0.0.1:8080/prototype/index.html#/release-management
+```

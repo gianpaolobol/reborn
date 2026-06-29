@@ -693,6 +693,84 @@
       return this.request(`/api/v1/platform/data-exports?limit=${encodeURIComponent(limit)}`);
     }
 
+    async getReleaseManagement() {
+      return this.request('/api/v1/platform/release-management');
+    }
+
+    async getBetaReadiness() {
+      return this.request('/api/v1/platform/beta-readiness');
+    }
+
+    async getFeatureFlags(status = 'all') {
+      return this.request(`/api/v1/platform/feature-flags?status=${encodeURIComponent(status)}`);
+    }
+
+    async updateFeatureFlag(id, payload = {}) {
+      return this.request(`/api/v1/platform/feature-flags/${encodeURIComponent(id)}`, {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getReleases(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/releases?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createRelease(payload = {}) {
+      return this.request('/api/v1/platform/releases', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async evaluateReleaseGates(id) {
+      return this.request(`/api/v1/platform/releases/${encodeURIComponent(id)}/evaluate-gates`, { method: 'POST' });
+    }
+
+    async getReleaseGates(id) {
+      return this.request(`/api/v1/platform/releases/${encodeURIComponent(id)}/gates`);
+    }
+
+    async decideRelease(id, decision = 'approve', rationale = 'Approved from Step 26 prototype console.') {
+      return this.request(`/api/v1/platform/releases/${encodeURIComponent(id)}/decision`, {
+        method: 'POST',
+        body: { decision, rationale }
+      });
+    }
+
+    async getReleaseDecisions(limit = 50) {
+      return this.request(`/api/v1/platform/release-decisions?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getPilotCohorts(status = 'all') {
+      return this.request(`/api/v1/platform/pilot-cohorts?status=${encodeURIComponent(status)}`);
+    }
+
+    async updatePilotCohort(id, payload = {}) {
+      return this.request(`/api/v1/platform/pilot-cohorts/${encodeURIComponent(id)}`, {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getPilotParticipants(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/pilot-participants?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async addPilotParticipant(payload = {}) {
+      return this.request('/api/v1/platform/pilot-participants', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async updatePilotParticipant(id, payload = {}) {
+      return this.request(`/api/v1/platform/pilot-participants/${encodeURIComponent(id)}`, {
+        method: 'POST',
+        body: payload
+      });
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -821,7 +899,23 @@
           sla_policies: [],
           sla_evaluations: [],
           operational_policies: [],
-          policy_attestations: []
+          policy_attestations: [],
+          privacy_governance: null,
+          privacy_notices: [],
+          consent_records: [],
+          data_processing_records: [],
+          retention_rules: [],
+          retention_evaluations: [],
+          data_subject_requests: [],
+          data_exports: [],
+          release_management: null,
+          beta_readiness: null,
+          feature_flags: [],
+          releases: [],
+          release_gates: [],
+          release_decisions: [],
+          pilot_cohorts: [],
+          pilot_participants: []
         };
       }
 
@@ -868,6 +962,14 @@
       let retentionEvaluations = { retention_evaluations: [] };
       let dataSubjectRequests = { data_subject_requests: [] };
       let dataExports = { data_exports: [] };
+      let releaseManagement = { release_management: null };
+      let betaReadiness = { beta_readiness: null };
+      let featureFlags = { feature_flags: [] };
+      let releases = { releases: [] };
+      let releaseGates = { release_gates: [] };
+      let releaseDecisions = { release_decisions: [] };
+      let pilotCohorts = { pilot_cohorts: [] };
+      let pilotParticipants = { pilot_participants: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -1118,6 +1220,49 @@
         } catch (_error) {
           dataExports = { data_exports: [] };
         }
+        try {
+          releaseManagement = await this.getReleaseManagement();
+        } catch (_error) {
+          releaseManagement = { release_management: null };
+        }
+        try {
+          betaReadiness = await this.getBetaReadiness();
+        } catch (_error) {
+          betaReadiness = { beta_readiness: null };
+        }
+        try {
+          featureFlags = await this.getFeatureFlags('all');
+        } catch (_error) {
+          featureFlags = { feature_flags: [] };
+        }
+        try {
+          releases = await this.getReleases('active', 30);
+        } catch (_error) {
+          releases = { releases: [] };
+        }
+        const latestRelease = (releases.releases || [])[0] || (releaseManagement.release_management?.latest_release || null);
+        if (latestRelease) {
+          try {
+            releaseGates = await this.getReleaseGates(latestRelease.id);
+          } catch (_error) {
+            releaseGates = { release_gates: [] };
+          }
+        }
+        try {
+          releaseDecisions = await this.getReleaseDecisions(30);
+        } catch (_error) {
+          releaseDecisions = { release_decisions: [] };
+        }
+        try {
+          pilotCohorts = await this.getPilotCohorts('all');
+        } catch (_error) {
+          pilotCohorts = { pilot_cohorts: [] };
+        }
+        try {
+          pilotParticipants = await this.getPilotParticipants('all', 30);
+        } catch (_error) {
+          pilotParticipants = { pilot_participants: [] };
+        }
 
       }
 
@@ -1271,7 +1416,15 @@
         retention_rules: retentionRules.retention_rules || [],
         retention_evaluations: retentionEvaluations.retention_evaluations || [],
         data_subject_requests: dataSubjectRequests.data_subject_requests || [],
-        data_exports: dataExports.data_exports || []
+        data_exports: dataExports.data_exports || [],
+        release_management: releaseManagement.release_management || null,
+        beta_readiness: betaReadiness.beta_readiness || null,
+        feature_flags: featureFlags.feature_flags || [],
+        releases: releases.releases || [],
+        release_gates: releaseGates.release_gates || [],
+        release_decisions: releaseDecisions.release_decisions || [],
+        pilot_cohorts: pilotCohorts.pilot_cohorts || [],
+        pilot_participants: pilotParticipants.pilot_participants || []
       };
     }
   }
