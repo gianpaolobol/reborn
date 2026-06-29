@@ -19,7 +19,7 @@ $repairHeaders = @{ Authorization = "Bearer $repairToken" }
 $caseBody = @{
   title = "Step 9 ownership smoke test part"
   description = "A user-owned repair case created from the Step 9 smoke test."
-  category = "wearable"
+  category = "consumer_electronics"
 } | ConvertTo-Json -Compress
 
 $created = Invoke-RestMethod -Method POST -Uri "$BaseUrl/api/v1/repair-cases" -ContentType "application/json" -Headers $repairHeaders -Body $caseBody
