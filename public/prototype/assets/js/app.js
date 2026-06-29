@@ -47,13 +47,20 @@ function formatEuro(cents) {
 
 function apiBanner() {
   const api = S.api;
+  const auth = S.auth;
   const statusClass = api.status === 'live' ? 'live' : api.status === 'mock' ? 'mock' : api.status === 'error' ? 'error' : 'checking';
   const label = api.status === 'live' ? 'Live API' : api.status === 'mock' ? 'Mock mode' : api.status === 'error' ? 'API error' : 'Checking API';
   const sync = api.lastSyncAt ? `Last sync ${new Date(api.lastSyncAt).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : 'No sync yet';
+  const user = auth.user;
+  const authLabel = auth.status === 'authenticated' && user ? `${user.name || user.email} · ${humanRole(user.role)}` : auth.tokenStored ? 'Saved token' : 'Guest';
   return html`<div class="api-banner ${statusClass}" role="status">
     <div><strong>${label}</strong><span>${safe(api.message)}</span></div>
     <div class="api-banner-actions">
       <span>${sync}</span>
+      <span class="auth-chip ${auth.status === 'authenticated' ? 'signed-in' : ''}">${safe(authLabel)}</span>
+      ${auth.status === 'authenticated'
+        ? `<button class="mini-button" type="button" onclick="handleLogout()" ${S.busy ? 'disabled' : ''}>Logout</button>`
+        : `<a class="mini-button link-button" href="#/login">Login</a>`}
       <button class="mini-button" type="button" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh API</button>
     </div>
   </div>`;
@@ -170,6 +177,123 @@ function apiSnapshot() {
   </div>`;
 }
 
+function humanRole(role) {
+  const labels = {
+    repair_user: 'Repair user',
+    maker: 'Maker',
+    provider: 'Provider',
+    enterprise: 'Enterprise',
+    admin: 'Admin',
+    customer: 'Repair user'
+  };
+  return labels[role] || safe(role || 'Guest');
+}
+
+function roleSlug(role) {
+  return role === 'repair_user' ? 'repair-user' : String(role || 'repair-user').replace(/_/g, '-');
+}
+
+function demoAccounts() {
+  return [
+    ['repair.user@reborn.local', 'Repair user', 'Creates owned repair cases and tracks personal repair history.'],
+    ['maker@reborn.local', 'Maker', 'Views CAD/model opportunities and royalty logic.'],
+    ['provider@reborn.local', 'Provider', 'Views fulfilment queue and provider network fit.'],
+    ['enterprise@reborn.local', 'Enterprise', 'Views fleet repair intelligence and category metrics.'],
+    ['admin@reborn.local', 'Admin', 'Views all operating dashboards and previews every role.']
+  ];
+}
+
+function authRequiredPanel(target = 'this dashboard') {
+  return html`<section class="grid two">
+    <div class="panel stack">
+      <p class="eyebrow">Authentication required</p>
+      <h2>Login to open ${safe(target)}.</h2>
+      <p class="muted">Step 10 connects the prototype to the Identity API introduced in Step 8 and the role dashboards introduced in Step 9.</p>
+      <div class="actions"><a class="btn green" href="#/login">Open demo login</a><button class="btn secondary" onclick="loginAsDemo('repair.user@reborn.local')">Login as repair user</button></div>
+    </div>
+    <aside class="panel dark-panel stack">
+      <h3>Protected by the backend</h3>
+      <p class="muted">The prototype stores a Bearer token in localStorage and sends it to protected API endpoints. Logout revokes the session server-side.</p>
+      ${badges([['Bearer token', 'blue'], ['Role access', 'green'], ['SQLite sessions', 'orange']])}
+    </aside>
+  </section>`;
+}
+
+function login() {
+  setActiveNav('login');
+  const isLive = S.api.status === 'live';
+  const user = S.auth.user;
+  return layout('Login', html`
+    <section class="hero">
+      <form class="panel stack" onsubmit="handleLogin(event)">
+        <p class="eyebrow">Identity MVP</p>
+        <h2>${user ? `Signed in as ${safe(user.name || user.email)}` : 'Login with a demo role.'}</h2>
+        <p class="muted">Use one of the seeded accounts. Password is <code>password</code>. This is prototype authentication only, backed by the PHP API when the server is live.</p>
+        ${!isLive ? `<div class="notice warning"><strong>Mock mode</strong><span>Start the PHP server to test real login.</span></div>` : ''}
+        <div class="form-grid">
+          <div class="field"><label for="loginEmail">Email</label><input id="loginEmail" name="email" value="admin@reborn.local" autocomplete="username" /></div>
+          <div class="field"><label for="loginPassword">Password</label><input id="loginPassword" name="password" type="password" value="password" autocomplete="current-password" /></div>
+        </div>
+        <div class="actions"><button class="btn green" type="submit" ${S.busy || !isLive ? 'disabled' : ''}>Login</button>${user ? `<button class="btn secondary" type="button" onclick="handleLogout()">Logout</button>` : ''}<a class="btn secondary" href="#/account">Open dashboard</a></div>
+      </form>
+      <aside class="panel dark-panel stack">
+        <h3>Demo accounts</h3>
+        <div class="demo-account-list">
+          ${demoAccounts().map(([email, role, text]) => `<button type="button" class="demo-account" onclick="loginAsDemo('${safe(email)}')" ${S.busy || !isLive ? 'disabled' : ''}><strong>${safe(role)}</strong><span>${safe(email)}</span><em>${safe(text)}</em></button>`).join('')}
+        </div>
+      </aside>
+    </section>
+  `);
+}
+
+function dashboardMetrics(metrics = {}) {
+  const entries = Object.entries(metrics || {});
+  if (!entries.length) return '<p class="muted">No metrics returned yet.</p>';
+  return `<div class="grid four">${entries.slice(0, 8).map(([key, value]) => metric(String(value ?? 0), key.replace(/_/g, ' '))).join('')}</div>`;
+}
+
+function compactTable(rows = [], columns = []) {
+  if (!rows || !rows.length) return '<p class="muted">No records yet.</p>';
+  const cols = columns.length ? columns : Object.keys(rows[0]).slice(0, 5);
+  return `<div class="table-wrap"><table class="table"><thead><tr>${cols.map(c => `<th>${safe(c.replace(/_/g, ' '))}</th>`).join('')}</tr></thead><tbody>${rows.slice(0, 6).map(row => `<tr>${cols.map(c => `<td>${safe(Array.isArray(row[c]) ? row[c].join(', ') : row[c])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+
+function roleDashboardContent(role, dashboard) {
+  if (!dashboard) return '<p class="muted">Dashboard not loaded yet. Use Refresh dashboard.</p>';
+
+  const roleName = humanRole(dashboard.role || role);
+  const headline = dashboard.headline || `${roleName} dashboard`;
+
+  let primary = '';
+  if (dashboard.repair_cases) primary += `<div class="panel stack"><h3>Repair cases</h3>${compactTable(dashboard.repair_cases, ['title', 'category', 'status', 'confidence_score'])}</div>`;
+  if (dashboard.next_actions) primary += `<div class="panel stack"><h3>Next actions</h3>${compactTable(dashboard.next_actions, ['action', 'reason', 'case_id'])}</div>`;
+  if (dashboard.models) primary += `<div class="panel stack"><h3>Models</h3>${compactTable(dashboard.models, ['title', 'component_label', 'license', 'verification_status'])}</div>`;
+  if (dashboard.opportunities) primary += `<div class="panel stack"><h3>Repair opportunities</h3>${compactTable(dashboard.opportunities, ['title', 'category', 'recognized_product', 'confidence_score'])}</div>`;
+  if (dashboard.candidate_jobs) primary += `<div class="panel stack"><h3>Candidate jobs</h3>${compactTable(dashboard.candidate_jobs, ['title', 'category', 'recognized_product', 'status'])}</div>`;
+  if (dashboard.provider_network) primary += `<div class="panel stack"><h3>Provider network</h3>${compactTable(dashboard.provider_network, ['name', 'city', 'rating', 'average_lead_time_days'])}</div>`;
+  if (dashboard.category_breakdown) primary += `<div class="panel stack"><h3>Category breakdown</h3>${compactTable(dashboard.category_breakdown, ['category', 'total'])}</div>`;
+  if (dashboard.latest_cases) primary += `<div class="panel stack"><h3>Latest cases</h3>${compactTable(dashboard.latest_cases, ['title', 'category', 'status', 'confidence_score'])}</div>`;
+  if (dashboard.users_by_role) primary += `<div class="panel stack"><h3>Users by role</h3>${compactTable(dashboard.users_by_role, ['role', 'total'])}</div>`;
+  if (dashboard.cases_by_status) primary += `<div class="panel stack"><h3>Cases by status</h3>${compactTable(dashboard.cases_by_status, ['status', 'total'])}</div>`;
+  if (dashboard.latest_events) primary += `<div class="panel stack"><h3>Latest domain events</h3>${compactTable(dashboard.latest_events, ['name', 'occurred_at', 'id'])}</div>`;
+
+  return html`
+    <section class="section-head"><div><p class="eyebrow">${safe(roleName)}</p><h2>${safe(headline)}</h2></div><p class="muted">Live role dashboard returned by the PHP API. Admin can preview all roles; normal users are constrained by backend permissions.</p></section>
+    <section class="panel stack">${dashboardMetrics(dashboard.metrics)}</section>
+    <section class="section grid two">${primary || '<div class="panel stack"><h3>Dashboard payload</h3><p class="muted">No collection rows returned yet.</p></div>'}</section>
+  `;
+}
+
+function roleDashboardView(role) {
+  setActiveNav(role === 'maker' ? 'maker' : role === 'provider' ? 'provider-network' : role === 'admin' ? 'account' : 'account');
+  if (S.auth.status !== 'authenticated') return layout(`${humanRole(role)} dashboard`, authRequiredPanel(`${humanRole(role)} dashboard`));
+  const dashboard = S.api.roleDashboards[role] || (S.auth.user?.role === role || (role === 'repair_user' && S.auth.user?.role === 'repair_user') ? S.api.dashboard : null);
+  return layout(`${humanRole(role)} dashboard`, html`
+    ${roleDashboardContent(role, dashboard)}
+    <section class="section panel stack"><h3>Dashboard controls</h3><p class="muted">The visible data depends on the currently authenticated role and backend access policy.</p><div class="actions"><button class="btn green" onclick="loadRoleDashboard('${safe(role)}')" ${S.busy ? 'disabled' : ''}>Refresh dashboard</button><a class="btn secondary" href="#/login">Switch role</a></div></section>
+  `);
+}
+
 function home() {
   setActiveNav('home');
   const p = getActiveProduct();
@@ -226,7 +350,7 @@ function start() {
         <div class="form-grid">
           <div class="field"><label for="repairTitle">Object type</label><input id="repairTitle" name="title" value="Dishwasher basket wheel" /></div>
           <div class="field"><label for="repairBrand">Brand / model if known</label><input id="repairBrand" name="brand" value="Bosch Series 4" /></div>
-          <div class="field"><label for="repairCategory">Category</label><select id="repairCategory" name="category"><option value="home_appliance">Home appliance</option><option value="wearable">Wearable</option><option value="eyewear">Eyewear</option><option value="furniture">Furniture</option></select></div>
+          <div class="field"><label for="repairCategory">Category</label><select id="repairCategory" name="category"><option value="home_appliance">Home appliance</option><option value="consumer_electronics">Consumer electronics</option><option value="furniture">Furniture</option><option value="mobility">Mobility</option><option value="sport">Sport</option><option value="tooling">Tooling</option><option value="generic">Generic</option></select></div>
           <div class="field"><label for="repairUrgency">Repair urgency</label><select id="repairUrgency" name="urgency"><option>Fast, within 48 hours</option><option>Lowest cost</option><option>Best quality</option><option>Lowest environmental impact</option></select></div>
         </div>
         <div class="field"><label for="repairDescription">Description</label><textarea id="repairDescription" name="description">The lower basket wheel is broken. The dishwasher still works but the basket no longer slides correctly.</textarea></div>
@@ -330,34 +454,32 @@ function aiGeneration() {
 
 function account() {
   setActiveNav('account');
+  if (S.auth.status !== 'authenticated') {
+    return layout('Account', authRequiredPanel('your repair dashboard'));
+  }
+
+  const dashboard = S.api.dashboard;
   return layout('Account', html`
-    <section class="section-head"><div><p class="eyebrow">User dashboard</p><h2>Your repaired objects become intelligence.</h2></div><p class="muted">The dashboard turns repair history into trust, credits and sustainability impact.</p></section><section class="grid four">${metric(D.wallet.savedObjects, 'Objects saved')}${metric(D.wallet.credits, 'Available credits')}${metric(D.wallet.pendingRoyalties, 'Pending royalties')}${metric(D.wallet.co2, 'CO₂ avoided')}</section><section class="section grid two"><div class="panel stack"><h3>Active repair</h3><p class="status-line"><span class="status-dot"></span>${safe(getActiveProduct().detectedName)}</p><p class="muted">${S.api.repairCase ? 'Live API repair case active.' : 'Mock repair case active.'}</p><div class="actions"><a class="btn green" href="#/checkout">Open order</a></div></div><div class="panel stack"><h3>Knowledge contributions</h3><p class="muted">${S.api.knowledgeNodes.length || 2} graph records available in the current prototype state.</p>${badges([['Graph contributor', 'blue'], ['Repair feedback', 'green']])}</div></section>
+    <section class="section-head"><div><p class="eyebrow">Authenticated dashboard</p><h2>${safe(S.auth.user?.name || S.auth.user?.email)}.</h2></div><p class="muted">Role: ${safe(humanRole(S.auth.user?.role))}. This page is backed by <code>GET /api/v1/dashboard</code>.</p></section>
+    ${roleDashboardContent(S.auth.user?.role || 'repair_user', dashboard)}
+    <section class="section panel stack"><h3>Session controls</h3><p class="muted">Token stored: ${S.auth.tokenStored ? 'yes' : 'no'}. Logout revokes the backend session and clears localStorage.</p><div class="actions"><button class="btn green" onclick="loadMyDashboard()" ${S.busy ? 'disabled' : ''}>Refresh my dashboard</button><button class="btn secondary" onclick="handleLogout()" ${S.busy ? 'disabled' : ''}>Logout</button><a class="btn secondary" href="#/login">Switch role</a></div></section>
   `);
 }
 
 function provider() {
-  return layout('Provider view', html`
-    <section class="section-head"><div><p class="eyebrow">Provider PRO</p><h2>Accept repairs with clear constraints.</h2></div><p class="muted">Providers should not receive vague STL jobs. They receive repair intent, constraints, quality checks and expected outcome.</p></section><section class="grid two"><div class="panel stack"><h3>Incoming repair order</h3><table class="table"><tr><th>Part</th><td>${safe(getActiveProduct().detectedName)}</td></tr><tr><th>Material</th><td>PETG-CF or PA12</td></tr><tr><th>Deadline</th><td>Based on selected provider SLA</td></tr><tr><th>Quality check</th><td>Dimensional photo + fit confirmation</td></tr></table><div class="actions"><button class="btn green" onclick="toast('Provider accepted the job in prototype state.')">Accept job</button><button class="btn secondary" onclick="toast('Provider requested clarification.')">Ask question</button></div></div><div class="panel stack"><h3>Provider score factors</h3>${badges([['On-time delivery', 'green'], ['Material compliance', 'blue'], ['Low return rate', 'green'], ['Local availability', 'orange']])}<p class="muted">Trust Engine will rank providers by repair success, not only by star reviews.</p></div></section>
-  `);
+  return roleDashboardView('provider');
 }
 
 function maker() {
-  setActiveNav('maker');
-  return layout('Maker view', html`
-    <section class="hero"><div class="panel stack"><p class="eyebrow">Maker CAD marketplace</p><h2>Upload models that repair real objects.</h2><p class="lead">Maker value is not measured only by downloads. It is measured by successful repairs, low returns and verified compatibility.</p><div class="form-grid"><div class="field"><label>Model name</label><input value="Bosch lower basket wheel replacement" /></div><div class="field"><label>License</label><select><option>Repair commercial license with royalty</option><option>Free community model</option><option>Enterprise restricted</option></select></div></div><div class="field"><label>Compatibility notes</label><textarea>Compatible with Bosch Series 4 lower basket. Avoid PLA. Validate axle diameter before production.</textarea></div><div class="actions"><button class="btn green" onclick="toast('Model submitted for verification in prototype state.')">Submit for verification</button></div></div><aside class="panel dark-panel stack"><h3>Royalty logic</h3><p class="muted">Royalty is triggered by fulfilled repairs, not by speculative file views. Credits can be used for materials, prints or marketplace purchases.</p><div class="grid two">${metric('€0.80', 'royalty / repair')}${metric('14', 'verified repairs')}${metric('2.1%', 'return rate')}${metric('A-', 'model trust')}</div></aside></section>
-  `);
+  return roleDashboardView('maker');
 }
 
 function enterprise() {
-  return layout('Enterprise', html`
-    <section class="grid two"><div class="panel stack"><p class="eyebrow">Enterprise Portal</p><h2>Repair intelligence for product fleets.</h2><p class="muted">Brands, facilities and circular economy operators can use Re-born as an intelligence layer for spare parts, maintenance, repairability and distributed fulfilment.</p>${badges([['Fleet repair analytics', 'blue'], ['White label', ''], ['API access', 'orange'], ['Compliance reporting', 'green']])}<div class="actions"><button class="btn blue" onclick="toast('Enterprise lead captured in prototype state.')">Request demo</button></div></div><div class="panel stack"><h3>Enterprise metrics</h3><div class="grid two">${metric('1,284', 'fleet objects')}${metric('18%', 'parts recovered')}${metric('€42k', 'avoided replacement')}${metric('6.8t', 'CO₂ avoided')}</div></div></section>
-  `);
+  return roleDashboardView('enterprise');
 }
 
 function adminOps() {
-  return layout('Admin ops', html`
-    <section class="section-head"><div><p class="eyebrow">Internal console</p><h2>Repair Intelligence operations.</h2></div><p class="muted">This prototype screen clarifies what internal teams will need to monitor before scaling.</p></section><section class="grid three"><div class="panel stack"><h3>Graph queue</h3><p class="muted">${S.api.knowledgeNodes.length || 12} graph records visible.</p>${badges([['Dimensions', 'orange'], ['Material reports', 'blue'], ['Failed fits', 'danger']])}</div><div class="panel stack"><h3>Provider risk</h3><p class="muted">${getActiveProviders().length} providers available for matching.</p>${badges([['SLA review', 'orange'], ['Trust Engine', 'blue']])}</div><div class="panel stack"><h3>AI moderation</h3><p class="muted">Generated models are quarantined until printability and safety checks pass.</p>${badges([['Validation gate', 'green'], ['Safety baseline', 'danger']])}</div></section><section class="section panel">${apiSnapshot()}</section>
-  `);
+  return roleDashboardView('admin');
 }
 
 const routes = {
@@ -370,6 +492,7 @@ const routes = {
   '/provider-network': providerNetwork,
   '/checkout': checkout,
   '/ai-generation': aiGeneration,
+  '/login': login,
   '/account': account,
   '/provider': provider,
   '/maker': maker,
@@ -437,11 +560,14 @@ async function refreshApiData(options = {}) {
 
 async function bootApi() {
   render();
+  S.setAuth({ tokenStored: Boolean(window.REBORN_API?.getToken()) });
   const health = await window.REBORN_API.health();
 
   if (health.ok) {
     S.setApi({ status: 'live', mode: 'live', message: health.message, lastError: null });
+    await bootAuthSession();
     await refreshApiData({ silent: true });
+    if (S.auth.status === 'authenticated') await loadMyDashboard({ silent: true });
   } else {
     S.setApi({ status: 'mock', mode: 'mock', message: health.message, lastError: health.reason || null, lastSyncAt: new Date().toISOString() });
     render();
@@ -460,6 +586,12 @@ async function createRepairCaseFromValues(payload) {
   if (S.api.status !== 'live') {
     toast('Backend API is not live. Start the PHP server to create a real repair case.');
     location.hash = '#/start';
+    return null;
+  }
+
+  if (S.auth.status !== 'authenticated') {
+    toast('Login required to create a live repair case.');
+    location.hash = '#/login';
     return null;
   }
 
@@ -538,10 +670,131 @@ function submitIntakeFromPrototype(event) {
   });
 }
 
+async function bootAuthSession() {
+  if (!window.REBORN_API?.getToken()) {
+    S.setAuth({ status: 'guest', user: null, tokenStored: false });
+    return;
+  }
+
+  try {
+    const payload = await window.REBORN_API.me();
+    S.setAuth({ status: 'authenticated', user: payload.user, tokenStored: true });
+  } catch (_error) {
+    window.REBORN_API.setToken(null);
+    S.setAuth({ status: 'guest', user: null, tokenStored: false });
+  }
+}
+
+async function handleLogin(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const formData = new FormData(form);
+  await loginWithCredentials(String(formData.get('email') || ''), String(formData.get('password') || ''));
+}
+
+async function loginAsDemo(email) {
+  await loginWithCredentials(email, 'password');
+}
+
+async function loginWithCredentials(email, password) {
+  if (S.api.status !== 'live') {
+    toast('Start the PHP API server before logging in.');
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.login(email.trim(), password);
+    S.setAuth({ status: 'authenticated', user: payload.user, tokenStored: true, lastLoginAt: new Date().toISOString() });
+    toast(`Logged in as ${humanRole(payload.user.role)}.`);
+    await refreshApiData({ silent: true });
+    await loadMyDashboard({ silent: true });
+    location.hash = '#/account';
+  } catch (error) {
+    S.setAuth({ status: 'guest', user: null, tokenStored: Boolean(window.REBORN_API.getToken()) });
+    toast(`Login failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function handleLogout() {
+  setBusy(true);
+  try {
+    if (S.auth.status === 'authenticated') await window.REBORN_API.logout();
+    else window.REBORN_API.setToken(null);
+    S.setAuth({ status: 'guest', user: null, tokenStored: false, lastLoginAt: null });
+    S.setApi({ dashboard: null, roleDashboards: {}, repairCases: [], repairCase: null, repairPaths: [] });
+    toast('Logged out.');
+    location.hash = '#/login';
+  } catch (error) {
+    window.REBORN_API.setToken(null);
+    S.setAuth({ status: 'guest', user: null, tokenStored: false });
+    toast(`Session cleared after logout error: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function loadMyDashboard(options = {}) {
+  if (S.auth.status !== 'authenticated') {
+    if (!options.silent) toast('Login required.');
+    return null;
+  }
+
+  if (!options.silent) setBusy(true);
+  try {
+    const payload = await window.REBORN_API.dashboard();
+    S.setApi({ dashboard: payload.dashboard, lastSyncAt: new Date().toISOString() });
+    if (!options.silent) toast('Dashboard refreshed.');
+    return payload.dashboard;
+  } catch (error) {
+    if (!options.silent) toast(`Dashboard unavailable: ${error.message}`);
+    return null;
+  } finally {
+    if (!options.silent) {
+      setBusy(false);
+      render();
+    }
+  }
+}
+
+async function loadRoleDashboard(role) {
+  if (S.auth.status !== 'authenticated') {
+    toast('Login required.');
+    location.hash = '#/login';
+    return null;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.roleDashboard(roleSlug(role));
+    S.setApi({
+      roleDashboards: { ...S.api.roleDashboards, [role]: payload.dashboard },
+      lastSyncAt: new Date().toISOString()
+    });
+    toast(`${humanRole(role)} dashboard refreshed.`);
+    return payload.dashboard;
+  } catch (error) {
+    toast(`Role dashboard unavailable: ${error.message}`);
+    return null;
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 window.refreshApiData = refreshApiData;
 window.createDemoRepairCase = createDemoRepairCase;
 window.runLiveDiagnosis = runLiveDiagnosis;
 window.submitIntakeFromPrototype = submitIntakeFromPrototype;
+window.handleLogin = handleLogin;
+window.loginAsDemo = loginAsDemo;
+window.handleLogout = handleLogout;
+window.loadMyDashboard = loadMyDashboard;
+window.loadRoleDashboard = loadRoleDashboard;
 window.render = render;
 
 window.addEventListener('hashchange', render);

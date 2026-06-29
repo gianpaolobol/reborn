@@ -59,3 +59,34 @@ assets/js/state.js
 assets/js/api-client.js
 assets/js/app.js
 ```
+
+## Step 10 — Auth UI and role dashboards
+
+Run the backend first:
+
+```powershell
+php scripts/setup-dev.php
+php -S 127.0.0.1:8080 -t public public/index.php
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8080/prototype/index.html#/login
+```
+
+Demo password for every seeded account is:
+
+```text
+password
+```
+
+Available demo accounts:
+
+- `repair.user@reborn.local`
+- `maker@reborn.local`
+- `provider@reborn.local`
+- `enterprise@reborn.local`
+- `admin@reborn.local`
+
+The prototype stores the Step 8 Bearer token in `localStorage` under `reborn_access_token`. Logout calls the backend and clears the token locally.

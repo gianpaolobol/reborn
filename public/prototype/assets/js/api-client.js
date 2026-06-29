@@ -50,10 +50,16 @@
         });
 
         const text = await response.text();
-        const payload = text ? JSON.parse(text) : {};
+        let payload = {};
+        try {
+          payload = text ? JSON.parse(text) : {};
+        } catch (_parseError) {
+          payload = { success: false, error: { code: 'NON_JSON_RESPONSE', message: text || 'Empty non-JSON response' } };
+        }
 
         if (!response.ok) {
-          const error = new Error(payload.message || `API error ${response.status}`);
+          const apiMessage = payload.error && payload.error.message ? payload.error.message : payload.message;
+          const error = new Error(apiMessage || `API error ${response.status}`);
           error.status = response.status;
           error.payload = payload;
           throw error;
@@ -81,6 +87,17 @@
       const payload = await this.request('/api/v1/auth/login', {
         method: 'POST',
         body: { email, password }
+      });
+      if (payload.token && payload.token.access_token) {
+        this.setToken(payload.token.access_token);
+      }
+      return payload;
+    }
+
+    async register(data) {
+      const payload = await this.request('/api/v1/auth/register', {
+        method: 'POST',
+        body: data
       });
       if (payload.token && payload.token.access_token) {
         this.setToken(payload.token.access_token);
@@ -168,16 +185,20 @@
         };
       }
 
-      const [cases, providers, knowledge] = await Promise.all([
-        this.listRepairCases(),
-        this.listProviders(),
-        this.listKnowledgeNodes()
+      const [providers, knowledge] = await Promise.all([
+        this.listProviders().catch(() => ({ providers: [] })),
+        this.listKnowledgeNodes().catch(() => ({ nodes: [] }))
       ]);
+
+      let cases = { repair_cases: [] };
+      if (this.getToken()) {
+        cases = await this.listRepairCases().catch(() => ({ repair_cases: [] }));
+      }
 
       const latestCase = (cases.repair_cases || [])[0] || null;
       let paths = { repair_paths: [] };
 
-      if (latestCase) {
+      if (latestCase && this.getToken()) {
         try {
           paths = await this.listRepairPaths(latestCase.id);
         } catch (_error) {

@@ -397,3 +397,55 @@ body.is-busy::after {
   .api-banner { align-items: flex-start; flex-direction: column; }
   .api-banner-actions { justify-content: flex-start; }
 }
+
+/* Step 10 — Auth UI and role dashboards */
+.auth-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.55);
+  color: var(--graphite-700);
+  font-size: .8rem;
+  font-weight: 700;
+}
+.auth-chip.signed-in {
+  border-color: rgba(47,191,113,.42);
+  background: rgba(47,191,113,.12);
+  color: #167243;
+}
+.link-button { text-decoration: none; }
+.notice {
+  display: grid;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+}
+.notice.warning {
+  border-color: rgba(255,122,26,.34);
+  background: rgba(255,122,26,.10);
+}
+.demo-account-list { display: grid; gap: 10px; }
+.demo-account {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--line-dark);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.06);
+  color: var(--off-white);
+  text-align: left;
+  cursor: pointer;
+}
+.demo-account:hover:not(:disabled) { background: rgba(255,255,255,.11); }
+.demo-account span { color: var(--graphite-300); font-size: .88rem; }
+.demo-account em { color: var(--graphite-300); font-style: normal; font-size: .78rem; }
+.demo-account:disabled { opacity: .52; cursor: not-allowed; }
+.table-wrap { width: 100%; overflow-x: auto; }
+.table thead th { background: rgba(17,19,21,.035); }
+.api-banner-actions .mini-button.link-button { color: inherit; }

@@ -282,3 +282,28 @@ powershell -ExecutionPolicy Bypass -File .\scripts\smoke-identity-access.ps1
 ## Step 9 — Repair Case Ownership & User Dashboards
 
 The backend now supports authenticated repair case ownership and role dashboards. Run `scripts/smoke-ownership-dashboards.ps1` after starting the PHP dev server to validate repair user ownership, admin dashboard preview and provider restrictions.
+
+## Step 10 — Prototype Auth UI & Role Dashboards
+
+The prototype now includes a browser login screen, demo role switching, token persistence, logout and role-aware dashboards.
+
+Run:
+
+```powershell
+php scripts/setup-dev.php
+php -S 127.0.0.1:8080 -t public public/index.php
+```
+
+Open:
+
+```text
+http://127.0.0.1:8080/prototype/index.html#/login
+```
+
+Smoke tests:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-identity-access.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-ownership-dashboards.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-prototype-auth-ui.ps1
+```

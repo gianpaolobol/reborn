@@ -7,7 +7,8 @@ window.REBORN_STATE = {
   auth: {
     status: 'guest',
     user: null,
-    tokenStored: false
+    tokenStored: false,
+    lastLoginAt: null
   },
   api: {
     status: 'checking',
@@ -20,7 +21,9 @@ window.REBORN_STATE = {
     repairPaths: [],
     providers: [],
     knowledgeNodes: [],
-    lastSyncAt: null
+    lastSyncAt: null,
+    dashboard: null,
+    roleDashboards: {}
   },
   set(key, value) {
     this[key] = value;
