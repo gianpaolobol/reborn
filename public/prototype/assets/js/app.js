@@ -106,7 +106,8 @@ function stepper(active) {
     ['marketplace-revenue', '19', 'Revenue'],
     ['maker-economy', '20', 'Makers'],
     ['ai-governance', '21', 'AI Gov'],
-    ['ai-provider-sandbox', '22', 'AI Ops']
+    ['ai-provider-sandbox', '22', 'AI Ops'],
+    ['geometry-printability', '23', 'Geometry']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -2695,6 +2696,94 @@ async function checkAiSandboxAdapters() {
   }
 }
 
+
+function geometryPrintabilityDashboard() {
+  setActiveNav('geometry-printability');
+  if (!S.auth.user) {
+    return layout('Geometry & Printability Governance', authRequiredPanel('the Step 32 geometry and printability console'), { currentStep: 'geometry-printability' });
+  }
+
+  const dashboard = S.api.geometryPrintability || {};
+  const summary = dashboard.summary || {};
+  const profiles = S.api.geometryValidationProfiles || [];
+  const rules = S.api.printabilityRules || [];
+  const assets = S.api.geometryAssets || dashboard.latest_assets || [];
+  const runs = S.api.geometryValidationRuns || dashboard.latest_runs || [];
+  const findings = S.api.printabilityFindings || dashboard.latest_findings || [];
+  const reviews = S.api.geometryReviewItems || dashboard.latest_reviews || [];
+  const audit = S.api.geometryGovernanceAuditLog || [];
+
+  const profileRows = profiles.slice(0, 6).map(item => `<tr><td>${safe(item.profile_key)}</td><td>${safe(item.target_process)}</td><td>${safe(item.material_family)}</td><td>${safe(item.min_wall_thickness_mm)} mm</td><td>${item.requires_human_review ? 'Yes' : 'No'}</td></tr>`).join('') || '<tr><td colspan="5">No validation profiles available.</td></tr>';
+  const ruleRows = rules.slice(0, 8).map(item => `<tr><td><span class="badge ${item.severity === 'critical' ? 'orange' : 'blue'}">${safe(item.severity)}</span></td><td>${safe(item.rule_key)}</td><td>${safe(item.category)}</td><td>${safe(item.description)}</td></tr>`).join('') || '<tr><td colspan="4">No printability rules available.</td></tr>';
+  const assetRows = assets.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'validated' ? 'green' : item.status === 'blocked' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.asset_code)}</td><td>${safe(item.file_name)}</td><td>${safe(item.file_format)}</td><td>${safe(item.bounding_box_mm?.x)}×${safe(item.bounding_box_mm?.y)}×${safe(item.bounding_box_mm?.z)} mm</td><td><button class="mini-button" onclick="evaluateGeometryAsset('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Evaluate</button></td></tr>`).join('') || '<tr><td colspan="6">No geometry assets registered.</td></tr>';
+  const runRows = runs.slice(0, 10).map(item => `<tr><td><span class="badge ${item.decision === 'approved' ? 'green' : item.decision === 'blocked' ? 'orange' : 'blue'}">${safe(item.decision)}</span></td><td>${safe(item.run_code)}</td><td>${safe(item.asset_code)}</td><td>${safe(item.score)}</td><td>${safe(item.summary)}</td></tr>`).join('') || '<tr><td colspan="5">No validation runs yet.</td></tr>';
+  const findingRows = findings.slice(0, 8).map(item => `<li><strong>${safe(item.severity)}</strong> · ${safe(item.rule_key)} — ${safe(item.message)} <span class="muted">${safe(item.recommendation)}</span></li>`).join('') || '<li>No open findings.</li>';
+  const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.priority === 'high' ? 'orange' : 'blue'}">${safe(item.priority)}</span></td><td>${safe(item.status)}</td><td>${safe(item.asset_code)}</td><td>${safe(item.file_name)}</td><td><button class="mini-button" onclick="approveGeometryReview('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Approve notes</button></td></tr>`).join('') || '<tr><td colspan="5">No active geometry reviews.</td></tr>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No geometry audit records yet.</li>';
+
+  return layout('Geometry & Printability Governance', `
+    <section class="section-head"><div><p class="eyebrow">Step 32 · CAD/Geometry Validation & Printability Governance</p><h2>Stop weak geometry before it reaches providers, makers or repair orders.</h2></div><p class="muted">Step 32 validates uploaded or AI-generated geometry with pilot rules, records findings and creates human review items before provider routing.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.assets_total ?? 0)}</strong><span>Geometry assets</span></div><div class="metric"><strong>${safe(summary.validation_runs ?? 0)}</strong><span>Validation runs</span></div><div class="metric"><strong>${safe(summary.open_findings ?? 0)}</strong><span>Open findings</span></div><div class="metric"><strong>${safe(summary.open_reviews ?? 0)}</strong><span>Human reviews</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoGeometryAsset()" ${S.busy ? 'disabled' : ''}>Register demo geometry</button><button class="btn secondary" onclick="evaluateFirstGeometryAsset()" ${S.busy ? 'disabled' : ''}>Evaluate first asset</button><a class="btn secondary" href="#/ai-provider-sandbox">Open AI sandbox</a><a class="btn secondary" href="#/maker-economy">Open maker economy</a></div><p class="muted small">This is a governance layer: it does not run a real CAD kernel, slicer, mesh repair tool or certified engineering analysis.</p></section>
+    <section class="section grid two"><div class="panel stack"><h3>Validation profiles</h3><table class="table"><tr><th>Profile</th><th>Process</th><th>Material</th><th>Wall</th><th>Review</th></tr>${profileRows}</table></div><div class="panel stack"><h3>Printability rules</h3><table class="table"><tr><th>Severity</th><th>Rule</th><th>Category</th><th>Description</th></tr>${ruleRows}</table></div></section>
+    <section class="section panel stack"><h3>Geometry assets</h3><table class="table"><tr><th>Status</th><th>Code</th><th>File</th><th>Format</th><th>Bounding box</th><th>Action</th></tr>${assetRows}</table></section>
+    <section class="section grid two"><div class="panel stack"><h3>Validation runs</h3><table class="table"><tr><th>Decision</th><th>Run</th><th>Asset</th><th>Score</th><th>Summary</th></tr>${runRows}</table></div><div class="panel stack"><h3>Open findings</h3><ul class="muted small">${findingRows}</ul></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Human review queue</h3><table class="table"><tr><th>Priority</th><th>Status</th><th>Asset</th><th>File</th><th>Action</th></tr>${reviewRows}</table></div><div class="panel stack"><h3>Geometry audit</h3><ul class="muted small">${auditRows}</ul></div></section>
+  `, { currentStep: 'geometry-printability' });
+}
+
+async function createDemoGeometryAsset() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to register geometry.');
+  setBusy(true);
+  try {
+    const suffix = `${new Date().getMinutes()}${new Date().getSeconds()}`;
+    await window.REBORN_API.createGeometryAsset({ file_name: `repair-bracket-${suffix}.stl`, file_format: 'stl', source_type: 'ai_artifact_stub', source_ref: `step32-demo-${suffix}`, bounding_box_mm: { x: 96, y: 42, z: 16 }, estimated_volume_cm3: 8.8, estimated_surface_cm2: 112.4, metadata: { source: 'prototype_console', purpose: 'printability_governance_demo' } });
+    toast('Geometry asset registered.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Geometry asset failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function evaluateGeometryAsset(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate geometry.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.evaluateGeometryAsset(id, { profile_key: 'fdm_pla_petg_standard', thin_wall_risk: 'medium' });
+    toast('Geometry validation completed.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Geometry validation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function evaluateFirstGeometryAsset() {
+  const asset = (S.api.geometryAssets || [])[0];
+  if (!asset) return toast('No geometry asset available. Register one first.');
+  await evaluateGeometryAsset(asset.id);
+}
+
+async function approveGeometryReview(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to review geometry.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.reviewGeometryItem(id, { decision: 'approved_with_notes', notes: 'Approved for pilot provider routing after human review. Real slicer/engineering validation still required before production.' });
+    toast('Geometry review completed.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Geometry review failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -2721,6 +2810,7 @@ const routes = {
   '/maker-economy': makerEconomyDashboard,
   '/ai-governance': aiGovernanceDashboard,
   '/ai-provider-sandbox': aiProviderSandboxDashboard,
+  '/geometry-printability': geometryPrintabilityDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -2890,6 +2980,14 @@ async function refreshApiData(options = {}) {
       aiArtifactStubs: bootstrap.ai_artifact_stubs || S.api.aiArtifactStubs || [],
       aiProviderCostLedger: bootstrap.ai_provider_cost_ledger || S.api.aiProviderCostLedger || [],
       aiProviderSandboxAuditLog: bootstrap.ai_provider_sandbox_audit_log || S.api.aiProviderSandboxAuditLog || [],
+      geometryPrintability: bootstrap.geometry_printability || S.api.geometryPrintability || null,
+      geometryValidationProfiles: bootstrap.geometry_validation_profiles || S.api.geometryValidationProfiles || [],
+      printabilityRules: bootstrap.printability_rules || S.api.printabilityRules || [],
+      geometryAssets: bootstrap.geometry_assets || S.api.geometryAssets || [],
+      geometryValidationRuns: bootstrap.geometry_validation_runs || S.api.geometryValidationRuns || [],
+      printabilityFindings: bootstrap.printability_findings || S.api.printabilityFindings || [],
+      geometryReviewItems: bootstrap.geometry_review_items || S.api.geometryReviewItems || [],
+      geometryGovernanceAuditLog: bootstrap.geometry_governance_audit_log || S.api.geometryGovernanceAuditLog || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
@@ -3998,6 +4096,10 @@ window.evaluatePartnerReadiness = evaluatePartnerReadiness;
 window.completePartnerTask = completePartnerTask;
 window.acceptPartnerAgreement = acceptPartnerAgreement;
 window.testPartnerIntegration = testPartnerIntegration;
+window.createDemoGeometryAsset = createDemoGeometryAsset;
+window.evaluateGeometryAsset = evaluateGeometryAsset;
+window.evaluateFirstGeometryAsset = evaluateFirstGeometryAsset;
+window.approveGeometryReview = approveGeometryReview;
 window.render = render;
 
 window.addEventListener('hashchange', render);

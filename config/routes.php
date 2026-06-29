@@ -126,6 +126,9 @@ return static function (Router $router, RepairController $repairController, Auth
                 'ai_job_orchestration',
                 'ai_provider_cost_ledger',
                 'ai_artifact_stubs',
+                'cad_geometry_validation',
+                'printability_governance',
+                'geometry_human_review',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -285,6 +288,17 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/platform/ai-artifact-stubs', [$platformController, 'aiArtifactStubs']);
     $router->get('/api/v1/platform/ai-provider-cost-ledger', [$platformController, 'aiProviderCostLedger']);
     $router->get('/api/v1/platform/ai-provider-sandbox-audit-log', [$platformController, 'aiProviderSandboxAuditLog']);
+    $router->get('/api/v1/platform/geometry-printability', [$platformController, 'geometryPrintability']);
+    $router->get('/api/v1/platform/geometry-validation-profiles', [$platformController, 'geometryValidationProfiles']);
+    $router->get('/api/v1/platform/printability-rules', [$platformController, 'printabilityRules']);
+    $router->get('/api/v1/platform/geometry-assets', [$platformController, 'geometryAssets']);
+    $router->post('/api/v1/platform/geometry-assets', [$platformController, 'createGeometryAsset']);
+    $router->post('/api/v1/platform/geometry-assets/{id}/evaluate', [$platformController, 'evaluateGeometryAsset']);
+    $router->get('/api/v1/platform/geometry-validation-runs', [$platformController, 'geometryValidationRuns']);
+    $router->get('/api/v1/platform/printability-findings', [$platformController, 'printabilityFindings']);
+    $router->get('/api/v1/platform/geometry-review-items', [$platformController, 'geometryReviewItems']);
+    $router->post('/api/v1/platform/geometry-review-items/{id}/review', [$platformController, 'reviewGeometryItem']);
+    $router->get('/api/v1/platform/geometry-governance-audit-log', [$platformController, 'geometryGovernanceAuditLog']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

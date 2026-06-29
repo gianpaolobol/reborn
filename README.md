@@ -577,3 +577,21 @@ Open the admin console:
 ```text
 http://127.0.0.1:8080/prototype/index.html#/ai-provider-sandbox
 ```
+
+## Step 32 — CAD/Geometry Validation & Printability Governance v1
+
+Step 32 adds a pilot geometry governance layer: CAD/mesh asset registry, validation profiles, printability rules, validation runs, findings, human review items and audit log.
+
+Prototype route:
+
+```text
+/prototype/index.html#/geometry-printability
+```
+
+Smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-geometry-printability-governance.ps1
+```
+
+This step does not run a real CAD kernel or slicer. It records the governance workflow needed before AI-generated or uploaded geometry can be routed to providers, maker publication or repair orders.

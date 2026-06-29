@@ -42,6 +42,7 @@ final class ProductionReadinessService
             'maker_economy' => $this->makerEconomyCheck(),
             'ai_pipeline_governance' => $this->aiPipelineGovernanceCheck(),
             'ai_provider_sandbox' => $this->aiProviderSandboxCheck(),
+            'geometry_printability' => $this->geometryPrintabilityCheck(),
         ];
 
         $status = 'ready';
@@ -93,7 +94,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v12_step31',
+            'checklist_version' => 'production_readiness_v13_step32',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -110,6 +111,7 @@ final class ProductionReadinessService
                 'maker model licensing, repair bounty rewards and royalty credit rules are reviewed before public maker onboarding',
                 'AI provider usage, human review gates, dataset consent/licensing and quality evaluation are reviewed before real AI integrations',
                 'AI provider adapters, job orchestration, provider costs, retry rules and artifact stubs are reviewed before any live external AI call',
+                'CAD/geometry validation, printability findings and human review decisions are completed before provider routing or maker publication',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
@@ -122,6 +124,7 @@ final class ProductionReadinessService
             'step_29_status' => 'Maker economy governance, model licensing, local royalty credits and repair bounty workflow v1 implemented.',
             'step_30_status' => 'AI pipeline governance, human-in-the-loop review, dataset governance and AI quality evaluation v1 implemented.',
             'step_31_status' => 'AI provider adapter sandbox, mock job orchestration, cost ledger and artifact stubs v1 implemented.',
+            'step_32_status' => 'CAD/geometry validation, printability governance and human review workflow v1 implemented.',
         ];
     }
 
@@ -675,6 +678,46 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'AI provider sandbox checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function geometryPrintabilityCheck(): array
+    {
+        try {
+            $tables = ['platform_geometry_validation_profiles', 'platform_geometry_assets', 'platform_geometry_validation_runs', 'platform_printability_rules', 'platform_printability_findings', 'platform_geometry_review_items', 'platform_geometry_governance_audit_log'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $profiles = 0;
+            $rules = 0;
+            $assets = 0;
+            $runs = 0;
+            if ($missing === []) {
+                $profiles = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_geometry_validation_profiles WHERE status = 'active'")->fetchColumn();
+                $rules = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_printability_rules WHERE status = 'active'")->fetchColumn();
+                $assets = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_geometry_assets')->fetchColumn();
+                $runs = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_geometry_validation_runs')->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? (($profiles > 0 && $rules > 0 && $assets > 0) ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'CAD/geometry validation and printability governance tables are available. Real mesh/CAD kernel analysis remains out of scope for the local pilot.' : 'Geometry printability governance tables are not fully migrated yet.',
+                'validation_profiles' => $profiles,
+                'printability_rules' => $rules,
+                'geometry_assets' => $assets,
+                'validation_runs' => $runs,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Geometry printability governance checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 

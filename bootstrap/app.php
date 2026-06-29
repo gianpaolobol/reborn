@@ -86,6 +86,7 @@ use Reborn\Platform\Application\MarketplaceRevenueService;
 use Reborn\Platform\Application\MakerEconomyService;
 use Reborn\Platform\Application\AiPipelineGovernanceService;
 use Reborn\Platform\Application\AiProviderSandboxService;
+use Reborn\Platform\Application\GeometryPrintabilityService;
 use Reborn\Platform\Application\OperationalTelemetryService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Platform\Presentation\PlatformController;
@@ -355,6 +356,7 @@ $marketplaceRevenueService = new MarketplaceRevenueService($pdo);
 $makerEconomyService = new MakerEconomyService($pdo);
 $aiPipelineGovernanceService = new AiPipelineGovernanceService($pdo);
 $aiProviderSandboxService = new AiProviderSandboxService($pdo);
+$geometryPrintabilityService = new GeometryPrintabilityService($pdo);
 $operationalTelemetryService = new OperationalTelemetryService(
     $pdo,
     $productionReadinessService,
@@ -376,6 +378,7 @@ $platformController = new PlatformController(
     $makerEconomyService,
     $aiPipelineGovernanceService,
     $aiProviderSandboxService,
+    $geometryPrintabilityService,
     $authContext
 );
 

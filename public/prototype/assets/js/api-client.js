@@ -1116,6 +1116,52 @@
       return this.request(`/api/v1/platform/ai-provider-sandbox-audit-log?limit=${encodeURIComponent(limit)}`);
     }
 
+
+
+    async getGeometryPrintability() {
+      return this.request('/api/v1/platform/geometry-printability');
+    }
+
+    async getGeometryValidationProfiles(status = 'active') {
+      return this.request(`/api/v1/platform/geometry-validation-profiles?status=${encodeURIComponent(status)}`);
+    }
+
+    async getPrintabilityRules(status = 'active') {
+      return this.request(`/api/v1/platform/printability-rules?status=${encodeURIComponent(status)}`);
+    }
+
+    async getGeometryAssets(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/geometry-assets?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createGeometryAsset(payload = {}) {
+      return this.request('/api/v1/platform/geometry-assets', { method: 'POST', body: payload });
+    }
+
+    async evaluateGeometryAsset(id, payload = {}) {
+      return this.request(`/api/v1/platform/geometry-assets/${encodeURIComponent(id)}/evaluate`, { method: 'POST', body: payload });
+    }
+
+    async getGeometryValidationRuns(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/geometry-validation-runs?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getPrintabilityFindings(status = 'open', limit = 50) {
+      return this.request(`/api/v1/platform/printability-findings?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getGeometryReviewItems(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/geometry-review-items?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async reviewGeometryItem(id, payload = {}) {
+      return this.request(`/api/v1/platform/geometry-review-items/${encodeURIComponent(id)}/review`, { method: 'POST', body: payload });
+    }
+
+    async getGeometryGovernanceAuditLog(limit = 50) {
+      return this.request(`/api/v1/platform/geometry-governance-audit-log?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -1374,6 +1420,14 @@
       let aiArtifactStubs = { ai_artifact_stubs: [] };
       let aiProviderCostLedger = { ai_provider_cost_ledger: [] };
       let aiProviderSandboxAuditLog = { ai_provider_sandbox_audit_log: [] };
+      let geometryPrintability = { geometry_printability: null };
+      let geometryValidationProfiles = { geometry_validation_profiles: [] };
+      let printabilityRules = { printability_rules: [] };
+      let geometryAssets = { geometry_assets: [] };
+      let geometryValidationRuns = { geometry_validation_runs: [] };
+      let printabilityFindings = { printability_findings: [] };
+      let geometryReviewItems = { geometry_review_items: [] };
+      let geometryGovernanceAuditLog = { geometry_governance_audit_log: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -1859,6 +1913,46 @@
         } catch (_error) {
           aiProviderSandboxAuditLog = { ai_provider_sandbox_audit_log: [] };
         }
+        try {
+          geometryPrintability = await this.getGeometryPrintability();
+        } catch (_error) {
+          geometryPrintability = { geometry_printability: null };
+        }
+        try {
+          geometryValidationProfiles = await this.getGeometryValidationProfiles('active');
+        } catch (_error) {
+          geometryValidationProfiles = { geometry_validation_profiles: [] };
+        }
+        try {
+          printabilityRules = await this.getPrintabilityRules('active');
+        } catch (_error) {
+          printabilityRules = { printability_rules: [] };
+        }
+        try {
+          geometryAssets = await this.getGeometryAssets('all', 30);
+        } catch (_error) {
+          geometryAssets = { geometry_assets: [] };
+        }
+        try {
+          geometryValidationRuns = await this.getGeometryValidationRuns('all', 30);
+        } catch (_error) {
+          geometryValidationRuns = { geometry_validation_runs: [] };
+        }
+        try {
+          printabilityFindings = await this.getPrintabilityFindings('open', 30);
+        } catch (_error) {
+          printabilityFindings = { printability_findings: [] };
+        }
+        try {
+          geometryReviewItems = await this.getGeometryReviewItems('active', 30);
+        } catch (_error) {
+          geometryReviewItems = { geometry_review_items: [] };
+        }
+        try {
+          geometryGovernanceAuditLog = await this.getGeometryGovernanceAuditLog(30);
+        } catch (_error) {
+          geometryGovernanceAuditLog = { geometry_governance_audit_log: [] };
+        }
 
       }
 
@@ -2058,7 +2152,15 @@
         ai_job_events: aiJobEvents.ai_job_events || [],
         ai_artifact_stubs: aiArtifactStubs.ai_artifact_stubs || [],
         ai_provider_cost_ledger: aiProviderCostLedger.ai_provider_cost_ledger || [],
-        ai_provider_sandbox_audit_log: aiProviderSandboxAuditLog.ai_provider_sandbox_audit_log || []
+        ai_provider_sandbox_audit_log: aiProviderSandboxAuditLog.ai_provider_sandbox_audit_log || [],
+        geometry_printability: geometryPrintability.geometry_printability || null,
+        geometry_validation_profiles: geometryValidationProfiles.geometry_validation_profiles || [],
+        printability_rules: printabilityRules.printability_rules || [],
+        geometry_assets: geometryAssets.geometry_assets || [],
+        geometry_validation_runs: geometryValidationRuns.geometry_validation_runs || [],
+        printability_findings: printabilityFindings.printability_findings || [],
+        geometry_review_items: geometryReviewItems.geometry_review_items || [],
+        geometry_governance_audit_log: geometryGovernanceAuditLog.geometry_governance_audit_log || []
       };
     }
   }

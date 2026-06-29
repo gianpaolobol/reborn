@@ -18,6 +18,7 @@ use Reborn\Platform\Application\MarketplaceRevenueService;
 use Reborn\Platform\Application\MakerEconomyService;
 use Reborn\Platform\Application\AiPipelineGovernanceService;
 use Reborn\Platform\Application\AiProviderSandboxService;
+use Reborn\Platform\Application\GeometryPrintabilityService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -38,6 +39,7 @@ final class PlatformController
         private readonly MakerEconomyService $makerEconomy,
         private readonly AiPipelineGovernanceService $aiGovernance,
         private readonly AiProviderSandboxService $aiSandbox,
+        private readonly GeometryPrintabilityService $geometry,
         private readonly AuthContext $auth,
     ) {
     }
@@ -1019,6 +1021,84 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['ai_provider_sandbox_audit_log' => $this->aiSandbox->auditLog($limit)], $request->requestId());
+    }
+
+
+    public function geometryPrintability(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['geometry_printability' => $this->geometry->dashboard()], $request->requestId());
+    }
+
+    public function geometryValidationProfiles(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        return JsonResponse::ok(['geometry_validation_profiles' => $this->geometry->profiles($status)], $request->requestId());
+    }
+
+    public function printabilityRules(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        return JsonResponse::ok(['printability_rules' => $this->geometry->rules($status)], $request->requestId());
+    }
+
+    public function geometryAssets(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['geometry_assets' => $this->geometry->geometryAssets($status, $limit)], $request->requestId());
+    }
+
+    public function createGeometryAsset(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['geometry_asset' => $this->geometry->createGeometryAsset($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function evaluateGeometryAsset(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['geometry_evaluation' => $this->geometry->evaluateGeometryAsset((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function geometryValidationRuns(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['geometry_validation_runs' => $this->geometry->validationRuns($status, $limit)], $request->requestId());
+    }
+
+    public function printabilityFindings(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'open');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['printability_findings' => $this->geometry->findings($status, $limit)], $request->requestId());
+    }
+
+    public function geometryReviewItems(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['geometry_review_items' => $this->geometry->reviews($status, $limit)], $request->requestId());
+    }
+
+    public function reviewGeometryItem(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['geometry_review_item' => $this->geometry->reviewGeometry((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function geometryGovernanceAuditLog(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['geometry_governance_audit_log' => $this->geometry->auditLog($limit)], $request->requestId());
     }
 
 }
