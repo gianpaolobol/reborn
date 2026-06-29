@@ -667,3 +667,21 @@ Prototype route:
 ```
 
 This step does not create certified LCA reports, legal environmental claims, ESG reporting or public sustainability statements. It records the governance workflow and pilot estimates needed before external impact claims can be reviewed and validated.
+
+### Step 37 — Investor Demo, KPI Narrative & Board Reporting Governance v1
+
+Step 37 turns the broad local MVP into an investor/board-ready operating narrative. It adds governed KPI definitions, KPI snapshots, demo narrative sections, board reports, evidence records, investor demo readiness reviews and investor reporting audit logging.
+
+Smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-investor-reporting-board-readiness.ps1
+```
+
+Prototype route:
+
+```text
+/prototype/index.html#/investor-reporting
+```
+
+This step does not create audited financials, legal investment materials, certified ESG reports or public traction claims. It records local/pilot evidence, caveats and narrative governance so Re-born can be demonstrated honestly before beta and fundraising use.

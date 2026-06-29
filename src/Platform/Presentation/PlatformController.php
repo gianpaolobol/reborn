@@ -23,6 +23,7 @@ use Reborn\Platform\Application\ProviderRoutingGovernanceService;
 use Reborn\Platform\Application\FulfilmentDispatchGovernanceService;
 use Reborn\Platform\Application\CustomerCareGovernanceService;
 use Reborn\Platform\Application\SustainabilityImpactService;
+use Reborn\Platform\Application\InvestorReportingService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -48,6 +49,7 @@ final class PlatformController
         private readonly FulfilmentDispatchGovernanceService $dispatch,
         private readonly CustomerCareGovernanceService $customerCare,
         private readonly SustainabilityImpactService $sustainability,
+        private readonly InvestorReportingService $investorReporting,
         private readonly AuthContext $auth,
     ) {
     }
@@ -1472,6 +1474,102 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['sustainability_audit_log' => $this->sustainability->auditLog($limit)], $request->requestId());
+    }
+
+
+    public function investorReporting(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['investor_reporting' => $this->investorReporting->dashboard()], $request->requestId());
+    }
+
+    public function investorKpiDefinitions(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        return JsonResponse::ok(['investor_kpi_definitions' => $this->investorReporting->kpiDefinitions($status)], $request->requestId());
+    }
+
+    public function investorKpiSnapshots(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['investor_kpi_snapshots' => $this->investorReporting->kpiSnapshots($status, $limit)], $request->requestId());
+    }
+
+    public function createInvestorKpiSnapshot(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['investor_kpi_snapshot' => $this->investorReporting->createKpiSnapshot($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function demoNarrativeSections(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        return JsonResponse::ok(['demo_narrative_sections' => $this->investorReporting->narrativeSections($status)], $request->requestId());
+    }
+
+    public function boardReports(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['board_reports' => $this->investorReporting->boardReports($status, $limit)], $request->requestId());
+    }
+
+    public function createBoardReport(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['board_report' => $this->investorReporting->createBoardReport($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function publishBoardReport(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['board_report' => $this->investorReporting->publishBoardReport((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function boardReportSections(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['board_report_sections' => $this->investorReporting->boardReportSections((string) $request->param('id'))], $request->requestId());
+    }
+
+    public function boardReportEvidence(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $reportId = trim((string) $request->query('board_report_id', '')) ?: null;
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['board_report_evidence' => $this->investorReporting->boardReportEvidence($reportId, $limit)], $request->requestId());
+    }
+
+    public function investorDemoReadinessReviews(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['investor_demo_readiness_reviews' => $this->investorReporting->readinessReviews($status, $limit)], $request->requestId());
+    }
+
+    public function evaluateInvestorDemoReadiness(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['investor_demo_readiness_review' => $this->investorReporting->evaluateDemoReadiness($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function reviewInvestorDemoReadiness(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['investor_demo_readiness_review' => $this->investorReporting->reviewDemoReadiness((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function investorReportingAuditLog(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['investor_reporting_audit_log' => $this->investorReporting->auditLog($limit)], $request->requestId());
     }
 
 }

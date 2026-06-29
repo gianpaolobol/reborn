@@ -91,6 +91,7 @@ use Reborn\Platform\Application\ProviderRoutingGovernanceService;
 use Reborn\Platform\Application\FulfilmentDispatchGovernanceService;
 use Reborn\Platform\Application\CustomerCareGovernanceService;
 use Reborn\Platform\Application\SustainabilityImpactService;
+use Reborn\Platform\Application\InvestorReportingService;
 use Reborn\Platform\Application\OperationalTelemetryService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Platform\Presentation\PlatformController;
@@ -365,6 +366,7 @@ $providerRoutingGovernanceService = new ProviderRoutingGovernanceService($pdo);
 $fulfilmentDispatchGovernanceService = new FulfilmentDispatchGovernanceService($pdo);
 $customerCareGovernanceService = new CustomerCareGovernanceService($pdo);
 $sustainabilityImpactService = new SustainabilityImpactService($pdo);
+$investorReportingService = new InvestorReportingService($pdo);
 $operationalTelemetryService = new OperationalTelemetryService(
     $pdo,
     $productionReadinessService,
@@ -391,6 +393,7 @@ $platformController = new PlatformController(
     $fulfilmentDispatchGovernanceService,
     $customerCareGovernanceService,
     $sustainabilityImpactService,
+    $investorReportingService,
     $authContext
 );
 

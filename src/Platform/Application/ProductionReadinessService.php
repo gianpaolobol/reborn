@@ -47,6 +47,7 @@ final class ProductionReadinessService
             'dispatch_governance' => $this->dispatchGovernanceCheck(),
             'customer_care_governance' => $this->customerCareGovernanceCheck(),
             'sustainability_impact' => $this->sustainabilityImpactCheck(),
+            'investor_reporting' => $this->investorReportingCheck(),
         ];
 
         $status = 'ready';
@@ -98,7 +99,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v17_step36',
+            'checklist_version' => 'production_readiness_v18_step37',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -119,6 +120,7 @@ final class ProductionReadinessService
                 'provider routing, dispatch tracking and proof-of-repair governance are reviewed before real fulfilment operations',
                 'customer acceptance, warranty placeholders and post-repair support workflows are reviewed before beta customer commitments',
                 'sustainability impact, circularity factors and repair outcome intelligence are reviewed before external environmental claims',
+                'investor demo KPIs, board report narrative and caveats are reviewed before external fundraising use',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
@@ -136,6 +138,7 @@ final class ProductionReadinessService
             'step_34_status' => 'Fulfilment dispatch, shipment tracking and proof-of-repair governance v1 implemented.',
             'step_35_status' => 'Customer acceptance, warranty placeholder and post-repair support governance v1 implemented.',
             'step_36_status' => 'Sustainability impact, circularity metrics and repair outcome intelligence v1 implemented.',
+            'step_37_status' => 'Investor demo KPI narrative and board reporting governance v1 implemented.',
         ];
     }
 
@@ -917,6 +920,43 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Sustainability impact checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function investorReportingCheck(): array
+    {
+        try {
+            $tables = ['platform_investor_kpi_definitions', 'platform_investor_kpi_snapshots', 'platform_demo_narrative_sections', 'platform_board_reports', 'platform_board_report_sections', 'platform_board_report_evidence', 'platform_investor_demo_readiness_reviews', 'platform_investor_reporting_audit_log'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $kpis = 0;
+            $sections = 0;
+            $reviews = 0;
+            if ($missing === []) {
+                $kpis = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_investor_kpi_definitions WHERE status = 'active'")->fetchColumn();
+                $sections = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_demo_narrative_sections WHERE status = 'active'")->fetchColumn();
+                $reviews = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_investor_demo_readiness_reviews")->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? ($kpis > 0 && $sections > 0 ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Investor demo KPI, narrative and board reporting governance tables are available. Metrics remain pilot/local evidence until externally validated.' : 'Investor reporting tables are not fully migrated yet.',
+                'kpi_definitions' => $kpis,
+                'narrative_sections' => $sections,
+                'readiness_reviews' => $reviews,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Investor reporting checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 

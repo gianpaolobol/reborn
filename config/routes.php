@@ -146,6 +146,12 @@ return static function (Router $router, RepairController $repairController, Auth
                 'circularity_metrics',
                 'repair_outcome_intelligence',
                 'impact_review_governance',
+                'investor_reporting',
+                'investor_kpi_snapshots',
+                'demo_narrative_sections',
+                'board_reports',
+                'board_report_evidence',
+                'investor_demo_readiness',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -375,6 +381,23 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/platform/impact-review-items', [$platformController, 'impactReviewItems']);
     $router->post('/api/v1/platform/impact-review-items/{id}/review', [$platformController, 'reviewImpactItem']);
     $router->get('/api/v1/platform/sustainability-audit-log', [$platformController, 'sustainabilityAuditLog']);
+
+
+
+    $router->get('/api/v1/platform/investor-reporting', [$platformController, 'investorReporting']);
+    $router->get('/api/v1/platform/investor-kpi-definitions', [$platformController, 'investorKpiDefinitions']);
+    $router->get('/api/v1/platform/investor-kpi-snapshots', [$platformController, 'investorKpiSnapshots']);
+    $router->post('/api/v1/platform/investor-kpi-snapshots', [$platformController, 'createInvestorKpiSnapshot']);
+    $router->get('/api/v1/platform/demo-narrative-sections', [$platformController, 'demoNarrativeSections']);
+    $router->get('/api/v1/platform/board-reports', [$platformController, 'boardReports']);
+    $router->post('/api/v1/platform/board-reports', [$platformController, 'createBoardReport']);
+    $router->post('/api/v1/platform/board-reports/{id}/publish', [$platformController, 'publishBoardReport']);
+    $router->get('/api/v1/platform/board-reports/{id}/sections', [$platformController, 'boardReportSections']);
+    $router->get('/api/v1/platform/board-report-evidence', [$platformController, 'boardReportEvidence']);
+    $router->get('/api/v1/platform/investor-demo-readiness-reviews', [$platformController, 'investorDemoReadinessReviews']);
+    $router->post('/api/v1/platform/investor-demo-readiness/evaluate', [$platformController, 'evaluateInvestorDemoReadiness']);
+    $router->post('/api/v1/platform/investor-demo-readiness-reviews/{id}/review', [$platformController, 'reviewInvestorDemoReadiness']);
+    $router->get('/api/v1/platform/investor-reporting-audit-log', [$platformController, 'investorReportingAuditLog']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

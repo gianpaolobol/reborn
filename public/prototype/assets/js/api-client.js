@@ -1380,6 +1380,65 @@
       return this.request(`/api/v1/platform/sustainability-audit-log?limit=${encodeURIComponent(limit)}`);
     }
 
+
+
+    async getInvestorReporting() {
+      return this.request('/api/v1/platform/investor-reporting');
+    }
+
+    async getInvestorKpiDefinitions(status = 'active') {
+      return this.request(`/api/v1/platform/investor-kpi-definitions?status=${encodeURIComponent(status)}`);
+    }
+
+    async getInvestorKpiSnapshots(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/investor-kpi-snapshots?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createInvestorKpiSnapshot(payload = {}) {
+      return this.request('/api/v1/platform/investor-kpi-snapshots', { method: 'POST', body: payload });
+    }
+
+    async getDemoNarrativeSections(status = 'active') {
+      return this.request(`/api/v1/platform/demo-narrative-sections?status=${encodeURIComponent(status)}`);
+    }
+
+    async getBoardReports(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/board-reports?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createBoardReport(payload = {}) {
+      return this.request('/api/v1/platform/board-reports', { method: 'POST', body: payload });
+    }
+
+    async publishBoardReport(id, payload = {}) {
+      return this.request(`/api/v1/platform/board-reports/${encodeURIComponent(id)}/publish`, { method: 'POST', body: payload });
+    }
+
+    async getBoardReportSections(id) {
+      return this.request(`/api/v1/platform/board-reports/${encodeURIComponent(id)}/sections`);
+    }
+
+    async getBoardReportEvidence(boardReportId = '', limit = 50) {
+      const query = boardReportId ? `board_report_id=${encodeURIComponent(boardReportId)}&limit=${encodeURIComponent(limit)}` : `limit=${encodeURIComponent(limit)}`;
+      return this.request(`/api/v1/platform/board-report-evidence?${query}`);
+    }
+
+    async getInvestorDemoReadinessReviews(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/investor-demo-readiness-reviews?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async evaluateInvestorDemoReadiness(payload = {}) {
+      return this.request('/api/v1/platform/investor-demo-readiness/evaluate', { method: 'POST', body: payload });
+    }
+
+    async reviewInvestorDemoReadiness(id, payload = {}) {
+      return this.request(`/api/v1/platform/investor-demo-readiness-reviews/${encodeURIComponent(id)}/review`, { method: 'POST', body: payload });
+    }
+
+    async getInvestorReportingAuditLog(limit = 50) {
+      return this.request(`/api/v1/platform/investor-reporting-audit-log?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -1701,6 +1760,14 @@
       let repairOutcomeInsights = { repair_outcome_insights: [] };
       let impactReviewItems = { impact_review_items: [] };
       let sustainabilityAuditLog = { sustainability_audit_log: [] };
+      let investorReporting = { investor_reporting: null };
+      let investorKpiDefinitions = { investor_kpi_definitions: [] };
+      let investorKpiSnapshots = { investor_kpi_snapshots: [] };
+      let demoNarrativeSections = { demo_narrative_sections: [] };
+      let boardReports = { board_reports: [] };
+      let boardReportEvidence = { board_report_evidence: [] };
+      let investorDemoReadinessReviews = { investor_demo_readiness_reviews: [] };
+      let investorReportingAuditLog = { investor_reporting_audit_log: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -2385,6 +2452,46 @@
         } catch (_error) {
           sustainabilityAuditLog = { sustainability_audit_log: [] };
         }
+        try {
+          investorReporting = await this.getInvestorReporting();
+        } catch (_error) {
+          investorReporting = { investor_reporting: null };
+        }
+        try {
+          investorKpiDefinitions = await this.getInvestorKpiDefinitions('active');
+        } catch (_error) {
+          investorKpiDefinitions = { investor_kpi_definitions: [] };
+        }
+        try {
+          investorKpiSnapshots = await this.getInvestorKpiSnapshots('all', 30);
+        } catch (_error) {
+          investorKpiSnapshots = { investor_kpi_snapshots: [] };
+        }
+        try {
+          demoNarrativeSections = await this.getDemoNarrativeSections('active');
+        } catch (_error) {
+          demoNarrativeSections = { demo_narrative_sections: [] };
+        }
+        try {
+          boardReports = await this.getBoardReports('all', 30);
+        } catch (_error) {
+          boardReports = { board_reports: [] };
+        }
+        try {
+          boardReportEvidence = await this.getBoardReportEvidence('', 30);
+        } catch (_error) {
+          boardReportEvidence = { board_report_evidence: [] };
+        }
+        try {
+          investorDemoReadinessReviews = await this.getInvestorDemoReadinessReviews('active', 30);
+        } catch (_error) {
+          investorDemoReadinessReviews = { investor_demo_readiness_reviews: [] };
+        }
+        try {
+          investorReportingAuditLog = await this.getInvestorReportingAuditLog(30);
+        } catch (_error) {
+          investorReportingAuditLog = { investor_reporting_audit_log: [] };
+        }
 
       }
 
@@ -2623,7 +2730,15 @@
         circularity_snapshots: circularitySnapshots.circularity_snapshots || [],
         repair_outcome_insights: repairOutcomeInsights.repair_outcome_insights || [],
         impact_review_items: impactReviewItems.impact_review_items || [],
-        sustainability_audit_log: sustainabilityAuditLog.sustainability_audit_log || []
+        sustainability_audit_log: sustainabilityAuditLog.sustainability_audit_log || [],
+        investor_reporting: investorReporting.investor_reporting || null,
+        investor_kpi_definitions: investorKpiDefinitions.investor_kpi_definitions || [],
+        investor_kpi_snapshots: investorKpiSnapshots.investor_kpi_snapshots || [],
+        demo_narrative_sections: demoNarrativeSections.demo_narrative_sections || [],
+        board_reports: boardReports.board_reports || [],
+        board_report_evidence: boardReportEvidence.board_report_evidence || [],
+        investor_demo_readiness_reviews: investorDemoReadinessReviews.investor_demo_readiness_reviews || [],
+        investor_reporting_audit_log: investorReportingAuditLog.investor_reporting_audit_log || []
       };
     }
   }

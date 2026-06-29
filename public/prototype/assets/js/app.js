@@ -111,7 +111,8 @@ function stepper(active) {
     ['provider-routing', '24', 'Routing'],
     ['dispatch-governance', '25', 'Dispatch'],
     ['customer-care', '26', 'Care'],
-    ['sustainability-impact', '27', 'Impact']
+    ['sustainability-impact', '27', 'Impact'],
+    ['investor-reporting', '28', 'Investor']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -3257,6 +3258,117 @@ async function resolveImpactReview(id) {
   }
 }
 
+
+
+function investorReportingDashboard() {
+  setActiveNav('investor-reporting');
+  if (!S.auth.user) {
+    return layout('Investor Reporting', authRequiredPanel('the Step 37 investor reporting console'), { currentStep: 'investor-reporting' });
+  }
+
+  const dashboard = S.api.investorReporting || {};
+  const summary = dashboard.summary || {};
+  const latest = dashboard.latest_snapshot || (S.api.investorKpiSnapshots || [])[0] || {};
+  const kpis = S.api.investorKpiDefinitions || dashboard.kpi_definitions || [];
+  const sections = S.api.demoNarrativeSections || dashboard.narrative_sections || [];
+  const reports = S.api.boardReports || dashboard.latest_reports || [];
+  const reviews = S.api.investorDemoReadinessReviews || dashboard.readiness_reviews || [];
+  const evidence = S.api.boardReportEvidence || [];
+  const audit = S.api.investorReportingAuditLog || [];
+  const fmt = value => Number(value || 0).toFixed(2);
+
+  const kpiRows = kpis.slice(0, 8).map(item => `<tr><td>${safe(item.category)}</td><td>${safe(item.name)}</td><td>${safe(item.unit)}</td><td>${safe(item.narrative_role)}</td></tr>`).join('') || '<tr><td colspan="4">No active investor KPI definitions.</td></tr>';
+  const sectionRows = sections.slice(0, 8).map(item => `<tr><td>${safe(item.sort_order)}</td><td>${safe(item.title)}</td><td>${safe(item.headline)}</td><td>${safe(item.risk_note)}</td></tr>`).join('') || '<tr><td colspan="4">No demo narrative sections.</td></tr>';
+  const reportRows = reports.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'published' ? 'green' : item.status === 'reviewed' ? 'blue' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.report_code)}</td><td>${safe(item.title)}</td><td>${safe(item.demo_score ?? 0)}</td><td><button class="mini-button" onclick="publishFirstBoardReport('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Publish</button></td></tr>`).join('') || '<tr><td colspan="5">No board reports yet.</td></tr>';
+  const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.score >= 80 ? 'green' : item.score >= 60 ? 'blue' : 'orange'}">${safe(item.score)}</span></td><td>${safe(item.readiness_level)}</td><td>${safe((item.blocking_issues || []).slice(0, 2).join('; '))}</td><td><button class="mini-button" onclick="approveInvestorReadiness('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Review</button></td></tr>`).join('') || '<tr><td colspan="4">No active demo readiness reviews.</td></tr>';
+  const evidenceRows = evidence.slice(0, 6).map(item => `<li><strong>${safe(item.title)}</strong> — ${safe(item.summary)}</li>`).join('') || '<li>No board evidence records yet.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No investor reporting audit entries yet.</li>';
+
+  return layout('Investor Reporting', `
+    <section class="section-head"><div><p class="eyebrow">Step 37 · Investor Demo, KPI Narrative & Board Reporting Governance</p><h2>Turn repair journey evidence into a clear investor/board narrative with KPI snapshots, reports, caveats and demo-readiness reviews.</h2></div><p class="muted">Step 37 is a local governance/reporting layer. It does not create audited financials, legal claims, certified ESG reporting or investment documents.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(latest.demo_score ?? summary.latest_demo_score ?? 0)}</strong><span>Demo score</span></div><div class="metric"><strong>${safe(latest.repair_cases ?? 0)}</strong><span>Repair cases</span></div><div class="metric"><strong>${safe(latest.providers ?? 0)}</strong><span>Providers/partners</span></div><div class="metric"><strong>${fmt(latest.co2e_avoided_kg)} kg</strong><span>CO₂e pilot estimate</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createInvestorKpiSnapshot()" ${S.busy ? 'disabled' : ''}>Create KPI snapshot</button><button class="btn secondary" onclick="createBoardReport()" ${S.busy ? 'disabled' : ''}>Create board report</button><button class="btn secondary" onclick="evaluateInvestorReadiness()" ${S.busy ? 'disabled' : ''}>Evaluate demo readiness</button><a class="btn secondary" href="#/sustainability-impact">Impact metrics</a></div><p class="muted small">Investor reporting should only use caveated pilot evidence until beta data, legal review and production integrations are available.</p></section>
+    <section class="section grid two"><div class="panel stack"><h3>Investor KPIs</h3><table class="table"><tr><th>Category</th><th>KPI</th><th>Unit</th><th>Narrative role</th></tr>${kpiRows}</table></div><div class="panel stack"><h3>Demo narrative sections</h3><table class="table"><tr><th>#</th><th>Section</th><th>Headline</th><th>Risk note</th></tr>${sectionRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Board reports</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Title</th><th>Score</th><th>Action</th></tr>${reportRows}</table></div><div class="panel stack"><h3>Demo readiness reviews</h3><table class="table"><tr><th>Score</th><th>Level</th><th>Blocking issues</th><th>Action</th></tr>${reviewRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Board evidence</h3><ul class="muted small">${evidenceRows}</ul></div><div class="panel stack"><h3>Investor reporting audit</h3><ul class="muted small">${auditRows}</ul></div></section>
+  `, { currentStep: 'investor-reporting' });
+}
+
+async function createInvestorKpiSnapshot() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create investor KPI snapshots.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.createInvestorKpiSnapshot({ scope: 'investor_demo', status: 'draft' });
+    toast('Investor KPI snapshot created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`KPI snapshot failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function createBoardReport() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create board reports.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.createBoardReport({ title: 'Re-born Investor Demo Board Report', period_label: new Date().toISOString().slice(0, 7) });
+    toast('Board report created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Board report failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function publishFirstBoardReport(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to publish board reports.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.publishBoardReport(id, { status: 'published' });
+    toast('Board report published for internal demo use.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Board report publish failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function evaluateInvestorReadiness() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate demo readiness.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.evaluateInvestorDemoReadiness({ notes: 'Evaluated from Step 37 prototype console.' });
+    toast('Investor demo readiness evaluated.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Readiness evaluation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function approveInvestorReadiness(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to review demo readiness.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.reviewInvestorDemoReadiness(id, { decision: 'reviewed_with_caveats', notes: 'Reviewed from Step 37 prototype console. Demo is local/pilot evidence with explicit caveats.' });
+    toast('Investor demo readiness reviewed.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Readiness review failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -3288,6 +3400,7 @@ const routes = {
   '/dispatch-governance': dispatchGovernanceDashboard,
   '/customer-care': customerCareDashboard,
   '/sustainability-impact': sustainabilityImpactDashboard,
+  '/investor-reporting': investorReportingDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -3496,6 +3609,14 @@ async function refreshApiData(options = {}) {
       repairOutcomeInsights: bootstrap.repair_outcome_insights || S.api.repairOutcomeInsights || [],
       impactReviewItems: bootstrap.impact_review_items || S.api.impactReviewItems || [],
       sustainabilityAuditLog: bootstrap.sustainability_audit_log || S.api.sustainabilityAuditLog || [],
+      investorReporting: bootstrap.investor_reporting || S.api.investorReporting || null,
+      investorKpiDefinitions: bootstrap.investor_kpi_definitions || S.api.investorKpiDefinitions || [],
+      investorKpiSnapshots: bootstrap.investor_kpi_snapshots || S.api.investorKpiSnapshots || [],
+      demoNarrativeSections: bootstrap.demo_narrative_sections || S.api.demoNarrativeSections || [],
+      boardReports: bootstrap.board_reports || S.api.boardReports || [],
+      boardReportEvidence: bootstrap.board_report_evidence || S.api.boardReportEvidence || [],
+      investorDemoReadinessReviews: bootstrap.investor_demo_readiness_reviews || S.api.investorDemoReadinessReviews || [],
+      investorReportingAuditLog: bootstrap.investor_reporting_audit_log || S.api.investorReportingAuditLog || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
