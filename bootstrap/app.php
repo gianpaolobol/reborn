@@ -62,6 +62,18 @@ use Reborn\Marketplace\Infrastructure\SqlitePaymentIntentRepository;
 use Reborn\Marketplace\Infrastructure\SqliteRepairOrderRepository;
 use Reborn\Marketplace\Presentation\RepairPathDecisionController;
 use Reborn\Marketplace\Presentation\RepairOrderController;
+use Reborn\Operations\Application\AdminOperationsPolicy;
+use Reborn\Operations\Application\AssignOpsReviewItemService;
+use Reborn\Operations\Application\CreateOpsEscalationService;
+use Reborn\Operations\Application\CreateOpsReviewItemService;
+use Reborn\Operations\Application\GetOpsReviewItemService;
+use Reborn\Operations\Application\ListOpsEscalationsService;
+use Reborn\Operations\Application\ListOpsReviewItemsService;
+use Reborn\Operations\Application\OpsSummaryService;
+use Reborn\Operations\Application\RecordOpsModerationActionService;
+use Reborn\Operations\Application\ResolveOpsReviewItemService;
+use Reborn\Operations\Infrastructure\SqliteAdminOperationsRepository;
+use Reborn\Operations\Presentation\AdminOperationsController;
 use Reborn\Provider\Application\ProviderMatchingService;
 use Reborn\Provider\Application\GetProviderMatchService;
 use Reborn\Provider\Application\GetProviderQuoteRequestService;
@@ -141,6 +153,8 @@ $repairLearningEventRepository = new SqliteRepairLearningEventRepository($pdo);
 $providerTrustRepository = new SqliteProviderTrustRepository($pdo);
 $marketplaceGovernanceRepository = new SqliteMarketplaceGovernanceRepository($pdo);
 $marketplaceGovernancePolicy = new MarketplaceGovernancePolicy();
+$adminOperationsRepository = new SqliteAdminOperationsRepository($pdo);
+$adminOperationsPolicy = new AdminOperationsPolicy();
 $knowledgeEngine = new KnowledgeEngine($pdo);
 $recognitionEngine = new RecognitionEngine($knowledgeEngine);
 $decisionService = new RepairPathDecisionService($pdo);
@@ -292,8 +306,22 @@ $governanceController = new GovernanceController(
     $authContext
 );
 
+$adminOperationsController = new AdminOperationsController(
+    new CreateOpsReviewItemService($adminOperationsRepository, $eventBus),
+    new ListOpsReviewItemsService($adminOperationsRepository),
+    new GetOpsReviewItemService($adminOperationsRepository),
+    new AssignOpsReviewItemService($adminOperationsRepository, $eventBus),
+    new RecordOpsModerationActionService($adminOperationsRepository, $eventBus),
+    new CreateOpsEscalationService($adminOperationsRepository, $eventBus),
+    new ListOpsEscalationsService($adminOperationsRepository),
+    new ResolveOpsReviewItemService($adminOperationsRepository, $eventBus),
+    new OpsSummaryService($adminOperationsRepository, $adminOperationsPolicy),
+    $adminOperationsPolicy,
+    $authContext
+);
+
 $router = new Router();
-(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $repairFulfilmentController, $learningController, $trustController, $governanceController, $authContext, $pdo);
+(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $repairFulfilmentController, $learningController, $trustController, $governanceController, $adminOperationsController, $authContext, $pdo);
 
 return [
     'router' => $router,

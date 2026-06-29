@@ -379,6 +379,62 @@
       return this.request('/api/v1/governance/policies');
     }
 
+
+    async createOpsReviewItem(data = {}) {
+      return this.request('/api/v1/ops/review-items', {
+        method: 'POST',
+        body: data
+      });
+    }
+
+    async getOpsReviewItems(status = null) {
+      return this.request(`/api/v1/ops/review-items${status ? `?status=${encodeURIComponent(status)}` : ''}`);
+    }
+
+    async getOpsReviewItem(reviewItemId) {
+      return this.request(`/api/v1/ops/review-items/${encodeURIComponent(reviewItemId)}`);
+    }
+
+    async assignOpsReviewItem(reviewItemId, assignedTo = null) {
+      return this.request(`/api/v1/ops/review-items/${encodeURIComponent(reviewItemId)}/assign`, {
+        method: 'POST',
+        body: assignedTo ? { assigned_to: assignedTo } : {}
+      });
+    }
+
+    async recordOpsModerationAction(reviewItemId, data = {}) {
+      return this.request(`/api/v1/ops/review-items/${encodeURIComponent(reviewItemId)}/moderation-actions`, {
+        method: 'POST',
+        body: data
+      });
+    }
+
+    async createOpsEscalation(reviewItemId, data = {}) {
+      return this.request(`/api/v1/ops/review-items/${encodeURIComponent(reviewItemId)}/escalations`, {
+        method: 'POST',
+        body: data
+      });
+    }
+
+    async resolveOpsReviewItem(reviewItemId, data = {}) {
+      return this.request(`/api/v1/ops/review-items/${encodeURIComponent(reviewItemId)}/resolve`, {
+        method: 'POST',
+        body: data
+      });
+    }
+
+    async getOpsEscalations() {
+      return this.request('/api/v1/ops/escalations');
+    }
+
+    async getOpsSummary() {
+      return this.request('/api/v1/ops/summary');
+    }
+
+    async getOpsPolicies() {
+      return this.request('/api/v1/ops/policies');
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -427,7 +483,12 @@
           governance_policy: null,
           provider_rankings: [],
           provider_ranking_snapshot: null,
-          governance_actions: []
+          governance_actions: [],
+          ops_summary: null,
+          ops_policy: null,
+          ops_review_items: [],
+          ops_review_item: null,
+          ops_escalations: []
         };
       }
 
@@ -460,6 +521,9 @@
       let governanceSummary = { summary: null, policy: null };
       let providerRankings = { provider_rankings: [], ranking_snapshot: null };
       let governanceActions = { governance_actions: [] };
+      let opsSummary = { summary: null, policy: null };
+      let opsReviewItems = { review_items: [] };
+      let opsEscalations = { escalations: [] };
 
       if (this.getToken()) {
         try {
@@ -481,6 +545,21 @@
           governanceActions = await this.getGovernanceActions();
         } catch (_error) {
           governanceActions = { governance_actions: [] };
+        }
+        try {
+          opsSummary = await this.getOpsSummary();
+        } catch (_error) {
+          opsSummary = { summary: null, policy: null };
+        }
+        try {
+          opsReviewItems = await this.getOpsReviewItems();
+        } catch (_error) {
+          opsReviewItems = { review_items: [] };
+        }
+        try {
+          opsEscalations = await this.getOpsEscalations();
+        } catch (_error) {
+          opsEscalations = { escalations: [] };
         }
       }
 
@@ -591,7 +670,12 @@
         governance_policy: governanceSummary.policy || null,
         provider_rankings: providerRankings.provider_rankings || [],
         provider_ranking_snapshot: providerRankings.ranking_snapshot || null,
-        governance_actions: governanceActions.governance_actions || []
+        governance_actions: governanceActions.governance_actions || [],
+        ops_summary: opsSummary.summary || null,
+        ops_policy: opsSummary.policy || null,
+        ops_review_items: opsReviewItems.review_items || [],
+        ops_review_item: (opsReviewItems.review_items || [])[0] || null,
+        ops_escalations: opsEscalations.escalations || []
       };
     }
   }

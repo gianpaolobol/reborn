@@ -85,7 +85,8 @@ function stepper(active) {
     ['fulfilment', '06', 'Fulfil'],
     ['learning', '07', 'Learn'],
     ['trust', '08', 'Trust'],
-    ['governance', '09', 'Govern']
+    ['governance', '09', 'Govern'],
+    ['ops', '10', 'Ops']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -495,6 +496,22 @@ function activeGovernanceActions() {
 
 function activeGovernanceSummary() {
   return S.api.governanceSummary || null;
+}
+
+function activeOpsReviewItems() {
+  return Array.isArray(S.api.opsReviewItems) ? S.api.opsReviewItems : [];
+}
+
+function activeOpsReviewItem() {
+  return S.api.opsReviewItem || activeOpsReviewItems()[0] || null;
+}
+
+function activeOpsEscalations() {
+  return Array.isArray(S.api.opsEscalations) ? S.api.opsEscalations : [];
+}
+
+function activeOpsSummary() {
+  return S.api.opsSummary || null;
 }
 
 function mockRecognitionResult() {
@@ -1122,6 +1139,66 @@ function governance() {
   `, { currentStep: 'governance' });
 }
 
+
+function mockOpsReviewItem() {
+  return {
+    id: 'mock-ops-review-item',
+    source_type: 'manual',
+    source_id: 'mock-source',
+    repair_case_id: S.api.repairCase?.id || null,
+    provider_id: activeProviderRankings()[0]?.provider_id || 'provider-bologna-lab',
+    category: 'quality',
+    priority: 'high',
+    status: 'open',
+    title: 'Review provider routing before wider exposure',
+    description: 'Mock ops queue item created to show moderation and operational governance flow.',
+    payload: { source: 'mock_admin_ops_console' },
+    assigned_to: null,
+    created_by: 'mock-admin',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    resolved_at: null
+  };
+}
+
+function mockOpsEscalation(reviewItem) {
+  return {
+    id: 'mock-ops-escalation',
+    review_item_id: reviewItem?.id || 'mock-ops-review-item',
+    escalation_level: 'ops_lead',
+    status: 'open',
+    reason: 'Mock escalation for operational governance readiness.',
+    assigned_to: 'mock-ops-lead',
+    created_by: 'mock-admin',
+    created_at: new Date().toISOString(),
+    resolved_at: null
+  };
+}
+
+function opsConsole() {
+  setActiveNav('admin');
+  const isAdmin = S.auth.user?.role === 'admin';
+  const reviewItems = activeOpsReviewItems();
+  const review = activeOpsReviewItem();
+  const escalations = activeOpsEscalations();
+  const summary = activeOpsSummary();
+  const policy = S.api.opsPolicy || {};
+  const statusCounts = summary?.review_items_by_status || {};
+  const priorityCounts = summary?.review_items_by_priority || {};
+  const reviewRows = reviewItems.length ? reviewItems.slice(0, 8).map(item => `<tr><td>${badges([[item.priority || 'medium', item.priority === 'critical' || item.priority === 'high' ? 'danger' : 'orange']])}</td><td><strong>${safe(item.title || item.category)}</strong><br><span class="muted small">${safe(item.category || 'manual_review')} · ${safe(item.source_type || 'manual')}</span></td><td>${badges([[item.status || 'open', item.status === 'resolved' ? 'green' : item.status === 'escalated' ? 'danger' : 'blue']])}</td><td class="muted small">${safe(item.assigned_to || 'unassigned')}</td></tr>`).join('') : '<tr><td colspan="4" class="muted">No operations review items yet.</td></tr>';
+  const escalationRows = escalations.length ? escalations.slice(0, 6).map(e => `<div class="timeline-row"><div class="timeline-time">${safe(e.escalation_level || 'ops')}</div><div class="timeline-content"><strong>${safe(e.status || 'open')}</strong><p class="muted small">${safe(e.reason || '')}</p><p class="muted small">Review ${safe(String(e.review_item_id || '').slice(0, 8))} · assigned ${safe(e.assigned_to || 'unassigned')}</p></div></div>`).join('') : '<p class="muted small">No escalations recorded yet.</p>';
+
+  return layout('Admin Operations', html`
+    <section class="section-head"><div><p class="eyebrow">Step 19 · Admin Operations Console</p><h2>Real repair systems need queues, moderation and accountable decisions.</h2></div><p class="muted">The operations console turns governance signals into admin workflows: review items, assignment, moderation actions, escalations and audit events.</p></section>
+    <section class="grid two">
+      <div class="panel stack"><h3>Ops control panel</h3><div class="grid two">${metric(summary?.review_items ?? reviewItems.length, 'Review items')}${metric(statusCounts.open ?? reviewItems.filter(i => i.status === 'open').length, 'Open')}${metric(statusCounts.escalated ?? reviewItems.filter(i => i.status === 'escalated').length, 'Escalated')}${metric(priorityCounts.critical ?? 0, 'Critical')}</div><div class="actions"><button class="btn green" onclick="createOpsReviewItem()" ${S.busy || !isAdmin ? 'disabled' : ''}>Create review item</button><button class="btn orange" onclick="assignOpsReviewItem()" ${S.busy || !isAdmin || !review ? 'disabled' : ''}>Assign to me</button><button class="btn secondary" onclick="recordOpsModerationAction()" ${S.busy || !isAdmin || !review ? 'disabled' : ''}>Record action</button><button class="btn secondary" onclick="createOpsEscalation()" ${S.busy || !isAdmin || !review ? 'disabled' : ''}>Escalate</button><button class="btn secondary" onclick="resolveOpsReviewItem()" ${S.busy || !isAdmin || !review ? 'disabled' : ''}>Resolve</button></div><p class="muted small">Admin-only mutations. This is the operational bridge between marketplace governance and real-world support.</p></div>
+      <aside class="panel dark-panel stack"><h3>Ops policy</h3>${badges([[policy.policy_version || 'admin_operations_moderation_v1', 'blue'], [policy.admin_only_mutations ? 'admin only' : 'policy visible', 'green'], [`${summary?.open_escalations ?? escalations.length} escalations`, escalations.length ? 'orange' : '']])}<p class="muted small">Critical SLA: ${safe(policy.priority_sla?.critical || summary?.sla_policy?.critical || '4 business hours')} · High SLA: ${safe(policy.priority_sla?.high || summary?.sla_policy?.high || '1 business day')}</p></aside>
+    </section>
+    <section class="section panel stack"><h3>Review queue</h3><table class="table"><tr><th>Priority</th><th>Item</th><th>Status</th><th>Owner</th></tr>${reviewRows}</table></section>
+    <section class="section panel stack"><h3>Escalation timeline</h3><div class="timeline">${escalationRows}</div></section>
+  `, { currentStep: 'ops' });
+}
+
 function aiGeneration() {
   return layout('AI generation', html`
     <section class="grid two"><div class="panel stack"><p class="eyebrow">AI repair model</p><h2>Generate only when repair knowledge is missing.</h2><p class="muted">AI generation is positioned as a repair fallback, not as the product. Generated models need validation before becoming verified graph assets.</p><div class="timeline"><div class="timeline-row"><div class="timeline-time">Step 1</div><div class="timeline-content"><strong>Geometry proposal</strong><p class="muted small">AI estimates shape from photos, dimensions and similar parts.</p></div></div><div class="timeline-row"><div class="timeline-time">Step 2</div><div class="timeline-content"><strong>Constraint check</strong><p class="muted small">Wall thickness, tolerance, material and mechanical risk.</p></div></div><div class="timeline-row"><div class="timeline-time">Step 3</div><div class="timeline-content"><strong>Provider validation</strong><p class="muted small">Provider flags printability before order confirmation.</p></div></div></div><div class="actions"><a class="btn orange" href="#/provider-network">Validate with provider</a><a class="btn secondary" href="#/repair-paths">Back to safer paths</a></div></div><aside class="panel stack"><h3>AI Premium trigger</h3><p class="muted">This flow consumes Repair Credits and creates potential marketplace assets if the model becomes verified.</p>${badges([['3 credits', 'orange'], ['Validation required', 'danger'], ['Learning event', 'blue']])}</aside></section>
@@ -1171,6 +1248,8 @@ const routes = {
   '/learning': learning,
   '/trust': trust,
   '/governance': governance,
+  '/ops': opsConsole,
+  '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
   '/account': account,
@@ -1250,6 +1329,11 @@ async function refreshApiData(options = {}) {
       providerRankings: bootstrap.provider_rankings || [],
       providerRankingSnapshot: bootstrap.provider_ranking_snapshot || null,
       governanceActions: bootstrap.governance_actions || [],
+      opsSummary: bootstrap.ops_summary || null,
+      opsPolicy: bootstrap.ops_policy || null,
+      opsReviewItems: bootstrap.ops_review_items || [],
+      opsReviewItem: bootstrap.ops_review_item || (bootstrap.ops_review_items || [])[0] || S.api.opsReviewItem,
+      opsEscalations: bootstrap.ops_escalations || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
@@ -2013,6 +2097,111 @@ async function bootAuthSession() {
 }
 
 
+
+async function createOpsReviewItem() {
+  if (S.api.status !== 'live') {
+    const item = mockOpsReviewItem();
+    S.setApi({ opsReviewItem: item, opsReviewItems: [item, ...activeOpsReviewItems()] });
+    toast('Mock ops review item created.');
+    render();
+    return;
+  }
+  setBusy(true);
+  try {
+    const providerId = activeProviderRankings()[0]?.provider_id || activeProviderMatch()?.result_json?.ranked_providers?.[0]?.provider_id || 'manual-provider-review';
+    const payload = await window.REBORN_API.createOpsReviewItem({
+      source_type: 'provider',
+      source_id: providerId,
+      provider_id: providerId,
+      repair_case_id: S.api.repairCase?.id || null,
+      category: 'quality',
+      priority: 'high',
+      title: 'Provider routing readiness review',
+      description: 'Ops review before increasing real repair demand for this provider.',
+      payload: { generated_from: 'prototype_ops_console' }
+    });
+    const items = await window.REBORN_API.getOpsReviewItems().catch(() => ({ review_items: [payload.review_item] }));
+    const summary = await window.REBORN_API.getOpsSummary().catch(() => ({ summary: S.api.opsSummary, policy: S.api.opsPolicy }));
+    S.setApi({ opsReviewItem: payload.review_item, opsReviewItems: items.review_items || [payload.review_item], opsSummary: summary.summary || S.api.opsSummary, opsPolicy: summary.policy || S.api.opsPolicy, lastSyncAt: new Date().toISOString() });
+    toast('Ops review item created.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Ops review failed: ${error.message}`, lastError: error.message });
+    toast(`Ops failed: ${error.message}`);
+  } finally { setBusy(false); render(); }
+}
+
+async function assignOpsReviewItem() {
+  const review = activeOpsReviewItem();
+  if (!review) return toast('Create an ops review item first.');
+  if (S.api.status !== 'live') {
+    const updated = { ...review, status: 'in_review', assigned_to: S.auth.user?.id || 'mock-admin' };
+    S.setApi({ opsReviewItem: updated, opsReviewItems: [updated, ...activeOpsReviewItems().filter(i => i.id !== review.id)] });
+    toast('Mock ops item assigned.');
+    render();
+    return;
+  }
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.assignOpsReviewItem(review.id);
+    const items = await window.REBORN_API.getOpsReviewItems().catch(() => ({ review_items: [payload.review_item] }));
+    S.setApi({ opsReviewItem: payload.review_item, opsReviewItems: items.review_items || [payload.review_item], lastSyncAt: new Date().toISOString() });
+    toast('Ops item assigned.');
+  } catch (error) { toast(`Assignment failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function recordOpsModerationAction() {
+  const review = activeOpsReviewItem();
+  if (!review) return toast('Create an ops review item first.');
+  if (S.api.status !== 'live') { toast('Mock moderation action recorded.'); return; }
+  setBusy(true);
+  try {
+    await window.REBORN_API.recordOpsModerationAction(review.id, { action_type: 'policy_note', target_type: review.source_type || 'manual', target_id: review.source_id || review.id, reason: 'Operational note recorded from prototype console.', payload: { source: 'prototype_ops_console' } });
+    const detail = await window.REBORN_API.getOpsReviewItem(review.id);
+    S.setApi({ opsReviewItem: detail.review_item, lastSyncAt: new Date().toISOString() });
+    toast('Moderation action recorded.');
+  } catch (error) { toast(`Moderation action failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function createOpsEscalation() {
+  const review = activeOpsReviewItem();
+  if (!review) return toast('Create an ops review item first.');
+  if (S.api.status !== 'live') {
+    const escalation = mockOpsEscalation(review);
+    S.setApi({ opsEscalations: [escalation, ...activeOpsEscalations()], opsReviewItem: { ...review, status: 'escalated' } });
+    toast('Mock ops escalation created.'); render(); return;
+  }
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.createOpsEscalation(review.id, { escalation_level: 'ops_lead', reason: 'Escalate provider routing decision for operational review.', assigned_to: S.auth.user?.id || null });
+    const escalations = await window.REBORN_API.getOpsEscalations().catch(() => ({ escalations: [payload.escalation] }));
+    const items = await window.REBORN_API.getOpsReviewItems().catch(() => ({ review_items: activeOpsReviewItems() }));
+    S.setApi({ opsEscalations: escalations.escalations || [payload.escalation], opsReviewItems: items.review_items || activeOpsReviewItems(), opsReviewItem: (items.review_items || []).find(i => i.id === review.id) || S.api.opsReviewItem, lastSyncAt: new Date().toISOString() });
+    toast('Ops escalation created.');
+  } catch (error) { toast(`Escalation failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function resolveOpsReviewItem() {
+  const review = activeOpsReviewItem();
+  if (!review) return toast('Create an ops review item first.');
+  if (S.api.status !== 'live') {
+    const updated = { ...review, status: 'resolved', resolved_at: new Date().toISOString() };
+    S.setApi({ opsReviewItem: updated, opsReviewItems: [updated, ...activeOpsReviewItems().filter(i => i.id !== review.id)] });
+    toast('Mock ops item resolved.'); render(); return;
+  }
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.resolveOpsReviewItem(review.id, { resolution: 'reviewed_and_safe_to_continue' });
+    const items = await window.REBORN_API.getOpsReviewItems().catch(() => ({ review_items: [payload.review_item] }));
+    const summary = await window.REBORN_API.getOpsSummary().catch(() => ({ summary: S.api.opsSummary, policy: S.api.opsPolicy }));
+    S.setApi({ opsReviewItem: payload.review_item, opsReviewItems: items.review_items || [payload.review_item], opsSummary: summary.summary || S.api.opsSummary, opsPolicy: summary.policy || S.api.opsPolicy, lastSyncAt: new Date().toISOString() });
+    toast('Ops review item resolved.');
+  } catch (error) { toast(`Resolve failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
 async function createProviderRankingSnapshot() {
   if (S.api.status !== 'live') {
     const snapshot = mockProviderRankingSnapshot();
@@ -2220,6 +2409,11 @@ window.recordCompletionLearning = recordCompletionLearning;
 window.recordProviderTrustReview = recordProviderTrustReview;
 window.createProviderRankingSnapshot = createProviderRankingSnapshot;
 window.recordProviderGovernanceAction = recordProviderGovernanceAction;
+window.createOpsReviewItem = createOpsReviewItem;
+window.assignOpsReviewItem = assignOpsReviewItem;
+window.recordOpsModerationAction = recordOpsModerationAction;
+window.createOpsEscalation = createOpsEscalation;
+window.resolveOpsReviewItem = resolveOpsReviewItem;
 window.handleLogin = handleLogin;
 window.loginAsDemo = loginAsDemo;
 window.handleLogout = handleLogout;

@@ -12,6 +12,7 @@ use Reborn\Identity\Domain\User;
 use Reborn\Identity\Presentation\AuthController;
 use Reborn\Marketplace\Presentation\RepairPathDecisionController;
 use Reborn\Marketplace\Presentation\RepairOrderController;
+use Reborn\Operations\Presentation\AdminOperationsController;
 use Reborn\Provider\Presentation\ProviderMatchController;
 use Reborn\Repair\Presentation\RepairController;
 use Reborn\Shared\Http\JsonResponse;
@@ -19,7 +20,7 @@ use Reborn\Shared\Http\Request;
 use Reborn\Shared\Http\Router;
 use Reborn\Trust\Presentation\TrustController;
 
-return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, ProviderMatchController $providerMatchController, RepairOrderController $repairOrderController, RepairFulfilmentController $repairFulfilmentController, LearningController $learningController, TrustController $trustController, GovernanceController $governanceController, AuthContext $auth, PDO $pdo): void {
+return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, ProviderMatchController $providerMatchController, RepairOrderController $repairOrderController, RepairFulfilmentController $repairFulfilmentController, LearningController $learningController, TrustController $trustController, GovernanceController $governanceController, AdminOperationsController $adminOperationsController, AuthContext $auth, PDO $pdo): void {
     $router->get('/api/health', static function (Request $request): JsonResponse {
         return JsonResponse::ok([
             'status' => 'ok',
@@ -55,6 +56,11 @@ return static function (Router $router, RepairController $repairController, Auth
                 'provider_ranking_governance',
                 'marketplace_governance_actions',
                 'governance_audit',
+                'admin_operations_console',
+                'moderation_workflow',
+                'ops_review_queue',
+                'ops_escalations',
+                'ops_audit_log',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -123,6 +129,17 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/governance/actions', [$governanceController, 'actions']);
     $router->get('/api/v1/governance/summary', [$governanceController, 'summary']);
     $router->get('/api/v1/governance/policies', [$governanceController, 'policies']);
+
+    $router->post('/api/v1/ops/review-items', [$adminOperationsController, 'createReviewItem']);
+    $router->get('/api/v1/ops/review-items', [$adminOperationsController, 'reviewItems']);
+    $router->get('/api/v1/ops/review-items/{id}', [$adminOperationsController, 'reviewItem']);
+    $router->post('/api/v1/ops/review-items/{id}/assign', [$adminOperationsController, 'assignReviewItem']);
+    $router->post('/api/v1/ops/review-items/{id}/moderation-actions', [$adminOperationsController, 'recordModerationAction']);
+    $router->post('/api/v1/ops/review-items/{id}/escalations', [$adminOperationsController, 'createEscalation']);
+    $router->post('/api/v1/ops/review-items/{id}/resolve', [$adminOperationsController, 'resolveReviewItem']);
+    $router->get('/api/v1/ops/escalations', [$adminOperationsController, 'escalations']);
+    $router->get('/api/v1/ops/summary', [$adminOperationsController, 'summary']);
+    $router->get('/api/v1/ops/policies', [$adminOperationsController, 'policies']);
 
     $router->get('/api/v1/providers', static function (Request $request) use ($pdo): JsonResponse {
         $stmt = $pdo->query('SELECT id, name, city, country, capabilities, rating, average_lead_time_days FROM providers ORDER BY rating DESC, name ASC');
