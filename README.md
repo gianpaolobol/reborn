@@ -152,3 +152,29 @@ This repository now includes the first execution layer of the Re-born OS:
 - GitHub issue templates and a script to create issues with GitHub CLI.
 
 The next product phase is **designing the clickable prototype** from the MVP wireframes before writing production backend code.
+
+## Static MVP prototype
+
+The first navigable MVP prototype is available at:
+
+```text
+public/prototype/index.html
+```
+
+Open it directly in a browser. It uses only HTML5, CSS3 and Vanilla JavaScript.
+
+Main prototype routes:
+
+```text
+#/start
+#/capture
+#/diagnosis
+#/repair-paths
+#/provider-network
+#/checkout
+#/account
+#/provider
+#/maker
+#/enterprise
+#/admin-ops
+```

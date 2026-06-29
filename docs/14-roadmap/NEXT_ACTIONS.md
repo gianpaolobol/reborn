@@ -67,3 +67,9 @@ Only after product/UX baseline:
 - implement database migrations;
 - implement RepairCase entity and repository;
 - implement first intake flow.
+
+## Step 4 completed — Prototype Pack
+
+The first navigable static prototype now exists in `public/prototype/index.html`.
+
+Immediate next action: create the backend skeleton and connect the MVP API contract to PHP 8.3 domain modules.

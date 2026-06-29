@@ -119,3 +119,20 @@
 - `tests/.gitkeep`
 - `tests/Feature/.gitkeep`
 - `tests/Unit/.gitkeep`
+
+## Step 4 additions
+
+```text
+public/prototype/index.html
+public/prototype/README.md
+public/prototype/assets/css/reborn.css
+public/prototype/assets/js/prototype-data.js
+public/prototype/assets/js/state.js
+public/prototype/assets/js/app.js
+
+docs/18-delivery/STEP4_PROTOTYPE_PACK.md
+docs/06-wireframes/PROTOTYPE_SCREEN_INVENTORY.md
+docs/11-frontend/STATIC_PROTOTYPE_IMPLEMENTATION.md
+docs/13-testing/PROTOTYPE_QA_CHECKLIST.md
+docs/17-handoff/NEXT_AGENT_HANDOFF_STEP4.md
+```
