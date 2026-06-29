@@ -996,6 +996,67 @@
       return this.request(`/api/v1/platform/maker-economy-audit-log?limit=${encodeURIComponent(limit)}`);
     }
 
+
+    async getAiGovernance() {
+      return this.request('/api/v1/platform/ai-governance');
+    }
+
+    async getAiModelProviders(status = 'all') {
+      return this.request(`/api/v1/platform/ai-model-providers?status=${encodeURIComponent(status)}`);
+    }
+
+    async getAiPipelineRuns(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/ai-pipeline-runs?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createAiPipelineRun(payload = {}) {
+      return this.request('/api/v1/platform/ai-pipeline-runs', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async reviewAiPipelineRun(id, payload = {}) {
+      return this.request(`/api/v1/platform/ai-pipeline-runs/${encodeURIComponent(id)}/review`, {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getAiHumanReviews(limit = 50) {
+      return this.request(`/api/v1/platform/ai-human-reviews?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getAiDatasetItems(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/ai-dataset-items?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createAiDatasetItem(payload = {}) {
+      return this.request('/api/v1/platform/ai-dataset-items', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getAiQualityEvaluations(limit = 50) {
+      return this.request(`/api/v1/platform/ai-quality-evaluations?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async evaluateAiQuality(payload = {}) {
+      return this.request('/api/v1/platform/ai-quality-evaluations/evaluate', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getAiSafetyRules(status = 'active') {
+      return this.request(`/api/v1/platform/ai-safety-rules?status=${encodeURIComponent(status)}`);
+    }
+
+    async getAiGovernanceAuditLog(limit = 50) {
+      return this.request(`/api/v1/platform/ai-governance-audit-log?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -1232,6 +1293,14 @@
       let repairBounties = { repair_bounties: [] };
       let bountySubmissions = { bounty_submissions: [] };
       let makerEconomyAuditLog = { maker_economy_audit_log: [] };
+      let aiGovernance = { ai_governance: null };
+      let aiModelProviders = { ai_model_providers: [] };
+      let aiPipelineRuns = { ai_pipeline_runs: [] };
+      let aiHumanReviews = { ai_human_reviews: [] };
+      let aiDatasetItems = { ai_dataset_items: [] };
+      let aiQualityEvaluations = { ai_quality_evaluations: [] };
+      let aiSafetyRules = { ai_safety_rules: [] };
+      let aiGovernanceAuditLog = { ai_governance_audit_log: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -1641,6 +1710,47 @@
           makerEconomyAuditLog = { maker_economy_audit_log: [] };
         }
 
+        try {
+          aiGovernance = await this.getAiGovernance();
+        } catch (_error) {
+          aiGovernance = { ai_governance: null };
+        }
+        try {
+          aiModelProviders = await this.getAiModelProviders('all');
+        } catch (_error) {
+          aiModelProviders = { ai_model_providers: [] };
+        }
+        try {
+          aiPipelineRuns = await this.getAiPipelineRuns('active', 30);
+        } catch (_error) {
+          aiPipelineRuns = { ai_pipeline_runs: [] };
+        }
+        try {
+          aiHumanReviews = await this.getAiHumanReviews(30);
+        } catch (_error) {
+          aiHumanReviews = { ai_human_reviews: [] };
+        }
+        try {
+          aiDatasetItems = await this.getAiDatasetItems('all', 30);
+        } catch (_error) {
+          aiDatasetItems = { ai_dataset_items: [] };
+        }
+        try {
+          aiQualityEvaluations = await this.getAiQualityEvaluations(30);
+        } catch (_error) {
+          aiQualityEvaluations = { ai_quality_evaluations: [] };
+        }
+        try {
+          aiSafetyRules = await this.getAiSafetyRules('active');
+        } catch (_error) {
+          aiSafetyRules = { ai_safety_rules: [] };
+        }
+        try {
+          aiGovernanceAuditLog = await this.getAiGovernanceAuditLog(30);
+        } catch (_error) {
+          aiGovernanceAuditLog = { ai_governance_audit_log: [] };
+        }
+
       }
 
       if (latestCase && this.getToken()) {
@@ -1824,7 +1934,15 @@
         model_royalty_events: modelRoyaltyEvents.model_royalty_events || [],
         repair_bounties: repairBounties.repair_bounties || [],
         bounty_submissions: bountySubmissions.bounty_submissions || [],
-        maker_economy_audit_log: makerEconomyAuditLog.maker_economy_audit_log || []
+        maker_economy_audit_log: makerEconomyAuditLog.maker_economy_audit_log || [],
+        ai_governance: aiGovernance.ai_governance || null,
+        ai_model_providers: aiModelProviders.ai_model_providers || [],
+        ai_pipeline_runs: aiPipelineRuns.ai_pipeline_runs || [],
+        ai_human_reviews: aiHumanReviews.ai_human_reviews || [],
+        ai_dataset_items: aiDatasetItems.ai_dataset_items || [],
+        ai_quality_evaluations: aiQualityEvaluations.ai_quality_evaluations || [],
+        ai_safety_rules: aiSafetyRules.ai_safety_rules || [],
+        ai_governance_audit_log: aiGovernanceAuditLog.ai_governance_audit_log || []
       };
     }
   }

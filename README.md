@@ -540,3 +540,8 @@ Open the admin console:
 ```text
 http://127.0.0.1:8080/prototype/index.html#/maker-economy
 ```
+
+
+## Step 30 — AI Pipeline Governance & Human-in-the-Loop Review v1
+
+Adds AI provider registry, AI pipeline run ledger, human review workflow, dataset governance, AI safety rules, quality evaluations and an admin prototype console at `#/ai-governance`. This remains a local/pilot governance layer: no real external AI provider, STL generation or training job is enabled yet.

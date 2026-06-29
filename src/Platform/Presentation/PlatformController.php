@@ -16,6 +16,7 @@ use Reborn\Platform\Application\ReleaseManagementService;
 use Reborn\Platform\Application\PartnerOnboardingService;
 use Reborn\Platform\Application\MarketplaceRevenueService;
 use Reborn\Platform\Application\MakerEconomyService;
+use Reborn\Platform\Application\AiPipelineGovernanceService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -34,6 +35,7 @@ final class PlatformController
         private readonly PartnerOnboardingService $partners,
         private readonly MarketplaceRevenueService $revenue,
         private readonly MakerEconomyService $makerEconomy,
+        private readonly AiPipelineGovernanceService $aiGovernance,
         private readonly AuthContext $auth,
     ) {
     }
@@ -851,6 +853,89 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['maker_economy_audit_log' => $this->makerEconomy->auditLog($limit)], $request->requestId());
+    }
+
+
+    public function aiPipelineGovernance(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['ai_governance' => $this->aiGovernance->dashboard()], $request->requestId());
+    }
+
+    public function aiModelProviders(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        return JsonResponse::ok(['ai_model_providers' => $this->aiGovernance->modelProviders($status)], $request->requestId());
+    }
+
+    public function aiPipelineRuns(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['ai_pipeline_runs' => $this->aiGovernance->pipelineRuns($status, $limit)], $request->requestId());
+    }
+
+    public function createAiPipelineRun(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['ai_pipeline_run' => $this->aiGovernance->createPipelineRun($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function reviewAiPipelineRun(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['ai_pipeline_run' => $this->aiGovernance->reviewPipelineRun((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function aiHumanReviews(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        $pipelineRunId = trim((string) $request->query('pipeline_run_id', '')) ?: null;
+        return JsonResponse::ok(['ai_human_reviews' => $this->aiGovernance->humanReviews($pipelineRunId, $limit)], $request->requestId());
+    }
+
+    public function aiDatasetItems(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['ai_dataset_items' => $this->aiGovernance->datasetItems($status, $limit)], $request->requestId());
+    }
+
+    public function createAiDatasetItem(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['ai_dataset_item' => $this->aiGovernance->createDatasetItem($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function aiQualityEvaluations(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['ai_quality_evaluations' => $this->aiGovernance->qualityEvaluations($limit)], $request->requestId());
+    }
+
+    public function evaluateAiQuality(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['ai_quality_evaluation' => $this->aiGovernance->evaluateQuality($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function aiSafetyRules(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        return JsonResponse::ok(['ai_safety_rules' => $this->aiGovernance->safetyRules($status)], $request->requestId());
+    }
+
+    public function aiGovernanceAuditLog(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['ai_governance_audit_log' => $this->aiGovernance->auditLog($limit)], $request->requestId());
     }
 
 }

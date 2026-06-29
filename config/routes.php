@@ -117,6 +117,11 @@ return static function (Router $router, RepairController $repairController, Auth
                 'maker_royalties',
                 'repair_bounties',
                 'bounty_submissions',
+                'ai_pipeline_governance',
+                'ai_model_providers',
+                'ai_human_review',
+                'ai_dataset_governance',
+                'ai_quality_evaluations',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -250,6 +255,19 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->post('/api/v1/platform/bounty-submissions', [$platformController, 'submitBounty']);
     $router->post('/api/v1/platform/bounty-submissions/{id}/review', [$platformController, 'reviewBountySubmission']);
     $router->get('/api/v1/platform/maker-economy-audit-log', [$platformController, 'makerEconomyAuditLog']);
+
+    $router->get('/api/v1/platform/ai-governance', [$platformController, 'aiPipelineGovernance']);
+    $router->get('/api/v1/platform/ai-model-providers', [$platformController, 'aiModelProviders']);
+    $router->get('/api/v1/platform/ai-pipeline-runs', [$platformController, 'aiPipelineRuns']);
+    $router->post('/api/v1/platform/ai-pipeline-runs', [$platformController, 'createAiPipelineRun']);
+    $router->post('/api/v1/platform/ai-pipeline-runs/{id}/review', [$platformController, 'reviewAiPipelineRun']);
+    $router->get('/api/v1/platform/ai-human-reviews', [$platformController, 'aiHumanReviews']);
+    $router->get('/api/v1/platform/ai-dataset-items', [$platformController, 'aiDatasetItems']);
+    $router->post('/api/v1/platform/ai-dataset-items', [$platformController, 'createAiDatasetItem']);
+    $router->get('/api/v1/platform/ai-quality-evaluations', [$platformController, 'aiQualityEvaluations']);
+    $router->post('/api/v1/platform/ai-quality-evaluations/evaluate', [$platformController, 'evaluateAiQuality']);
+    $router->get('/api/v1/platform/ai-safety-rules', [$platformController, 'aiSafetyRules']);
+    $router->get('/api/v1/platform/ai-governance-audit-log', [$platformController, 'aiGovernanceAuditLog']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

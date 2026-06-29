@@ -104,7 +104,8 @@ function stepper(active) {
     ['release-management', '17', 'Release'],
     ['partner-onboarding', '18', 'Partners'],
     ['marketplace-revenue', '19', 'Revenue'],
-    ['maker-economy', '20', 'Makers']
+    ['maker-economy', '20', 'Makers'],
+    ['ai-governance', '21', 'AI Gov']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -2514,6 +2515,105 @@ async function acceptBountySubmission(id) {
   }
 }
 
+
+function aiGovernanceDashboard() {
+  setActiveNav('ai-governance');
+  if (!S.auth.user) {
+    return layout('AI Governance', authRequiredPanel('the Step 30 AI pipeline governance console'), { currentStep: 'ai-governance' });
+  }
+
+  const dashboard = S.api.aiGovernance || {};
+  const summary = dashboard.summary || {};
+  const providers = S.api.aiModelProviders || dashboard.model_providers || [];
+  const runs = S.api.aiPipelineRuns || dashboard.pipeline_runs || [];
+  const reviews = S.api.aiHumanReviews || dashboard.pending_reviews || [];
+  const dataset = S.api.aiDatasetItems || dashboard.dataset_items || [];
+  const evaluations = S.api.aiQualityEvaluations || dashboard.quality_evaluations || [];
+  const rules = S.api.aiSafetyRules || dashboard.safety_rules || [];
+  const auditLog = S.api.aiGovernanceAuditLog || [];
+  const actionRows = Object.entries(dashboard.operator_actions || {}).map(([key, value]) => `<li><strong>${safe(key)}</strong> — ${safe(value)}</li>`).join('') || '<li>No immediate AI governance action.</li>';
+
+  const providerRows = providers.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : item.status === 'mock' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.name)}</td><td>${safe(item.capability)}</td><td>${safe(item.execution_mode)}</td><td>${item.requires_human_review ? 'Yes' : 'No'}</td></tr>`).join('') || '<tr><td colspan="5">No AI providers configured.</td></tr>';
+  const runRows = runs.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'approved' || item.status === 'completed' ? 'green' : item.status === 'rejected' || item.risk_level === 'critical' ? 'blue' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.pipeline_type)}</td><td>${safe(item.provider_name || item.provider_key)}</td><td>${safe(item.confidence_score)}</td><td><button class="mini-button" onclick="approveAiPipelineRun('${safe(item.id)}')" ${item.status === 'approved' || item.status === 'completed' ? 'disabled' : ''}>Approve</button></td></tr>`).join('') || '<tr><td colspan="5">No AI pipeline runs yet.</td></tr>';
+  const reviewRows = reviews.slice(0, 10).map(item => `<tr><td>${safe(item.run_code)}</td><td>${safe(item.decision)}</td><td>${safe(item.quality_score)}</td><td>${safe(item.safety_score)}</td><td>${safe(item.created_at)}</td></tr>`).join('') || '<tr><td colspan="5">No human reviews yet.</td></tr>';
+  const datasetRows = dataset.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'approved' ? 'green' : item.status === 'candidate' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.object_category)}</td><td>${safe(item.label)}</td><td>${safe(item.consent_status)}</td><td>${safe(item.license_status)}</td></tr>`).join('') || '<tr><td colspan="5">No AI dataset items yet.</td></tr>';
+  const evaluationRows = evaluations.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'passed' ? 'green' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.pipeline_type)}</td><td>${safe(item.sample_size)}</td><td>${safe(item.pass_rate)}%</td><td>${safe(item.average_confidence)}</td></tr>`).join('') || '<tr><td colspan="5">No AI quality evaluations yet.</td></tr>';
+  const ruleRows = rules.slice(0, 10).map(item => `<tr><td><span class="badge ${item.severity === 'high' ? 'orange' : item.severity === 'critical' ? 'blue' : 'green'}">${safe(item.severity)}</span></td><td>${safe(item.name)}</td><td>${safe(item.applies_to)}</td><td colspan="2">${safe(item.required_action)}</td></tr>`).join('') || '<tr><td colspan="5">No AI safety rules configured.</td></tr>';
+  const auditRows = auditLog.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No AI governance audit records yet.</li>';
+
+  return layout('AI Governance', `
+    <section class="section-head"><div><p class="eyebrow">Step 30 · AI Pipeline Governance & Human-in-the-Loop Review</p><h2>Make AI useful without pretending it is already production-grade.</h2></div><p class="muted">Step 30 controls mock/future AI providers, pipeline runs, human reviews, dataset readiness, safety rules and quality evaluations before real AI integrations are enabled.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.pipeline_runs_pending_review ?? 0)}</strong><span>Pending reviews</span></div><div class="metric"><strong>${safe(summary.providers_total ?? 0)}</strong><span>AI providers</span></div><div class="metric"><strong>${safe(summary.dataset_items_approved ?? 0)}</strong><span>Approved dataset items</span></div><div class="metric"><strong>${safe(summary.safety_rules_active ?? 0)}</strong><span>Active safety rules</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoAiPipelineRun()" ${S.busy ? 'disabled' : ''}>Create AI run</button><button class="btn secondary" onclick="createDemoAiDatasetItem()" ${S.busy ? 'disabled' : ''}>Add dataset item</button><button class="btn secondary" onclick="evaluateDemoAiQuality()" ${S.busy ? 'disabled' : ''}>Evaluate quality</button><a class="btn secondary" href="#/maker-economy">Open maker economy</a></div><ul class="muted small">${actionRows}</ul></section>
+    <section class="section grid two"><div class="panel stack"><h3>AI providers</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Capability</th><th>Mode</th><th>Review</th></tr>${providerRows}</table></div><div class="panel stack"><h3>Pipeline runs</h3><table class="table"><tr><th>Status</th><th>Type</th><th>Provider</th><th>Conf.</th><th>Action</th></tr>${runRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Human reviews</h3><table class="table"><tr><th>Run</th><th>Decision</th><th>Quality</th><th>Safety</th><th>Created</th></tr>${reviewRows}</table></div><div class="panel stack"><h3>Dataset governance</h3><table class="table"><tr><th>Status</th><th>Category</th><th>Label</th><th>Consent</th><th>License</th></tr>${datasetRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Quality evaluations</h3><table class="table"><tr><th>Status</th><th>Pipeline</th><th>Sample</th><th>Pass</th><th>Confidence</th></tr>${evaluationRows}</table></div><div class="panel stack"><h3>Safety rules</h3><table class="table"><tr><th>Severity</th><th>Name</th><th>Applies to</th><th colspan="2">Required action</th></tr>${ruleRows}</table></div></section>
+    <section class="section panel stack"><h3>AI governance audit</h3><ul class="muted small">${auditRows}</ul></section>
+  `, { currentStep: 'ai-governance' });
+}
+
+async function createDemoAiPipelineRun() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create AI pipeline runs.');
+  setBusy(true);
+  try {
+    const suffix = `${new Date().getMinutes()}${new Date().getSeconds()}`;
+    await window.REBORN_API.createAiPipelineRun({ pipeline_type: 'model_generation', provider_key: 'mock_model_generation_engine', source_type: 'repair_bounty', source_ref: `prototype-ai-run-${suffix}`, input_summary: 'Generate a repair-oriented printable concept for a broken object reported during the pilot.', status: 'in_review', confidence_score: 64, risk_level: 'high', human_review_required: true });
+    toast('AI pipeline run created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`AI run creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function approveAiPipelineRun(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to review AI runs.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.reviewAiPipelineRun(id, { decision: 'approved', quality_score: 86, safety_score: 82, dimensional_score: 78, notes: 'Approved from Step 30 prototype console. Pilot only.', output_summary: 'Human review approved the AI output for controlled pilot use.' });
+    toast('AI pipeline run reviewed.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`AI review failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function createDemoAiDatasetItem() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create dataset items.');
+  setBusy(true);
+  try {
+    const suffix = `${new Date().getMinutes()}${new Date().getSeconds()}`;
+    await window.REBORN_API.createAiDatasetItem({ source_type: 'repair_outcome', source_ref: `prototype-learning-${suffix}`, object_category: 'appliance', label: `repair_outcome_${suffix}`, status: 'candidate', consent_status: 'approved', license_status: 'pilot_internal', quality_score: 74, metadata: { source: 'prototype_console', training_use: 'dry_run_only' } });
+    toast('AI dataset item registered.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Dataset item creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function evaluateDemoAiQuality() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate AI quality.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.evaluateAiQuality({ pipeline_type: 'model_generation', sample_size: 12 });
+    toast('AI quality evaluation recorded.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`AI quality evaluation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -2538,6 +2638,7 @@ const routes = {
   '/partner-onboarding': partnerOnboardingDashboard,
   '/marketplace-revenue': marketplaceRevenueDashboard,
   '/maker-economy': makerEconomyDashboard,
+  '/ai-governance': aiGovernanceDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,

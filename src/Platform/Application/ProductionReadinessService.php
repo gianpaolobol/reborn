@@ -40,6 +40,7 @@ final class ProductionReadinessService
             'partner_onboarding' => $this->partnerOnboardingCheck(),
             'marketplace_revenue' => $this->marketplaceRevenueCheck(),
             'maker_economy' => $this->makerEconomyCheck(),
+            'ai_pipeline_governance' => $this->aiPipelineGovernanceCheck(),
         ];
 
         $status = 'ready';
@@ -91,7 +92,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v10_step29',
+            'checklist_version' => 'production_readiness_v11_step30',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -106,6 +107,7 @@ final class ProductionReadinessService
                 'partner onboarding tasks, agreements, integrations and readiness reviews are approved',
                 'marketplace fee policies, credit ledger and payout governance are reviewed before monetization',
                 'maker model licensing, repair bounty rewards and royalty credit rules are reviewed before public maker onboarding',
+                'AI provider usage, human review gates, dataset consent/licensing and quality evaluation are reviewed before real AI integrations',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
@@ -116,6 +118,7 @@ final class ProductionReadinessService
             'step_27_status' => 'Enterprise and partner onboarding governance, agreements, integrations and readiness reviews v1 implemented.',
             'step_28_status' => 'Marketplace revenue governance, repair credits ledger and mock payout workflow v1 implemented.',
             'step_29_status' => 'Maker economy governance, model licensing, local royalty credits and repair bounty workflow v1 implemented.',
+            'step_30_status' => 'AI pipeline governance, human-in-the-loop review, dataset governance and AI quality evaluation v1 implemented.',
         ];
     }
 
@@ -186,10 +189,10 @@ final class ProductionReadinessService
             $count = (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn();
             $latest = $this->pdo->query('SELECT filename FROM migrations ORDER BY executed_at DESC, id DESC LIMIT 1')->fetchColumn();
             return [
-                'status' => $count >= 22 ? 'ok' : 'warn',
+                'status' => $count >= 24 ? 'ok' : 'warn',
                 'executed_count' => $count,
                 'latest' => $latest ?: null,
-                'message' => $count >= 22 ? 'All MVP hardening, observability, incident-response, notification, service-governance, privacy-governance, release-management, partner-onboarding and marketplace-revenue migrations are present.' : 'Some migrations may still need to run.',
+                'message' => $count >= 24 ? 'All MVP hardening, governance, marketplace, maker economy and AI pipeline governance migrations are present.' : 'Some migrations may still need to run.',
             ];
         } catch (Throwable $exception) {
             return ['status' => 'fail', 'message' => 'Migration metadata is unavailable.', 'error' => $exception->getMessage()];
@@ -592,6 +595,46 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Maker economy governance checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function aiPipelineGovernanceCheck(): array
+    {
+        try {
+            $tables = ['platform_ai_model_providers', 'platform_ai_pipeline_runs', 'platform_ai_human_reviews', 'platform_ai_dataset_items', 'platform_ai_quality_evaluations', 'platform_ai_safety_rules', 'platform_ai_governance_audit_log'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $providers = 0;
+            $runs = 0;
+            $rules = 0;
+            $datasetItems = 0;
+            if ($missing === []) {
+                $providers = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_ai_model_providers WHERE status IN ('mock', 'active')")->fetchColumn();
+                $runs = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_ai_pipeline_runs WHERE status IN ('queued', 'running', 'in_review', 'approved', 'completed')")->fetchColumn();
+                $rules = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_ai_safety_rules WHERE status = 'active'")->fetchColumn();
+                $datasetItems = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_ai_dataset_items WHERE status IN ('candidate', 'approved')")->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? (($providers > 0 && $runs > 0 && $rules > 0 && $datasetItems > 0) ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'AI pipeline governance, human review, dataset and safety rule tables are available.' : 'AI pipeline governance tables are not fully migrated yet.',
+                'ai_model_providers' => $providers,
+                'ai_pipeline_runs' => $runs,
+                'ai_safety_rules' => $rules,
+                'ai_dataset_items' => $datasetItems,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'AI pipeline governance checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 
