@@ -99,7 +99,8 @@ function stepper(active) {
     ['observability', '12', 'Observe'],
     ['incidents', '13', 'Respond'],
     ['notifications', '14', 'Notify'],
-    ['service-governance', '15', 'SLA']
+    ['service-governance', '15', 'SLA'],
+    ['privacy-governance', '16', 'Privacy']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -1777,6 +1778,152 @@ async function attestFirstOperationalPolicy() {
   return attestOperationalPolicy(first.id);
 }
 
+
+function privacyGovernanceDashboard() {
+  setActiveNav('privacy-governance');
+  if (S.auth.user?.role !== 'admin') {
+    return layout('Privacy Governance', authRequiredPanel('the Step 25 privacy, consent and data governance console'), { currentStep: 'privacy-governance' });
+  }
+
+  const governance = S.api.privacyGovernance || {};
+  const summary = governance.summary || {};
+  const notices = S.api.privacyNotices || governance.privacy_notices || [];
+  const processing = S.api.dataProcessingRecords || governance.processing_records || [];
+  const retentionRules = S.api.retentionRules || governance.retention_rules || [];
+  const retentionEvaluations = S.api.retentionEvaluations || governance.latest_retention_evaluations || [];
+  const dsr = S.api.dataSubjectRequests || governance.open_data_subject_requests || [];
+  const consents = S.api.consentRecords || governance.recent_consent_records || [];
+  const exports = S.api.dataExports || governance.recent_data_exports || [];
+  const actionRows = (governance.operator_actions || []).map(item => `<li>${safe(item)}</li>`).join('') || '<li>No immediate privacy action.</li>';
+
+  const noticeRows = notices.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : item.status === 'draft' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.code)}</td><td>${safe(item.title)}</td><td>${safe(item.scope)}</td><td>${safe(item.version)}</td><td>${safe(item.review_due_at || 'not scheduled')}</td></tr>`).join('') || '<tr><td colspan="6">No privacy notices configured.</td></tr>';
+  const processingRows = processing.slice(0, 8).map(item => `<div class="timeline-row"><div class="timeline-time">${safe(item.risk_level)}</div><div class="timeline-content"><strong>${safe(item.activity_code)}</strong><p class="muted small">${safe(item.name)} · ${safe(item.domain)} · ${safe(item.lawful_basis)} · retention ${safe(item.retention_days)} days</p></div></div>`).join('') || '<p class="muted small">No processing records available.</p>';
+  const retentionRuleRows = retentionRules.slice(0, 8).map(item => `<tr><td>${item.enabled ? 'on' : 'off'}</td><td>${safe(item.code)}</td><td>${safe(item.scope)}</td><td>${safe(item.table_name)}</td><td>${safe(item.retention_days)} days</td><td>${safe(item.action)}</td></tr>`).join('') || '<tr><td colspan="6">No retention rules configured.</td></tr>';
+  const retentionRows = retentionEvaluations.slice(0, 8).map(item => `<div class="timeline-row"><div class="timeline-time">${safe(item.status)}</div><div class="timeline-content"><strong>${safe(item.rule_code)}</strong><p class="muted small">${safe(item.candidate_count)} candidate(s) · ${safe(item.evaluated_at)} · ${safe(item.summary?.note || 'dry-run')}</p></div></div>`).join('') || '<p class="muted small">No retention evaluation yet.</p>';
+  const consentRows = consents.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'granted' ? 'green' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.subject_email || item.user_id || 'unknown')}</td><td>${safe(item.consent_type)}</td><td>${safe(item.notice_code)}</td><td>${safe(item.granted_at || item.withdrawn_at || item.created_at)}</td><td>${item.status === 'granted' ? `<button class="mini-button" onclick="withdrawConsentRecord('${safe(item.id)}')">Withdraw</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">No consent records yet.</td></tr>';
+  const dsrRows = dsr.slice(0, 8).map(item => `<tr><td><span class="badge ${item.priority === 'urgent' || item.priority === 'high' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.request_type)}</td><td>${safe(item.subject_email)}</td><td>${safe(item.response_due_at)}</td><td><button class="mini-button" onclick="generateDataExport('${safe(item.id)}')">Export</button> <button class="mini-button" onclick="resolveDataSubjectRequest('${safe(item.id)}')">Resolve</button></td></tr>`).join('') || '<tr><td colspan="5">No active data subject requests.</td></tr>';
+  const exportRows = exports.slice(0, 8).map(item => `<div class="timeline-row"><div class="timeline-time">${safe(item.status)}</div><div class="timeline-content"><strong>${safe(item.subject_email)}</strong><p class="muted small">${safe(item.request_type)} · generated ${safe(item.generated_at)} · expires ${safe(item.expires_at)} · cases ${safe(item.payload_summary?.repair_cases ?? 0)}</p></div></div>`).join('') || '<p class="muted small">No data exports generated yet.</p>';
+
+  return layout('Privacy Governance', html`
+    <section class="section-head"><div><p class="eyebrow">Step 25 · Privacy, Consent & Data Governance</p><h2>Govern repair data before a real beta.</h2></div><p class="muted">Step 25 adds privacy notices, consent records, data processing inventory, retention dry-runs and data subject request handling. It is a local/pilot governance layer, not a final legal approval.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.privacy_notices ?? 0)}</strong><span>Privacy notices</span></div><div class="metric"><strong>${safe(summary.processing_records ?? 0)}</strong><span>Processing records</span></div><div class="metric"><strong>${safe(summary.active_consents ?? 0)}</strong><span>Active consents</span></div><div class="metric"><strong>${safe(summary.open_data_subject_requests ?? 0)}</strong><span>Open DSR</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="evaluateDataRetention()" ${S.busy ? 'disabled' : ''}>Evaluate retention</button><button class="btn secondary" onclick="recordDemoConsent()" ${S.busy ? 'disabled' : ''}>Record demo consent</button><button class="btn secondary" onclick="createDemoDataSubjectRequest()" ${S.busy ? 'disabled' : ''}>Create access request</button><button class="btn secondary" onclick="generateFirstDataExport()" ${S.busy || dsr.length === 0 ? 'disabled' : ''}>Export first DSR</button></div><ul class="muted small">${actionRows}</ul></section>
+    <section class="grid two"><div class="panel stack"><h3>Privacy notices</h3><table class="data-table"><thead><tr><th>Status</th><th>Code</th><th>Title</th><th>Scope</th><th>Version</th><th>Review</th></tr></thead><tbody>${noticeRows}</tbody></table></div><div class="panel stack"><h3>Processing records</h3><div class="timeline">${processingRows}</div></div></section>
+    <section class="grid two"><div class="panel stack"><h3>Retention rules</h3><table class="data-table"><thead><tr><th>Enabled</th><th>Code</th><th>Scope</th><th>Table</th><th>Retention</th><th>Action</th></tr></thead><tbody>${retentionRuleRows}</tbody></table></div><div class="panel stack"><h3>Latest retention dry-runs</h3><div class="timeline">${retentionRows}</div></div></section>
+    <section class="grid two"><div class="panel stack"><h3>Consent ledger</h3><table class="data-table"><thead><tr><th>Status</th><th>Subject</th><th>Type</th><th>Notice</th><th>Date</th><th>Action</th></tr></thead><tbody>${consentRows}</tbody></table></div><div class="panel stack"><h3>Data subject requests</h3><table class="data-table"><thead><tr><th>Status</th><th>Type</th><th>Subject</th><th>Due</th><th>Action</th></tr></thead><tbody>${dsrRows}</tbody></table></div></section>
+    <section class="section panel stack"><h3>Generated exports</h3><div class="timeline">${exportRows}</div><p class="muted small">Exports are stored as JSON payloads in SQLite for local pilot validation. They are not downloadable files and do not embed uploaded binaries.</p></section>
+  `, { currentStep: 'privacy-governance' });
+}
+
+async function evaluateDataRetention() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate retention.');
+  setBusy(true);
+  try {
+    const result = await window.REBORN_API.evaluateRetention();
+    toast(`Retention evaluated: ${result.retention_evaluation_run.evaluated_count} rule(s).`);
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Retention evaluation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function recordDemoConsent() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to record consent.');
+  const email = S.auth.user?.email || 'repair.user@reborn.local';
+  setBusy(true);
+  try {
+    await window.REBORN_API.recordConsent({
+      subject_email: email,
+      notice_code: 'REPAIR-INTAKE-PRIVACY',
+      consent_type: 'privacy_notice_acknowledged',
+      status: 'granted',
+      source: 'prototype_step25',
+      metadata: { demo: true, note: 'Step 25 prototype consent ledger validation.' }
+    });
+    toast('Demo consent recorded.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Consent recording failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function withdrawConsentRecord(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to withdraw consent.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.withdrawConsent(id, 'Withdrawn from Step 25 prototype console.');
+    toast('Consent withdrawn.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Consent withdrawal failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function createDemoDataSubjectRequest() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create DSR.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.createDataSubjectRequest({
+      request_type: 'access',
+      subject_email: 'repair.user@reborn.local',
+      priority: 'normal',
+      description: 'Step 25 smoke/demo access request for local pilot data export validation.'
+    });
+    toast('Data subject access request created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`DSR creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function generateDataExport(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to generate export.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.generateDataExport(id);
+    toast('Subject data export generated.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Data export failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function generateFirstDataExport() {
+  const request = (S.api.dataSubjectRequests || [])[0];
+  if (!request) return toast('Create a data subject request first.');
+  return generateDataExport(request.id);
+}
+
+async function resolveDataSubjectRequest(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to resolve DSR.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.resolveDataSubjectRequest(id, 'fulfilled', 'Fulfilled from Step 25 prototype console after export review.');
+    toast('Data subject request resolved.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`DSR resolution failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -1796,6 +1943,7 @@ const routes = {
   '/incidents': incidentResponseDashboard,
   '/notifications': notificationCenterDashboard,
   '/service-governance': serviceGovernanceDashboard,
+  '/privacy-governance': privacyGovernanceDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -1911,6 +2059,14 @@ async function refreshApiData(options = {}) {
       slaEvaluations: bootstrap.sla_evaluations || S.api.slaEvaluations || [],
       operationalPolicies: bootstrap.operational_policies || S.api.operationalPolicies || [],
       policyAttestations: bootstrap.policy_attestations || S.api.policyAttestations || [],
+      privacyGovernance: bootstrap.privacy_governance || S.api.privacyGovernance,
+      privacyNotices: bootstrap.privacy_notices || S.api.privacyNotices || [],
+      consentRecords: bootstrap.consent_records || S.api.consentRecords || [],
+      dataProcessingRecords: bootstrap.data_processing_records || S.api.dataProcessingRecords || [],
+      retentionRules: bootstrap.retention_rules || S.api.retentionRules || [],
+      retentionEvaluations: bootstrap.retention_evaluations || S.api.retentionEvaluations || [],
+      dataSubjectRequests: bootstrap.data_subject_requests || S.api.dataSubjectRequests || [],
+      dataExports: bootstrap.data_exports || S.api.dataExports || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {

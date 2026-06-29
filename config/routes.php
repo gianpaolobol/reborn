@@ -87,6 +87,13 @@ return static function (Router $router, RepairController $repairController, Auth
                 'sla_evaluations',
                 'operational_policies',
                 'policy_attestations',
+                'privacy_governance',
+                'privacy_notices',
+                'consent_records',
+                'data_processing_records',
+                'retention_rules',
+                'data_subject_requests',
+                'data_exports',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -141,6 +148,21 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/platform/operational-policies', [$platformController, 'operationalPolicies']);
     $router->get('/api/v1/platform/policy-attestations', [$platformController, 'policyAttestations']);
     $router->post('/api/v1/platform/operational-policies/{id}/attest', [$platformController, 'attestOperationalPolicy']);
+
+    $router->get('/api/v1/platform/privacy-governance', [$platformController, 'privacyGovernance']);
+    $router->get('/api/v1/platform/privacy-notices', [$platformController, 'privacyNotices']);
+    $router->get('/api/v1/platform/consent-records', [$platformController, 'consentRecords']);
+    $router->post('/api/v1/platform/consent-records', [$platformController, 'recordConsent']);
+    $router->post('/api/v1/platform/consent-records/{id}/withdraw', [$platformController, 'withdrawConsent']);
+    $router->get('/api/v1/platform/data-processing-records', [$platformController, 'dataProcessingRecords']);
+    $router->get('/api/v1/platform/retention-rules', [$platformController, 'retentionRules']);
+    $router->post('/api/v1/platform/retention/evaluate', [$platformController, 'evaluateRetention']);
+    $router->get('/api/v1/platform/retention-evaluations', [$platformController, 'retentionEvaluations']);
+    $router->get('/api/v1/platform/data-subject-requests', [$platformController, 'dataSubjectRequests']);
+    $router->post('/api/v1/platform/data-subject-requests', [$platformController, 'createDataSubjectRequest']);
+    $router->post('/api/v1/platform/data-subject-requests/{id}/resolve', [$platformController, 'resolveDataSubjectRequest']);
+    $router->post('/api/v1/platform/data-subject-requests/{id}/export', [$platformController, 'generateDataExport']);
+    $router->get('/api/v1/platform/data-exports', [$platformController, 'dataExports']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

@@ -11,6 +11,7 @@ use Reborn\Platform\Application\IncidentResponseService;
 use Reborn\Platform\Application\OperationalTelemetryService;
 use Reborn\Platform\Application\NotificationCenterService;
 use Reborn\Platform\Application\OperationalGovernanceService;
+use Reborn\Platform\Application\PrivacyGovernanceService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -24,6 +25,7 @@ final class PlatformController
         private readonly IncidentResponseService $incidents,
         private readonly NotificationCenterService $notifications,
         private readonly OperationalGovernanceService $governance,
+        private readonly PrivacyGovernanceService $privacy,
         private readonly AuthContext $auth,
     ) {
     }
@@ -341,6 +343,100 @@ final class PlatformController
     {
         $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         return JsonResponse::created(['policy_attestation' => $this->governance->attestPolicy((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+
+    public function privacyGovernance(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['privacy_governance' => $this->privacy->dashboard()], $request->requestId());
+    }
+
+    public function privacyNotices(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        return JsonResponse::ok(['privacy_notices' => $this->privacy->privacyNotices($status)], $request->requestId());
+    }
+
+    public function consentRecords(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['consent_records' => $this->privacy->consentRecords($status, $limit)], $request->requestId());
+    }
+
+    public function recordConsent(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['consent_record' => $this->privacy->recordConsent($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function withdrawConsent(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $body = $request->body();
+        $note = trim((string) ($body['note'] ?? 'Consent withdrawn from Step 25 console.'));
+        return JsonResponse::ok(['consent_record' => $this->privacy->withdrawConsent((string) $request->param('id'), $user->id, $note)], $request->requestId());
+    }
+
+    public function dataProcessingRecords(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['data_processing_records' => $this->privacy->processingRecords()], $request->requestId());
+    }
+
+    public function retentionRules(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['retention_rules' => $this->privacy->retentionRules()], $request->requestId());
+    }
+
+    public function evaluateRetention(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['retention_evaluation_run' => $this->privacy->evaluateRetention($user->id)], $request->requestId());
+    }
+
+    public function retentionEvaluations(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['retention_evaluations' => $this->privacy->retentionEvaluations($limit)], $request->requestId());
+    }
+
+    public function dataSubjectRequests(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['data_subject_requests' => $this->privacy->dataSubjectRequests($status, $limit)], $request->requestId());
+    }
+
+    public function createDataSubjectRequest(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['data_subject_request' => $this->privacy->createDataSubjectRequest($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function resolveDataSubjectRequest(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['data_subject_request' => $this->privacy->resolveDataSubjectRequest((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function generateDataExport(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['data_export' => $this->privacy->generateDataExport((string) $request->param('id'), $user->id)], $request->requestId());
+    }
+
+    public function dataExports(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['data_exports' => $this->privacy->dataExports($limit)], $request->requestId());
     }
 
 }

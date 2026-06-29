@@ -35,6 +35,7 @@ final class ProductionReadinessService
             'incident_response' => $this->incidentResponseCheck(),
             'notification_center' => $this->notificationCenterCheck(),
             'service_governance' => $this->serviceGovernanceCheck(),
+            'privacy_governance' => $this->privacyGovernanceCheck(),
         ];
 
         $status = 'ready';
@@ -86,7 +87,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v5_step24',
+            'checklist_version' => 'production_readiness_v6_step25',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -95,12 +96,14 @@ final class ProductionReadinessService
                 'alert evaluation and status page workflow are verified',
                 'notification dispatch and escalation workflow are verified',
                 'SLA evaluation and operational policy attestations are reviewed',
+                'privacy notices, consent capture, data subject request and retention dry-run are reviewed',
                 'privacy/legal liability terms for repair outcomes are approved',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
             'step_23_status' => 'Notification center, mock delivery records and escalation workflow v1 implemented.',
             'step_24_status' => 'Service level objectives, SLA evaluations and operational policy governance v1 implemented.',
+            'step_25_status' => 'Privacy notices, consent ledger, processing records, retention dry-run and data subject request workflow v1 implemented.',
         ];
     }
 
@@ -171,10 +174,10 @@ final class ProductionReadinessService
             $count = (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn();
             $latest = $this->pdo->query('SELECT filename FROM migrations ORDER BY executed_at DESC, id DESC LIMIT 1')->fetchColumn();
             return [
-                'status' => $count >= 18 ? 'ok' : 'warn',
+                'status' => $count >= 19 ? 'ok' : 'warn',
                 'executed_count' => $count,
                 'latest' => $latest ?: null,
-                'message' => $count >= 18 ? 'All MVP hardening, observability, incident-response, notification and service-governance migrations are present.' : 'Some migrations may still need to run.',
+                'message' => $count >= 19 ? 'All MVP hardening, observability, incident-response, notification, service-governance and privacy-governance migrations are present.' : 'Some migrations may still need to run.',
             ];
         } catch (Throwable $exception) {
             return ['status' => 'fail', 'message' => 'Migration metadata is unavailable.', 'error' => $exception->getMessage()];
@@ -389,6 +392,43 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Service governance checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function privacyGovernanceCheck(): array
+    {
+        try {
+            $tables = ['platform_privacy_notices', 'platform_consent_records', 'platform_data_processing_records', 'platform_retention_rules', 'platform_retention_evaluations', 'platform_data_subject_requests', 'platform_data_exports'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $notices = 0;
+            $processingRecords = 0;
+            $retentionRules = 0;
+            if ($missing === []) {
+                $notices = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_privacy_notices WHERE status IN ('draft', 'active')")->fetchColumn();
+                $processingRecords = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_data_processing_records WHERE status IN ('draft', 'active')")->fetchColumn();
+                $retentionRules = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_retention_rules WHERE enabled = 1')->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? (($notices > 0 && $processingRecords > 0 && $retentionRules > 0) ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Privacy, consent and data governance tables are available.' : 'Privacy governance tables are not fully migrated yet.',
+                'privacy_notices' => $notices,
+                'processing_records' => $processingRecords,
+                'enabled_retention_rules' => $retentionRules,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Privacy governance checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 

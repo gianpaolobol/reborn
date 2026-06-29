@@ -417,3 +417,32 @@ Open the admin console:
 ```text
 http://127.0.0.1:8080/prototype/index.html#/service-governance
 ```
+
+## Step 25 — Privacy, Consent & Data Governance v1
+
+Step 25 adds the first local/pilot privacy governance layer needed before a credible beta.
+
+It adds:
+
+- SQLite-backed privacy notices;
+- consent records with grant/withdraw lifecycle;
+- data processing inventory for repair, AI learning, provider governance and platform ops;
+- retention rules and dry-run retention evaluations;
+- data subject request workflow;
+- local JSON subject-access exports stored in SQLite;
+- admin prototype console at `#/privacy-governance`;
+- smoke test `scripts/smoke-privacy-data-governance.ps1`.
+
+Important: Step 25 is **not** final GDPR/legal approval. It makes privacy, consent, retention and data-subject workflows visible and auditable in the local/pilot MVP without pretending that external AI, payments or notification providers are production-approved.
+
+Run after Step 20/21/22/23/24 checks:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-privacy-data-governance.ps1
+```
+
+Open the admin console:
+
+```text
+http://127.0.0.1:8080/prototype/index.html#/privacy-governance
+```

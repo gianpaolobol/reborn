@@ -111,7 +111,7 @@ final class OperationalTelemetryService
                 [
                     'name' => '1. Local preflight',
                     'checks' => [
-                        'git status is clean except intended Step 21 files',
+                        'git status is clean except intended Step 25 files',
                         'php scripts/setup-dev.php completes',
                         'all smoke tests pass from a second PowerShell window',
                         'manual backup has been created through API or scripts/backup-sqlite.ps1',
@@ -134,6 +134,7 @@ final class OperationalTelemetryService
                         'operator can inspect API logs and readiness snapshots',
                         'operator can evaluate alerts and update the local/pilot status page',
                         'operator can dispatch Step 23 mock notifications and start escalation runs',
+                        'operator can evaluate SLA governance and privacy retention dry-runs',
                     ],
                 ],
                 [
@@ -143,6 +144,8 @@ final class OperationalTelemetryService
                         'observability dashboard shows no repeated 500 errors',
                         'Step 22 alert evaluation has been run and no unresolved critical incident blocks the release',
                         'Step 23 notification dispatch has no failed mandatory deliveries',
+                        'Step 24 SLA evaluation has no unreviewed breach blocking the pilot',
+                        'Step 25 privacy governance has reviewed notices, retention dry-run and open DSR status',
                         'admin ops workflow still works after deploy',
                         'known mocks are explicitly disclosed in demo or pilot notes',
                     ],
@@ -157,7 +160,7 @@ final class OperationalTelemetryService
             'not_yet_production_grade' => [
                 'real AI diagnosis and model generation',
                 'real payment provider webhooks',
-                'legal/privacy pack',
+                'final legal/privacy pack and real consent UX',
                 'centralized logs and external uptime monitoring',
                 'provider SLA and dispute workflow',
             ],
@@ -184,6 +187,8 @@ final class OperationalTelemetryService
             'smoke-observability-ops.ps1' => 'Step 21 observability ops',
             'smoke-incident-response-status.ps1' => 'Step 22 incident response status',
             'smoke-notification-escalation.ps1' => 'Step 23 notification escalation',
+            'smoke-service-governance-sla.ps1' => 'Step 24 service governance SLA',
+            'smoke-privacy-data-governance.ps1' => 'Step 25 privacy data governance',
         ];
 
         $rows = [];

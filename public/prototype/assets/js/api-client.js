@@ -623,6 +623,76 @@
 
 
 
+
+
+    async getPrivacyGovernance() {
+      return this.request('/api/v1/platform/privacy-governance');
+    }
+
+    async getPrivacyNotices(status = 'all') {
+      return this.request(`/api/v1/platform/privacy-notices?status=${encodeURIComponent(status)}`);
+    }
+
+    async getConsentRecords(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/consent-records?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async recordConsent(data) {
+      return this.request('/api/v1/platform/consent-records', {
+        method: 'POST',
+        body: data
+      });
+    }
+
+    async withdrawConsent(id, note) {
+      return this.request(`/api/v1/platform/consent-records/${encodeURIComponent(id)}/withdraw`, {
+        method: 'POST',
+        body: { note }
+      });
+    }
+
+    async getDataProcessingRecords() {
+      return this.request('/api/v1/platform/data-processing-records');
+    }
+
+    async getRetentionRules() {
+      return this.request('/api/v1/platform/retention-rules');
+    }
+
+    async evaluateRetention() {
+      return this.request('/api/v1/platform/retention/evaluate', { method: 'POST' });
+    }
+
+    async getRetentionEvaluations(limit = 50) {
+      return this.request(`/api/v1/platform/retention-evaluations?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getDataSubjectRequests(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/data-subject-requests?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createDataSubjectRequest(data) {
+      return this.request('/api/v1/platform/data-subject-requests', {
+        method: 'POST',
+        body: data
+      });
+    }
+
+    async resolveDataSubjectRequest(id, status = 'fulfilled', resolutionNotes = 'Resolved from Step 25 prototype console.') {
+      return this.request(`/api/v1/platform/data-subject-requests/${encodeURIComponent(id)}/resolve`, {
+        method: 'POST',
+        body: { status, resolution_notes: resolutionNotes }
+      });
+    }
+
+    async generateDataExport(id) {
+      return this.request(`/api/v1/platform/data-subject-requests/${encodeURIComponent(id)}/export`, { method: 'POST' });
+    }
+
+    async getDataExports(limit = 50) {
+      return this.request(`/api/v1/platform/data-exports?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -790,6 +860,14 @@
       let slaEvaluations = { sla_evaluations: [] };
       let operationalPolicies = { operational_policies: [] };
       let policyAttestations = { policy_attestations: [] };
+      let privacyGovernance = { privacy_governance: null };
+      let privacyNotices = { privacy_notices: [] };
+      let consentRecords = { consent_records: [] };
+      let dataProcessingRecords = { data_processing_records: [] };
+      let retentionRules = { retention_rules: [] };
+      let retentionEvaluations = { retention_evaluations: [] };
+      let dataSubjectRequests = { data_subject_requests: [] };
+      let dataExports = { data_exports: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -1000,6 +1078,47 @@
           policyAttestations = { policy_attestations: [] };
         }
 
+        try {
+          privacyGovernance = await this.getPrivacyGovernance();
+        } catch (_error) {
+          privacyGovernance = { privacy_governance: null };
+        }
+        try {
+          privacyNotices = await this.getPrivacyNotices('all');
+        } catch (_error) {
+          privacyNotices = { privacy_notices: [] };
+        }
+        try {
+          consentRecords = await this.getConsentRecords('all', 30);
+        } catch (_error) {
+          consentRecords = { consent_records: [] };
+        }
+        try {
+          dataProcessingRecords = await this.getDataProcessingRecords();
+        } catch (_error) {
+          dataProcessingRecords = { data_processing_records: [] };
+        }
+        try {
+          retentionRules = await this.getRetentionRules();
+        } catch (_error) {
+          retentionRules = { retention_rules: [] };
+        }
+        try {
+          retentionEvaluations = await this.getRetentionEvaluations(30);
+        } catch (_error) {
+          retentionEvaluations = { retention_evaluations: [] };
+        }
+        try {
+          dataSubjectRequests = await this.getDataSubjectRequests('active', 30);
+        } catch (_error) {
+          dataSubjectRequests = { data_subject_requests: [] };
+        }
+        try {
+          dataExports = await this.getDataExports(30);
+        } catch (_error) {
+          dataExports = { data_exports: [] };
+        }
+
       }
 
       if (latestCase && this.getToken()) {
@@ -1144,7 +1263,15 @@
         sla_policies: slaPolicies.sla_policies || [],
         sla_evaluations: slaEvaluations.sla_evaluations || [],
         operational_policies: operationalPolicies.operational_policies || [],
-        policy_attestations: policyAttestations.policy_attestations || []
+        policy_attestations: policyAttestations.policy_attestations || [],
+        privacy_governance: privacyGovernance.privacy_governance || null,
+        privacy_notices: privacyNotices.privacy_notices || [],
+        consent_records: consentRecords.consent_records || [],
+        data_processing_records: dataProcessingRecords.data_processing_records || [],
+        retention_rules: retentionRules.retention_rules || [],
+        retention_evaluations: retentionEvaluations.retention_evaluations || [],
+        data_subject_requests: dataSubjectRequests.data_subject_requests || [],
+        data_exports: dataExports.data_exports || []
       };
     }
   }
