@@ -59,10 +59,13 @@ jobs:
           cp .env.ci.example .env
           mkdir -p storage/database storage/logs storage/uploads storage/backups
           rm -f storage/database/reborn.sqlite
-          rm -f storage/logs/*.log storage/logs/ci-smoke-results.json || true
+          rm -f storage/logs/*.log storage/logs/*.json || true
 
       - name: Set up development database
         run: php scripts/setup-dev.php
+
+      - name: Reset deterministic demo credentials
+        run: php scripts/reset-demo-credentials.php
 
       - name: Verify demo credentials seed
         run: php scripts/verify-demo-credentials.php
@@ -92,6 +95,10 @@ jobs:
           echo "API did not become healthy in time. Server log follows:"
           cat storage/logs/ci-php-server.log || true
           exit 1
+
+      - name: Verify API auth preflight
+        shell: pwsh
+        run: ./scripts/ci-api-auth-preflight.ps1 -BaseUrl http://127.0.0.1:8080
 
       - name: Capture pre-smoke readiness snapshot
         shell: bash

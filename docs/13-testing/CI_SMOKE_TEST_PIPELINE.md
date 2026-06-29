@@ -164,3 +164,22 @@ storage/logs/*.json
 ```
 
 Do not upload `.env`, SQLite databases, uploads, backups or other runtime data that may contain tokens or user data.
+
+## Auth preflight hardening
+
+The CI pipeline resets demo credentials after `scripts/setup-dev.php` using `scripts/reset-demo-credentials.php`.
+This avoids false failures when demo users already exist with stale hashes or when a seed file was changed after the local database was created.
+
+Before the full smoke suite starts, `scripts/ci-api-auth-preflight.ps1` verifies:
+
+- `/api/health` is reachable.
+- `admin@reborn.local` can log in with password `password` through the HTTP API.
+- `/api/v1/auth/me` accepts the returned bearer token.
+
+If this preflight fails, the workflow writes:
+
+- `storage/logs/ci-auth-preflight.json`
+- `storage/logs/ci-auth-preflight-failure.json`
+- `storage/logs/ci-php-server.log`
+
+These artifacts identify whether the failure is a database seed issue, an API auth issue, or a server runtime issue.

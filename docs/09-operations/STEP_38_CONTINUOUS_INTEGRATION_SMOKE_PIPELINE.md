@@ -148,3 +148,9 @@ git add .
 git commit -m "ci: add PHP SQLite smoke test pipeline"
 git push
 ```
+
+## Patch note — deterministic demo credentials and API auth preflight
+
+The CI now runs `scripts/reset-demo-credentials.php` after database setup and before the API server starts. This guarantees that all demo accounts used by the smoke scripts exist, are active, and verify against the password `password`.
+
+The CI also runs `scripts/ci-api-auth-preflight.ps1` before the full smoke suite. This catches admin login failures before the first smoke test and writes explicit JSON diagnostics to `storage/logs`.

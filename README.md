@@ -8,6 +8,18 @@ Repository ufficiale: https://github.com/gianpaolobol/reborn
 
 ## Continuous Integration
 
+### CI auth preflight
+
+The smoke-test workflow resets deterministic demo credentials before running the API smoke suite:
+
+```bash
+php scripts/reset-demo-credentials.php
+php scripts/verify-demo-credentials.php
+```
+
+It then runs an HTTP auth preflight against `/api/v1/auth/login` before the full smoke suite starts. If the admin login fails, check the uploaded runtime artifact `reborn-ci-runtime-logs`, especially `ci-auth-preflight-failure.json`.
+
+
 Re-born includes a GitHub Actions smoke test pipeline:
 
 ```text
