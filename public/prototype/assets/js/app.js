@@ -45,6 +45,14 @@ function formatEuro(cents) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(cents / 100);
 }
 
+function formatBytes(bytes) {
+  const value = Number(bytes || 0);
+  if (!value) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+  return `${(value / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
+}
+
 function apiBanner() {
   const api = S.api;
   const auth = S.auth;
@@ -87,7 +95,8 @@ function stepper(active) {
     ['trust', '08', 'Trust'],
     ['governance', '09', 'Govern'],
     ['ops', '10', 'Ops'],
-    ['readiness', '11', 'Ready']
+    ['readiness', '11', 'Ready'],
+    ['observability', '12', 'Observe']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -1216,18 +1225,63 @@ function productionReadiness() {
   const policy = S.api.securityPolicy || { policy_version: 'production_readiness_v1', rate_limit_enabled: false, security_headers_enabled: false, headers: {} };
   const runtime = S.api.runtimeReport || {};
   const checklist = S.api.deployChecklist || { items: ['Login as admin to load production checklist.'], blocked_until: [] };
+  const snapshots = S.api.readinessSnapshots || [];
   const checks = readiness.checks || {};
   const checkRows = Object.entries(checks).map(([name, check]) => `<tr><th>${safe(name)}</th><td><span class="badge ${check.status === 'ok' ? 'green' : check.status === 'warn' ? 'orange' : 'danger'}">${safe(check.status || 'unknown')}</span></td><td>${safe(check.message || check.php_version || '')}</td></tr>`).join('');
   const itemRows = (checklist.items || []).map(item => `<div class="timeline-row"><div class="timeline-time">Check</div><div class="timeline-content"><strong>${safe(item)}</strong></div></div>`).join('');
+  const snapshotRows = snapshots.length ? snapshots.slice(0, 5).map(snapshot => `<div class="timeline-row"><div class="timeline-time">${safe(String(snapshot.status || '').toUpperCase())}</div><div class="timeline-content"><strong>${safe(snapshot.created_at || '')}</strong><p class="muted small">Snapshot ${safe(String(snapshot.id || '').slice(0, 8))}</p></div></div>`).join('') : '<p class="muted small">No readiness snapshots yet.</p>';
   return layout('Production Readiness', html`
-    <section class="section-head"><div><p class="eyebrow">Step 20 · Production Readiness Hardening</p><h2>Make Re-born operable beyond a demo.</h2></div><p class="muted">This panel exposes readiness checks, security policy, runtime diagnostics and deploy blockers without introducing external infrastructure too early.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 20 → Step 21 · Readiness History</p><h2>Keep readiness strict, but visible.</h2></div><p class="muted">This panel keeps Step 20 production readiness intact and adds the Step 21 evidence trail: snapshots, runtime signals and deploy blockers.</p></section>
     <section class="grid two">
-      <div class="panel stack"><h3>Readiness status</h3><div class="grid two">${metric(readiness.status || 'unknown', 'System status')}${metric(readiness.environment || 'unknown', 'Environment')}${metric(policy.rate_limit_enabled ? 'on' : 'off', 'Rate limit')}${metric(policy.security_headers_enabled ? 'on' : 'off', 'Security headers')}</div><div class="actions"><button class="btn green" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh readiness</button><button class="btn secondary" onclick="createReadinessSnapshot()" ${S.busy || S.auth.user?.role !== 'admin' ? 'disabled' : ''}>Persist snapshot</button><a class="btn secondary" href="#/ops">Back to Ops</a></div><p class="muted small">Snapshots are admin-only and are used to prove readiness state before pilot or deploy decisions.</p></div>
-      <aside class="panel dark-panel stack"><h3>Runtime</h3>${badges([[runtime.php_version || 'PHP runtime pending', 'blue'], [runtime.sapi || 'API mode', ''], [runtime.app_debug === false ? 'debug off' : 'debug/dev', runtime.app_debug === false ? 'green' : 'orange']])}<p class="muted small">Admin runtime details are intentionally protected. Public readiness only exposes safe aggregate checks.</p></aside>
+      <div class="panel stack"><h3>Readiness status</h3><div class="grid two">${metric(readiness.status || 'unknown', 'System status')}${metric(readiness.environment || 'unknown', 'Environment')}${metric(policy.rate_limit_enabled ? 'on' : 'off', 'Rate limit')}${metric(policy.security_headers_enabled ? 'on' : 'off', 'Security headers')}</div><div class="actions"><button class="btn green" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh readiness</button><button class="btn secondary" onclick="createReadinessSnapshot()" ${S.busy || S.auth.user?.role !== 'admin' ? 'disabled' : ''}>Persist snapshot</button><a class="btn secondary" href="#/observability">Open observability</a></div><p class="muted small">Snapshots are admin-only and prove the platform state before pilot or deploy decisions.</p></div>
+      <aside class="panel dark-panel stack"><h3>Runtime</h3>${badges([[runtime.php_version || 'PHP runtime pending', 'blue'], [runtime.sapi || 'API mode', ''], [runtime.app_debug === false ? 'debug off' : 'debug/dev', runtime.app_debug === false ? 'green' : 'orange']])}<p class="muted small">Admin runtime details are intentionally protected. Public readiness exposes only safe aggregate checks.</p></aside>
     </section>
     <section class="section panel stack"><h3>Readiness checks</h3><table class="table"><tr><th>Area</th><th>Status</th><th>Message</th></tr>${checkRows}</table></section>
-    <section class="section grid two"><div class="panel stack"><h3>Security policy</h3>${badges([[policy.policy_version || 'production_readiness_v1', 'blue'], [policy.security_headers_enabled ? 'headers enabled' : 'headers off', policy.security_headers_enabled ? 'green' : 'orange'], [policy.rate_limit_enabled ? `${policy.rate_limit_max_requests || '?'} req/window` : 'rate limit off', policy.rate_limit_enabled ? 'green' : 'orange']])}<p class="muted small">CSP is deferred because the current prototype still uses inline handlers. API JSON receives no-store and defensive headers.</p></div><div class="panel stack"><h3>Deploy checklist</h3><div class="timeline">${itemRows}</div></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Readiness history</h3><div class="timeline">${snapshotRows}</div></div><div class="panel stack"><h3>Deploy checklist</h3><div class="timeline">${itemRows}</div></div></section>
   `, { currentStep: 'readiness' });
+}
+
+function observabilityDashboard() {
+  setActiveNav('observability');
+  if (S.auth.user?.role !== 'admin') {
+    return layout('Observability', authRequiredPanel('the Step 21 observability console'), { currentStep: 'observability' });
+  }
+
+  const obs = S.api.observability || {};
+  const http = S.api.httpMetrics || obs.http || { summary: {}, recent_requests: [], by_path: [], by_status: [] };
+  const summary = http.summary || obs.http || {};
+  const backupStatus = S.api.backupStatus || obs.backup || {};
+  const backups = S.api.backups || [];
+  const logs = S.api.platformLogs || { entries: [], files: [] };
+  const runbook = S.api.deploymentRunbook || { phases: [], rollback: [] };
+  const smoke = S.api.smokeTests || { run_order: [] };
+  const recentRows = (http.recent_requests || []).slice(0, 8).map(row => `<tr><td>${safe(row.method)}</td><td>${safe(row.path)}</td><td>${safe(row.status_code)}</td><td>${safe(row.duration_ms)} ms</td><td>${safe(row.occurred_at || '')}</td></tr>`).join('') || '<tr><td colspan="5">No HTTP metrics yet. Refresh the API once.</td></tr>';
+  const backupRows = backups.slice(0, 6).map(backup => `<tr><td>${safe(backup.status)}</td><td>${safe(backup.backup_file)}</td><td>${formatBytes(backup.size_bytes)}</td><td>${safe(backup.created_at)}</td></tr>`).join('') || '<tr><td colspan="4">No backup has been created yet.</td></tr>';
+  const logRows = (logs.entries || []).slice(0, 6).map(entry => `<div class="timeline-row"><div class="timeline-time">${safe(entry.file || 'log')}</div><div class="timeline-content"><strong>${safe(entry.exception || entry.path || 'entry')}</strong><p class="muted small">${safe(entry.message || entry.occurred_at || '')}</p></div></div>`).join('') || '<p class="muted small">No API exception logs yet.</p>';
+  const phaseRows = (runbook.phases || []).map(phase => `<div class="timeline-row"><div class="timeline-time">Run</div><div class="timeline-content"><strong>${safe(phase.name)}</strong><p class="muted small">${safe((phase.checks || []).slice(0, 3).join(' · '))}</p></div></div>`).join('') || '<p class="muted small">Deployment runbook loads after admin login.</p>';
+  const smokeRows = (smoke.run_order || []).slice(-4).map(row => `<div class="timeline-row"><div class="timeline-time">${row.exists ? 'OK' : 'MISS'}</div><div class="timeline-content"><strong>${safe(row.label)}</strong><p class="muted small">${safe(row.script)}</p></div></div>`).join('') || '<p class="muted small">Smoke summary unavailable.</p>';
+
+  return layout('Observability', html`
+    <section class="section-head"><div><p class="eyebrow">Step 21 · Observability, Backup & Deploy Runbook</p><h2>Make Re-born governable, not only demonstrable.</h2></div><p class="muted">The operator can now see API activity, logs, readiness history, storage/database footprint, backups and deployment steps from one admin console.</p></section>
+    <section class="grid four">
+      ${metric(obs.status || 'unknown', 'Operational status')}
+      ${metric(summary.total_requests || 0, 'HTTP requests')}
+      ${metric(summary.errors_5xx || 0, '5xx errors')}
+      ${metric(backupStatus.latest_backup ? 'available' : 'missing', 'Latest backup')}
+    </section>
+    <section class="section grid two">
+      <div class="panel stack"><h3>HTTP metrics</h3><table class="table"><tr><th>Method</th><th>Path</th><th>Status</th><th>Time</th><th>At</th></tr>${recentRows}</table></div>
+      <div class="panel stack"><h3>Backup automation</h3><div class="actions"><button class="btn green" onclick="createBackupNow()" ${S.busy ? 'disabled' : ''}>Create SQLite backup</button><button class="btn secondary" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh</button></div><table class="table"><tr><th>Status</th><th>File</th><th>Size</th><th>At</th></tr>${backupRows}</table></div>
+    </section>
+    <section class="section grid two">
+      <div class="panel stack"><h3>API log viewer</h3><div class="timeline">${logRows}</div></div>
+      <div class="panel stack"><h3>Deployment runbook</h3><div class="timeline">${phaseRows}</div></div>
+    </section>
+    <section class="section grid two">
+      <div class="panel stack"><h3>Storage & database</h3><div class="grid two">${metric(formatBytes(obs.storage?.uploads_bytes), 'Uploads')}${metric(formatBytes(obs.storage?.logs_bytes), 'Logs')}${metric(formatBytes(obs.storage?.backups_bytes), 'Backups')}${metric(obs.database?.migrations_count || '?', 'Migrations')}</div></div>
+      <div class="panel stack"><h3>Smoke test summary</h3><div class="timeline">${smokeRows}</div></div>
+    </section>
+  `, { currentStep: 'observability' });
 }
 
 async function createReadinessSnapshot() {
@@ -1242,6 +1296,24 @@ async function createReadinessSnapshot() {
     await refreshApiData({ silent: true });
   } catch (error) {
     toast(`Readiness snapshot failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function createBackupNow() {
+  if (S.auth.user?.role !== 'admin') {
+    toast('Admin login required to create backups.');
+    return;
+  }
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.createBackup();
+    toast(`Backup created: ${payload.backup.backup_file}`);
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Backup failed: ${error.message}`);
   } finally {
     setBusy(false);
     render();
@@ -1299,6 +1371,7 @@ const routes = {
   '/governance': governance,
   '/ops': opsConsole,
   '/readiness': productionReadiness,
+  '/observability': observabilityDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -1388,6 +1461,14 @@ async function refreshApiData(options = {}) {
       securityPolicy: bootstrap.security_policy || S.api.securityPolicy,
       runtimeReport: bootstrap.runtime_report || S.api.runtimeReport,
       deployChecklist: bootstrap.deploy_checklist || S.api.deployChecklist,
+      observability: bootstrap.observability || S.api.observability,
+      httpMetrics: bootstrap.http_metrics || S.api.httpMetrics,
+      platformLogs: bootstrap.platform_logs || S.api.platformLogs,
+      backupStatus: bootstrap.backup_status || S.api.backupStatus,
+      backups: bootstrap.backups || S.api.backups || [],
+      readinessSnapshots: bootstrap.readiness_snapshots || S.api.readinessSnapshots || [],
+      deploymentRunbook: bootstrap.deployment_runbook || S.api.deploymentRunbook,
+      smokeTests: bootstrap.smoke_tests || S.api.smokeTests,
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {

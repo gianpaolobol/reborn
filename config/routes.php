@@ -67,6 +67,12 @@ return static function (Router $router, RepairController $repairController, Auth
                 'rate_limiting',
                 'readiness_checks',
                 'deploy_checklist',
+                'observability_dashboard',
+                'http_metrics',
+                'api_log_viewer',
+                'backup_automation',
+                'deployment_runbook',
+                'smoke_test_summary',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -78,6 +84,14 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/platform/deploy-checklist', [$platformController, 'deployChecklist']);
     $router->get('/api/v1/platform/runtime', [$platformController, 'runtime']);
     $router->post('/api/v1/platform/readiness-snapshots', [$platformController, 'storeReadinessSnapshot']);
+    $router->get('/api/v1/platform/readiness-snapshots', [$platformController, 'readinessSnapshots']);
+    $router->get('/api/v1/platform/observability', [$platformController, 'observability']);
+    $router->get('/api/v1/platform/http-metrics', [$platformController, 'httpMetrics']);
+    $router->get('/api/v1/platform/logs', [$platformController, 'logs']);
+    $router->get('/api/v1/platform/backups', [$platformController, 'backups']);
+    $router->post('/api/v1/platform/backups', [$platformController, 'createBackup']);
+    $router->get('/api/v1/platform/deployment-runbook', [$platformController, 'deploymentRunbook']);
+    $router->get('/api/v1/platform/smoke-tests-summary', [$platformController, 'smokeTestsSummary']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

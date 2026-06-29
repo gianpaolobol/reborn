@@ -30,6 +30,8 @@ final class ProductionReadinessService
             'configuration' => $this->configurationCheck(),
             'security' => $this->securityCheck(),
             'runtime' => $this->runtimeCheck(),
+            'observability' => $this->observabilityCheck(),
+            'backup' => $this->backupCheck(),
         ];
 
         $status = 'ready';
@@ -81,7 +83,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v1',
+            'checklist_version' => 'production_readiness_v2_step21',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -89,7 +91,7 @@ final class ProductionReadinessService
                 'backup and restore procedure has been tested',
                 'privacy/legal liability terms for repair outcomes are approved',
             ],
-            'step_21_suggestion' => 'Observability dashboard, backup automation and deployment runbook v1.',
+            'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
         ];
     }
 
@@ -160,10 +162,10 @@ final class ProductionReadinessService
             $count = (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn();
             $latest = $this->pdo->query('SELECT filename FROM migrations ORDER BY executed_at DESC, id DESC LIMIT 1')->fetchColumn();
             return [
-                'status' => $count >= 14 ? 'ok' : 'warn',
+                'status' => $count >= 15 ? 'ok' : 'warn',
                 'executed_count' => $count,
                 'latest' => $latest ?: null,
-                'message' => $count >= 14 ? 'All MVP hardening migrations are present.' : 'Some migrations may still need to run.',
+                'message' => $count >= 15 ? 'All MVP hardening and observability migrations are present.' : 'Some migrations may still need to run.',
             ];
         } catch (Throwable $exception) {
             return ['status' => 'fail', 'message' => 'Migration metadata is unavailable.', 'error' => $exception->getMessage()];
@@ -226,6 +228,56 @@ final class ProductionReadinessService
             'rate_limit_enabled' => (bool) ($this->securityConfig['rate_limit_enabled'] ?? true),
             'rate_limit_max_requests' => (int) ($this->securityConfig['rate_limit_max_requests'] ?? 240),
             'rate_limit_window_seconds' => (int) ($this->securityConfig['rate_limit_window_seconds'] ?? 60),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function observabilityCheck(): array
+    {
+        try {
+            $table = $this->pdo->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'platform_http_metrics'")->fetchColumn();
+            if (!$table) {
+                return ['status' => 'warn', 'message' => 'HTTP metrics table is not available yet. Run migrations.'];
+            }
+
+            $count = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_http_metrics')->fetchColumn();
+            $last = $this->pdo->query('SELECT occurred_at FROM platform_http_metrics ORDER BY occurred_at DESC LIMIT 1')->fetchColumn();
+            return [
+                'status' => 'ok',
+                'message' => 'HTTP metrics recorder is available.',
+                'recorded_requests' => $count,
+                'last_request_at' => $last ?: null,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Observability metrics are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+    /** @return array<string, mixed> */
+    private function backupCheck(): array
+    {
+        $backupDir = $this->rootPath . '/storage/backups';
+        if (!is_dir($backupDir)) {
+            @mkdir($backupDir, 0775, true);
+        }
+
+        $writable = is_dir($backupDir) && is_writable($backupDir);
+        $latest = null;
+        try {
+            $latest = $this->pdo->query("SELECT created_at FROM platform_backup_runs WHERE status = 'completed' ORDER BY created_at DESC LIMIT 1")->fetchColumn() ?: null;
+        } catch (Throwable) {
+            // Table may not exist before Step 21 migration. Keep this as a warning, not a hard failure.
+        }
+
+        if (!$writable) {
+            return ['status' => 'fail', 'message' => 'Backup directory is not writable.', 'backup_dir' => $backupDir];
+        }
+
+        return [
+            'status' => $latest ? 'ok' : 'warn',
+            'message' => $latest ? 'At least one completed backup exists.' : 'Backup directory is writable, but no completed backup has been recorded yet.',
+            'backup_dir' => $backupDir,
+            'latest_completed_backup_at' => $latest,
         ];
     }
 

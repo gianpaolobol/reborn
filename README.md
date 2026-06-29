@@ -307,3 +307,32 @@ powershell -ExecutionPolicy Bypass -File .\scripts\smoke-identity-access.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\smoke-ownership-dashboards.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\smoke-prototype-auth-ui.ps1
 ```
+
+## Step 21 — Observability Dashboard, Backup Automation & Deployment Runbook v1
+
+Step 21 makes the local MVP operable and governable beyond a pure demo.
+
+New capabilities:
+
+- admin observability console in the prototype at `#/observability`;
+- HTTP request metrics persisted in SQLite;
+- admin log viewer for API exception logs;
+- readiness snapshot history;
+- manual SQLite backup creation through API/UI;
+- backup status and restore checklist;
+- deployment runbook and smoke-test run order endpoints.
+
+Run after starting the PHP server:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-production-readiness.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-observability-ops.ps1
+```
+
+Open:
+
+```text
+http://127.0.0.1:8080/prototype/index.html#/observability
+```
+
+Login as `admin@reborn.local / password` to access the protected operational endpoints.

@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Reborn\Shared\Http;
 
 use Throwable;
+use Reborn\Platform\Application\ObservabilityRecorder;
 
 final class Router
 {
-    public function __construct(private readonly ?RateLimiter $rateLimiter = null)
-    {
+    public function __construct(
+        private readonly ?RateLimiter $rateLimiter = null,
+        private readonly ?ObservabilityRecorder $observability = null,
+    ) {
     }
 
     /** @var list<array{method:string, pattern:string, regex:string, params:list<string>, handler:callable}> */
@@ -39,6 +42,7 @@ final class Router
 
     public function dispatch(): JsonResponse
     {
+        $startedAt = microtime(true);
         $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
         $path = rtrim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/', '/') ?: '/';
         $methodMatches = [];
@@ -60,46 +64,54 @@ final class Router
 
             $request = Request::fromGlobals($params);
             if ($request->jsonError() !== null) {
-                return JsonResponse::badRequest('Malformed JSON body.', ['json_error' => $request->jsonError()], $request->requestId());
+                return $this->recordAndReturn(JsonResponse::badRequest('Malformed JSON body.', ['json_error' => $request->jsonError()], $request->requestId()), $request, $startedAt);
             }
 
             $rateLimitResponse = $this->rateLimiter?->enforce($request);
             if ($rateLimitResponse instanceof JsonResponse) {
-                return $rateLimitResponse;
+                return $this->recordAndReturn($rateLimitResponse, $request, $startedAt);
             }
 
             try {
                 $response = ($route['handler'])($request);
-                return $response instanceof JsonResponse ? $response : JsonResponse::ok(['data' => $response], $request->requestId());
+                $jsonResponse = $response instanceof JsonResponse ? $response : JsonResponse::ok(['data' => $response], $request->requestId());
+                return $this->recordAndReturn($jsonResponse, $request, $startedAt);
             } catch (ValidationException $exception) {
                 $fields = $exception->details()['fields'] ?? [];
-                return JsonResponse::validation(is_array($fields) ? $fields : [], $request->requestId());
+                return $this->recordAndReturn(JsonResponse::validation(is_array($fields) ? $fields : [], $request->requestId()), $request, $startedAt);
             } catch (ApiException $exception) {
-                return JsonResponse::error(
+                return $this->recordAndReturn(JsonResponse::error(
                     $exception->errorCode(),
                     $exception->getMessage(),
                     $exception->statusCode(),
                     $exception->details(),
                     $request->requestId()
-                );
+                ), $request, $startedAt);
             } catch (Throwable $exception) {
                 $this->logException($exception, $request);
                 if (($_ENV['APP_DEBUG'] ?? 'true') === 'true') {
-                    return JsonResponse::serverError($exception->getMessage(), $request->requestId());
+                    return $this->recordAndReturn(JsonResponse::serverError($exception->getMessage(), $request->requestId()), $request, $startedAt);
                 }
 
-                return JsonResponse::serverError('Unexpected server error.', $request->requestId());
+                return $this->recordAndReturn(JsonResponse::serverError('Unexpected server error.', $request->requestId()), $request, $startedAt);
             }
         }
 
         $request = Request::fromGlobals();
         if ($methodMatches !== []) {
-            return JsonResponse::error('METHOD_NOT_ALLOWED', 'HTTP method not allowed for this route.', 405, [
+            return $this->recordAndReturn(JsonResponse::error('METHOD_NOT_ALLOWED', 'HTTP method not allowed for this route.', 405, [
                 'allowed_methods' => array_values(array_unique($methodMatches)),
-            ], $request->requestId());
+            ], $request->requestId()), $request, $startedAt);
         }
 
-        return JsonResponse::notFound('API route not found.', $request->requestId());
+        return $this->recordAndReturn(JsonResponse::notFound('API route not found.', $request->requestId()), $request, $startedAt);
+    }
+
+    private function recordAndReturn(JsonResponse $response, Request $request, float $startedAt): JsonResponse
+    {
+        $durationMs = (int) round((microtime(true) - $startedAt) * 1000);
+        $this->observability?->record($request, $response->statusCode(), $durationMs);
+        return $response;
     }
 
     /** @return array{string, list<string>} */

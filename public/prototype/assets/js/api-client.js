@@ -457,6 +457,42 @@
       });
     }
 
+
+
+    async getReadinessSnapshots(limit = 20) {
+      return this.request(`/api/v1/platform/readiness-snapshots?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getObservability() {
+      return this.request('/api/v1/platform/observability');
+    }
+
+    async getHttpMetrics(limit = 50) {
+      return this.request(`/api/v1/platform/http-metrics?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getPlatformLogs(limit = 80) {
+      return this.request(`/api/v1/platform/logs?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getBackups(limit = 20) {
+      return this.request(`/api/v1/platform/backups?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createBackup() {
+      return this.request('/api/v1/platform/backups', {
+        method: 'POST'
+      });
+    }
+
+    async getDeploymentRunbook() {
+      return this.request('/api/v1/platform/deployment-runbook');
+    }
+
+    async getSmokeTestsSummary() {
+      return this.request('/api/v1/platform/smoke-tests-summary');
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -514,7 +550,15 @@
           platform_readiness: null,
           security_policy: null,
           runtime_report: null,
-          deploy_checklist: null
+          deploy_checklist: null,
+          observability: null,
+          http_metrics: null,
+          platform_logs: null,
+          backup_status: null,
+          backups: [],
+          readiness_snapshots: [],
+          deployment_runbook: null,
+          smoke_tests: null
         };
       }
 
@@ -528,6 +572,13 @@
       let securityPolicy = { security_policy: null };
       let runtimeReport = { runtime: null };
       let deployChecklist = { deploy_checklist: null };
+      let observability = { observability: null };
+      let httpMetrics = { http_metrics: null };
+      let platformLogs = { logs: null };
+      let backups = { backup_status: null, backups: [] };
+      let readinessSnapshots = { readiness_snapshots: [] };
+      let deploymentRunbook = { deployment_runbook: null };
+      let smokeTests = { smoke_tests: null };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -612,6 +663,42 @@
         } catch (_error) {
           deployChecklist = { deploy_checklist: null };
         }
+        try {
+          observability = await this.getObservability();
+        } catch (_error) {
+          observability = { observability: null };
+        }
+        try {
+          httpMetrics = await this.getHttpMetrics();
+        } catch (_error) {
+          httpMetrics = { http_metrics: null };
+        }
+        try {
+          platformLogs = await this.getPlatformLogs(40);
+        } catch (_error) {
+          platformLogs = { logs: null };
+        }
+        try {
+          backups = await this.getBackups();
+        } catch (_error) {
+          backups = { backup_status: null, backups: [] };
+        }
+        try {
+          readinessSnapshots = await this.getReadinessSnapshots();
+        } catch (_error) {
+          readinessSnapshots = { readiness_snapshots: [] };
+        }
+        try {
+          deploymentRunbook = await this.getDeploymentRunbook();
+        } catch (_error) {
+          deploymentRunbook = { deployment_runbook: null };
+        }
+        try {
+          smokeTests = await this.getSmokeTestsSummary();
+        } catch (_error) {
+          smokeTests = { smoke_tests: null };
+        }
+
       }
 
       if (latestCase && this.getToken()) {
@@ -730,7 +817,15 @@
         platform_readiness: platformReadiness.readiness || null,
         security_policy: securityPolicy.security_policy || null,
         runtime_report: runtimeReport.runtime || null,
-        deploy_checklist: deployChecklist.deploy_checklist || null
+        deploy_checklist: deployChecklist.deploy_checklist || null,
+        observability: observability.observability || null,
+        http_metrics: httpMetrics.http_metrics || null,
+        platform_logs: platformLogs.logs || null,
+        backup_status: backups.backup_status || null,
+        backups: backups.backups || [],
+        readiness_snapshots: readinessSnapshots.readiness_snapshots || [],
+        deployment_runbook: deploymentRunbook.deployment_runbook || null,
+        smoke_tests: smokeTests.smoke_tests || null
       };
     }
   }

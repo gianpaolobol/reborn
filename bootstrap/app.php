@@ -74,6 +74,9 @@ use Reborn\Operations\Application\RecordOpsModerationActionService;
 use Reborn\Operations\Application\ResolveOpsReviewItemService;
 use Reborn\Operations\Infrastructure\SqliteAdminOperationsRepository;
 use Reborn\Operations\Presentation\AdminOperationsController;
+use Reborn\Platform\Application\BackupService;
+use Reborn\Platform\Application\ObservabilityRecorder;
+use Reborn\Platform\Application\OperationalTelemetryService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Platform\Presentation\PlatformController;
 use Reborn\Provider\Application\ProviderMatchingService;
@@ -324,18 +327,29 @@ $adminOperationsController = new AdminOperationsController(
     $authContext
 );
 
+$productionReadinessService = new ProductionReadinessService(
+    $pdo,
+    $config['app'],
+    $config['database'],
+    $config['security'],
+    dirname(__DIR__)
+);
+$backupService = new BackupService($pdo, $config['database'], dirname(__DIR__));
+$operationalTelemetryService = new OperationalTelemetryService(
+    $pdo,
+    $productionReadinessService,
+    $backupService,
+    dirname(__DIR__)
+);
+
 $platformController = new PlatformController(
-    new ProductionReadinessService(
-        $pdo,
-        $config['app'],
-        $config['database'],
-        $config['security'],
-        dirname(__DIR__)
-    ),
+    $productionReadinessService,
+    $operationalTelemetryService,
+    $backupService,
     $authContext
 );
 
-$router = new Router(new RateLimiter($pdo, $config['security']));
+$router = new Router(new RateLimiter($pdo, $config['security']), new ObservabilityRecorder($pdo));
 (require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $repairFulfilmentController, $learningController, $trustController, $governanceController, $adminOperationsController, $platformController, $authContext, $pdo);
 
 return [
