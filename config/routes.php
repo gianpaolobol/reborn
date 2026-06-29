@@ -13,6 +13,7 @@ use Reborn\Identity\Presentation\AuthController;
 use Reborn\Marketplace\Presentation\RepairPathDecisionController;
 use Reborn\Marketplace\Presentation\RepairOrderController;
 use Reborn\Operations\Presentation\AdminOperationsController;
+use Reborn\Platform\Presentation\PlatformController;
 use Reborn\Provider\Presentation\ProviderMatchController;
 use Reborn\Repair\Presentation\RepairController;
 use Reborn\Shared\Http\JsonResponse;
@@ -20,7 +21,7 @@ use Reborn\Shared\Http\Request;
 use Reborn\Shared\Http\Router;
 use Reborn\Trust\Presentation\TrustController;
 
-return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, ProviderMatchController $providerMatchController, RepairOrderController $repairOrderController, RepairFulfilmentController $repairFulfilmentController, LearningController $learningController, TrustController $trustController, GovernanceController $governanceController, AdminOperationsController $adminOperationsController, AuthContext $auth, PDO $pdo): void {
+return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, ProviderMatchController $providerMatchController, RepairOrderController $repairOrderController, RepairFulfilmentController $repairFulfilmentController, LearningController $learningController, TrustController $trustController, GovernanceController $governanceController, AdminOperationsController $adminOperationsController, PlatformController $platformController, AuthContext $auth, PDO $pdo): void {
     $router->get('/api/health', static function (Request $request): JsonResponse {
         return JsonResponse::ok([
             'status' => 'ok',
@@ -61,10 +62,22 @@ return static function (Router $router, RepairController $repairController, Auth
                 'ops_review_queue',
                 'ops_escalations',
                 'ops_audit_log',
+                'production_readiness_hardening',
+                'security_headers',
+                'rate_limiting',
+                'readiness_checks',
+                'deploy_checklist',
                 'domain_events',
             ],
         ], $request->requestId());
     });
+
+    $router->get('/api/ready', [$platformController, 'ready']);
+    $router->get('/api/v1/platform/readiness', [$platformController, 'ready']);
+    $router->get('/api/v1/platform/security-policy', [$platformController, 'securityPolicy']);
+    $router->get('/api/v1/platform/deploy-checklist', [$platformController, 'deployChecklist']);
+    $router->get('/api/v1/platform/runtime', [$platformController, 'runtime']);
+    $router->post('/api/v1/platform/readiness-snapshots', [$platformController, 'storeReadinessSnapshot']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

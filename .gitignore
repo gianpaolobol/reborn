@@ -36,3 +36,4 @@ vendor/
 debug-db.php
 fix-demo-passwords.php
 login.json
+/storage/backups/

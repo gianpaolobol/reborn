@@ -74,6 +74,8 @@ use Reborn\Operations\Application\RecordOpsModerationActionService;
 use Reborn\Operations\Application\ResolveOpsReviewItemService;
 use Reborn\Operations\Infrastructure\SqliteAdminOperationsRepository;
 use Reborn\Operations\Presentation\AdminOperationsController;
+use Reborn\Platform\Application\ProductionReadinessService;
+use Reborn\Platform\Presentation\PlatformController;
 use Reborn\Provider\Application\ProviderMatchingService;
 use Reborn\Provider\Application\GetProviderMatchService;
 use Reborn\Provider\Application\GetProviderQuoteRequestService;
@@ -98,6 +100,7 @@ use Reborn\Repair\Infrastructure\SqliteRepairCaseRepository;
 use Reborn\Repair\Presentation\RepairController;
 use Reborn\Shared\Database\Connection;
 use Reborn\Shared\Domain\EventBus;
+use Reborn\Shared\Http\RateLimiter;
 use Reborn\Shared\Http\Router;
 use Reborn\Shared\Storage\LocalFileStorage;
 use Reborn\Shared\Support\Env;
@@ -117,6 +120,7 @@ $config = [
     'app' => require dirname(__DIR__) . '/config/app.php',
     'database' => require dirname(__DIR__) . '/config/database.php',
     'auth' => require dirname(__DIR__) . '/config/auth.php',
+    'security' => require dirname(__DIR__) . '/config/security.php',
 ];
 
 $connection = new Connection($config['database']);
@@ -320,8 +324,19 @@ $adminOperationsController = new AdminOperationsController(
     $authContext
 );
 
-$router = new Router();
-(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $repairFulfilmentController, $learningController, $trustController, $governanceController, $adminOperationsController, $authContext, $pdo);
+$platformController = new PlatformController(
+    new ProductionReadinessService(
+        $pdo,
+        $config['app'],
+        $config['database'],
+        $config['security'],
+        dirname(__DIR__)
+    ),
+    $authContext
+);
+
+$router = new Router(new RateLimiter($pdo, $config['security']));
+(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $repairOrderController, $repairFulfilmentController, $learningController, $trustController, $governanceController, $adminOperationsController, $platformController, $authContext, $pdo);
 
 return [
     'router' => $router,

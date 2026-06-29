@@ -13,6 +13,8 @@ if (PHP_SAPI === 'cli-server') {
 
 $app = require dirname(__DIR__) . '/bootstrap/app.php';
 
+Reborn\Shared\Http\SecurityHeaders::apply($app['config']['security'] ?? []);
+
 /** @var Reborn\Shared\Http\Router $router */
 $router = $app['router'];
 

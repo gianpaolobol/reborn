@@ -8,6 +8,10 @@ use Throwable;
 
 final class Router
 {
+    public function __construct(private readonly ?RateLimiter $rateLimiter = null)
+    {
+    }
+
     /** @var list<array{method:string, pattern:string, regex:string, params:list<string>, handler:callable}> */
     private array $routes = [];
 
@@ -57,6 +61,11 @@ final class Router
             $request = Request::fromGlobals($params);
             if ($request->jsonError() !== null) {
                 return JsonResponse::badRequest('Malformed JSON body.', ['json_error' => $request->jsonError()], $request->requestId());
+            }
+
+            $rateLimitResponse = $this->rateLimiter?->enforce($request);
+            if ($rateLimitResponse instanceof JsonResponse) {
+                return $rateLimitResponse;
             }
 
             try {

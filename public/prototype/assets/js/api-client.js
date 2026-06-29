@@ -435,6 +435,28 @@
       return this.request('/api/v1/ops/policies');
     }
 
+    async getPlatformReadiness() {
+      return this.request('/api/v1/platform/readiness');
+    }
+
+    async getSecurityPolicy() {
+      return this.request('/api/v1/platform/security-policy');
+    }
+
+    async getRuntimeReport() {
+      return this.request('/api/v1/platform/runtime');
+    }
+
+    async getDeployChecklist() {
+      return this.request('/api/v1/platform/deploy-checklist');
+    }
+
+    async createReadinessSnapshot() {
+      return this.request('/api/v1/platform/readiness-snapshots', {
+        method: 'POST'
+      });
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -488,7 +510,11 @@
           ops_policy: null,
           ops_review_items: [],
           ops_review_item: null,
-          ops_escalations: []
+          ops_escalations: [],
+          platform_readiness: null,
+          security_policy: null,
+          runtime_report: null,
+          deploy_checklist: null
         };
       }
 
@@ -498,6 +524,21 @@
       ]);
 
       let cases = { repair_cases: [] };
+      let platformReadiness = { readiness: null };
+      let securityPolicy = { security_policy: null };
+      let runtimeReport = { runtime: null };
+      let deployChecklist = { deploy_checklist: null };
+      try {
+        platformReadiness = await this.getPlatformReadiness();
+      } catch (_error) {
+        platformReadiness = { readiness: null };
+      }
+      try {
+        securityPolicy = await this.getSecurityPolicy();
+      } catch (_error) {
+        securityPolicy = { security_policy: null };
+      }
+
       if (this.getToken()) {
         cases = await this.listRepairCases().catch(() => ({ repair_cases: [] }));
       }
@@ -560,6 +601,16 @@
           opsEscalations = await this.getOpsEscalations();
         } catch (_error) {
           opsEscalations = { escalations: [] };
+        }
+        try {
+          runtimeReport = await this.getRuntimeReport();
+        } catch (_error) {
+          runtimeReport = { runtime: null };
+        }
+        try {
+          deployChecklist = await this.getDeployChecklist();
+        } catch (_error) {
+          deployChecklist = { deploy_checklist: null };
         }
       }
 
@@ -675,7 +726,11 @@
         ops_policy: opsSummary.policy || null,
         ops_review_items: opsReviewItems.review_items || [],
         ops_review_item: (opsReviewItems.review_items || [])[0] || null,
-        ops_escalations: opsEscalations.escalations || []
+        ops_escalations: opsEscalations.escalations || [],
+        platform_readiness: platformReadiness.readiness || null,
+        security_policy: securityPolicy.security_policy || null,
+        runtime_report: runtimeReport.runtime || null,
+        deploy_checklist: deployChecklist.deploy_checklist || null
       };
     }
   }

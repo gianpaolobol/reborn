@@ -86,7 +86,8 @@ function stepper(active) {
     ['learning', '07', 'Learn'],
     ['trust', '08', 'Trust'],
     ['governance', '09', 'Govern'],
-    ['ops', '10', 'Ops']
+    ['ops', '10', 'Ops'],
+    ['readiness', '11', 'Ready']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -1199,6 +1200,54 @@ function opsConsole() {
   `, { currentStep: 'ops' });
 }
 
+
+function productionReadiness() {
+  setActiveNav('readiness');
+  const readiness = S.api.platformReadiness || {
+    status: S.api.status === 'live' ? 'unknown' : 'mock',
+    environment: 'prototype',
+    checks: {
+      database: { status: 'mock', message: 'Live API required for database readiness.' },
+      storage: { status: 'mock', message: 'Live API required for storage readiness.' },
+      security: { status: 'mock', security_headers_enabled: false, rate_limit_enabled: false },
+      runtime: { status: 'mock', php_version: 'n/a' }
+    }
+  };
+  const policy = S.api.securityPolicy || { policy_version: 'production_readiness_v1', rate_limit_enabled: false, security_headers_enabled: false, headers: {} };
+  const runtime = S.api.runtimeReport || {};
+  const checklist = S.api.deployChecklist || { items: ['Login as admin to load production checklist.'], blocked_until: [] };
+  const checks = readiness.checks || {};
+  const checkRows = Object.entries(checks).map(([name, check]) => `<tr><th>${safe(name)}</th><td><span class="badge ${check.status === 'ok' ? 'green' : check.status === 'warn' ? 'orange' : 'danger'}">${safe(check.status || 'unknown')}</span></td><td>${safe(check.message || check.php_version || '')}</td></tr>`).join('');
+  const itemRows = (checklist.items || []).map(item => `<div class="timeline-row"><div class="timeline-time">Check</div><div class="timeline-content"><strong>${safe(item)}</strong></div></div>`).join('');
+  return layout('Production Readiness', html`
+    <section class="section-head"><div><p class="eyebrow">Step 20 · Production Readiness Hardening</p><h2>Make Re-born operable beyond a demo.</h2></div><p class="muted">This panel exposes readiness checks, security policy, runtime diagnostics and deploy blockers without introducing external infrastructure too early.</p></section>
+    <section class="grid two">
+      <div class="panel stack"><h3>Readiness status</h3><div class="grid two">${metric(readiness.status || 'unknown', 'System status')}${metric(readiness.environment || 'unknown', 'Environment')}${metric(policy.rate_limit_enabled ? 'on' : 'off', 'Rate limit')}${metric(policy.security_headers_enabled ? 'on' : 'off', 'Security headers')}</div><div class="actions"><button class="btn green" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh readiness</button><button class="btn secondary" onclick="createReadinessSnapshot()" ${S.busy || S.auth.user?.role !== 'admin' ? 'disabled' : ''}>Persist snapshot</button><a class="btn secondary" href="#/ops">Back to Ops</a></div><p class="muted small">Snapshots are admin-only and are used to prove readiness state before pilot or deploy decisions.</p></div>
+      <aside class="panel dark-panel stack"><h3>Runtime</h3>${badges([[runtime.php_version || 'PHP runtime pending', 'blue'], [runtime.sapi || 'API mode', ''], [runtime.app_debug === false ? 'debug off' : 'debug/dev', runtime.app_debug === false ? 'green' : 'orange']])}<p class="muted small">Admin runtime details are intentionally protected. Public readiness only exposes safe aggregate checks.</p></aside>
+    </section>
+    <section class="section panel stack"><h3>Readiness checks</h3><table class="table"><tr><th>Area</th><th>Status</th><th>Message</th></tr>${checkRows}</table></section>
+    <section class="section grid two"><div class="panel stack"><h3>Security policy</h3>${badges([[policy.policy_version || 'production_readiness_v1', 'blue'], [policy.security_headers_enabled ? 'headers enabled' : 'headers off', policy.security_headers_enabled ? 'green' : 'orange'], [policy.rate_limit_enabled ? `${policy.rate_limit_max_requests || '?'} req/window` : 'rate limit off', policy.rate_limit_enabled ? 'green' : 'orange']])}<p class="muted small">CSP is deferred because the current prototype still uses inline handlers. API JSON receives no-store and defensive headers.</p></div><div class="panel stack"><h3>Deploy checklist</h3><div class="timeline">${itemRows}</div></div></section>
+  `, { currentStep: 'readiness' });
+}
+
+async function createReadinessSnapshot() {
+  if (S.auth.user?.role !== 'admin') {
+    toast('Admin login required to persist readiness snapshots.');
+    return;
+  }
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.createReadinessSnapshot();
+    toast(`Readiness snapshot ${String(payload.readiness_snapshot.id).slice(0, 8)} saved.`);
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Readiness snapshot failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 function aiGeneration() {
   return layout('AI generation', html`
     <section class="grid two"><div class="panel stack"><p class="eyebrow">AI repair model</p><h2>Generate only when repair knowledge is missing.</h2><p class="muted">AI generation is positioned as a repair fallback, not as the product. Generated models need validation before becoming verified graph assets.</p><div class="timeline"><div class="timeline-row"><div class="timeline-time">Step 1</div><div class="timeline-content"><strong>Geometry proposal</strong><p class="muted small">AI estimates shape from photos, dimensions and similar parts.</p></div></div><div class="timeline-row"><div class="timeline-time">Step 2</div><div class="timeline-content"><strong>Constraint check</strong><p class="muted small">Wall thickness, tolerance, material and mechanical risk.</p></div></div><div class="timeline-row"><div class="timeline-time">Step 3</div><div class="timeline-content"><strong>Provider validation</strong><p class="muted small">Provider flags printability before order confirmation.</p></div></div></div><div class="actions"><a class="btn orange" href="#/provider-network">Validate with provider</a><a class="btn secondary" href="#/repair-paths">Back to safer paths</a></div></div><aside class="panel stack"><h3>AI Premium trigger</h3><p class="muted">This flow consumes Repair Credits and creates potential marketplace assets if the model becomes verified.</p>${badges([['3 credits', 'orange'], ['Validation required', 'danger'], ['Learning event', 'blue']])}</aside></section>
@@ -1249,6 +1298,7 @@ const routes = {
   '/trust': trust,
   '/governance': governance,
   '/ops': opsConsole,
+  '/readiness': productionReadiness,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -1334,6 +1384,10 @@ async function refreshApiData(options = {}) {
       opsReviewItems: bootstrap.ops_review_items || [],
       opsReviewItem: bootstrap.ops_review_item || (bootstrap.ops_review_items || [])[0] || S.api.opsReviewItem,
       opsEscalations: bootstrap.ops_escalations || [],
+      platformReadiness: bootstrap.platform_readiness || S.api.platformReadiness,
+      securityPolicy: bootstrap.security_policy || S.api.securityPolicy,
+      runtimeReport: bootstrap.runtime_report || S.api.runtimeReport,
+      deployChecklist: bootstrap.deploy_checklist || S.api.deployChecklist,
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
@@ -2327,7 +2381,7 @@ async function handleLogout() {
     if (S.auth.status === 'authenticated') await window.REBORN_API.logout();
     else window.REBORN_API.setToken(null);
     S.setAuth({ status: 'guest', user: null, tokenStored: false, lastLoginAt: null });
-    S.setApi({ dashboard: null, roleDashboards: {}, repairCases: [], repairCase: null, repairPaths: [], repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, repairOrders: [], repairOrder: null, paymentIntents: [], paymentIntent: null, fulfilments: [], fulfilment: null, completionReports: [], completionReport: null, learningEvents: [], learningEvent: null, trustReviews: [], trustReview: null, providerQualityScores: [], providerQualityScore: null, providerTrustSignals: [], governanceSummary: null, governancePolicy: null, providerRankings: [], providerRankingSnapshot: null, governanceActions: [] });
+    S.setApi({ dashboard: null, roleDashboards: {}, repairCases: [], repairCase: null, repairPaths: [], repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, repairOrders: [], repairOrder: null, paymentIntents: [], paymentIntent: null, fulfilments: [], fulfilment: null, completionReports: [], completionReport: null, learningEvents: [], learningEvent: null, trustReviews: [], trustReview: null, providerQualityScores: [], providerQualityScore: null, providerTrustSignals: [], governanceSummary: null, governancePolicy: null, providerRankings: [], providerRankingSnapshot: null, governanceActions: [], platformReadiness: null, securityPolicy: null, runtimeReport: null, deployChecklist: null });
     toast('Logged out.');
     location.hash = '#/login';
   } catch (error) {
@@ -2414,6 +2468,7 @@ window.assignOpsReviewItem = assignOpsReviewItem;
 window.recordOpsModerationAction = recordOpsModerationAction;
 window.createOpsEscalation = createOpsEscalation;
 window.resolveOpsReviewItem = resolveOpsReviewItem;
+window.createReadinessSnapshot = createReadinessSnapshot;
 window.handleLogin = handleLogin;
 window.loginAsDemo = loginAsDemo;
 window.handleLogout = handleLogout;

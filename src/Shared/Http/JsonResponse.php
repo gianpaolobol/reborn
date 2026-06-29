@@ -77,6 +77,7 @@ final class JsonResponse
         http_response_code($this->status);
         header('Content-Type: application/json; charset=utf-8');
         header('X-Reborn-API: Repair-Intelligence-v1');
+        SecurityHeaders::applyApi();
 
         foreach ($this->headers as $name => $value) {
             header($name . ': ' . $value);
