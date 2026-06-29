@@ -493,6 +493,81 @@
       return this.request('/api/v1/platform/smoke-tests-summary');
     }
 
+    async getStatusPage() {
+      return this.request('/api/status');
+    }
+
+    async getIncidentResponse() {
+      return this.request('/api/v1/platform/incident-response');
+    }
+
+    async getAlertRules() {
+      return this.request('/api/v1/platform/alert-rules');
+    }
+
+    async evaluateAlerts() {
+      return this.request('/api/v1/platform/alerts/evaluate', { method: 'POST' });
+    }
+
+    async getAlerts(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/alerts?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async acknowledgeAlert(id) {
+      return this.request(`/api/v1/platform/alerts/${encodeURIComponent(id)}/acknowledge`, { method: 'POST' });
+    }
+
+    async resolveAlert(id, message = 'Resolved from prototype console.') {
+      return this.request(`/api/v1/platform/alerts/${encodeURIComponent(id)}/resolve`, {
+        method: 'POST',
+        body: { message }
+      });
+    }
+
+    async getIncidents(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/incidents?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createIncident(payload) {
+      return this.request('/api/v1/platform/incidents', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async updateIncidentStatus(id, payload) {
+      return this.request(`/api/v1/platform/incidents/${encodeURIComponent(id)}/status`, {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getStatusUpdates(limit = 20) {
+      return this.request(`/api/v1/platform/status-updates?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createStatusUpdate(payload) {
+      return this.request('/api/v1/platform/status-updates', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getMaintenanceWindows(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/maintenance-windows?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createMaintenanceWindow(payload) {
+      return this.request('/api/v1/platform/maintenance-windows', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async closeMaintenanceWindow(id) {
+      return this.request(`/api/v1/platform/maintenance-windows/${encodeURIComponent(id)}/close`, { method: 'POST' });
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -558,7 +633,14 @@
           backups: [],
           readiness_snapshots: [],
           deployment_runbook: null,
-          smoke_tests: null
+          smoke_tests: null,
+          status_page: null,
+          incident_response: null,
+          alert_rules: [],
+          alerts: [],
+          incidents: [],
+          status_updates: [],
+          maintenance_windows: []
         };
       }
 
@@ -579,6 +661,13 @@
       let readinessSnapshots = { readiness_snapshots: [] };
       let deploymentRunbook = { deployment_runbook: null };
       let smokeTests = { smoke_tests: null };
+      let statusPage = { status_page: null };
+      let incidentResponse = { incident_response: null };
+      let alertRules = { alert_rules: [] };
+      let alerts = { alerts: [] };
+      let incidents = { incidents: [] };
+      let statusUpdates = { status_updates: [] };
+      let maintenanceWindows = { maintenance_windows: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -588,6 +677,11 @@
         securityPolicy = await this.getSecurityPolicy();
       } catch (_error) {
         securityPolicy = { security_policy: null };
+      }
+      try {
+        statusPage = await this.getStatusPage();
+      } catch (_error) {
+        statusPage = { status_page: null };
       }
 
       if (this.getToken()) {
@@ -697,6 +791,36 @@
           smokeTests = await this.getSmokeTestsSummary();
         } catch (_error) {
           smokeTests = { smoke_tests: null };
+        }
+        try {
+          incidentResponse = await this.getIncidentResponse();
+        } catch (_error) {
+          incidentResponse = { incident_response: null };
+        }
+        try {
+          alertRules = await this.getAlertRules();
+        } catch (_error) {
+          alertRules = { alert_rules: [] };
+        }
+        try {
+          alerts = await this.getAlerts();
+        } catch (_error) {
+          alerts = { alerts: [] };
+        }
+        try {
+          incidents = await this.getIncidents();
+        } catch (_error) {
+          incidents = { incidents: [] };
+        }
+        try {
+          statusUpdates = await this.getStatusUpdates();
+        } catch (_error) {
+          statusUpdates = { status_updates: [] };
+        }
+        try {
+          maintenanceWindows = await this.getMaintenanceWindows();
+        } catch (_error) {
+          maintenanceWindows = { maintenance_windows: [] };
         }
 
       }
@@ -825,7 +949,14 @@
         backups: backups.backups || [],
         readiness_snapshots: readinessSnapshots.readiness_snapshots || [],
         deployment_runbook: deploymentRunbook.deployment_runbook || null,
-        smoke_tests: smokeTests.smoke_tests || null
+        smoke_tests: smokeTests.smoke_tests || null,
+        status_page: statusPage.status_page || null,
+        incident_response: incidentResponse.incident_response || null,
+        alert_rules: alertRules.alert_rules || [],
+        alerts: alerts.alerts || [],
+        incidents: incidents.incidents || [],
+        status_updates: statusUpdates.status_updates || [],
+        maintenance_windows: maintenanceWindows.maintenance_windows || []
       };
     }
   }

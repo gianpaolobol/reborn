@@ -336,3 +336,28 @@ http://127.0.0.1:8080/prototype/index.html#/observability
 ```
 
 Login as `admin@reborn.local / password` to access the protected operational endpoints.
+
+## Step 22 — Incident Response, Alerting & Status Management v1
+
+Step 22 turns Step 21 observability into an operator workflow for pilot/beta governance.
+
+It adds:
+
+- SQLite-backed alert rules and alert lifecycle;
+- incident lifecycle and status updates;
+- public local/pilot status payload at `/api/status`;
+- maintenance windows;
+- admin prototype console at `#/incidents`;
+- smoke test `scripts/smoke-incident-response-status.ps1`.
+
+Run after Step 20/21 checks:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-incident-response-status.ps1
+```
+
+Open the admin console:
+
+```text
+http://127.0.0.1:8080/prototype/index.html#/incidents
+```

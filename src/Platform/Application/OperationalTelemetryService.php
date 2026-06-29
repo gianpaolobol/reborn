@@ -105,7 +105,7 @@ final class OperationalTelemetryService
     public function deploymentRunbook(): array
     {
         return [
-            'runbook_version' => 'deployment_runbook_v1',
+            'runbook_version' => 'deployment_runbook_v2_step22',
             'purpose' => 'Move Re-born from local MVP to controlled pilot without pretending it is enterprise-grade production yet.',
             'phases' => [
                 [
@@ -132,6 +132,7 @@ final class OperationalTelemetryService
                         'backup restore procedure has been rehearsed',
                         'storage/uploads retention policy is documented',
                         'operator can inspect API logs and readiness snapshots',
+                        'operator can evaluate alerts and update the local/pilot status page',
                     ],
                 ],
                 [
@@ -139,6 +140,7 @@ final class OperationalTelemetryService
                     'checks' => [
                         'readiness is ready or degraded only for accepted warnings',
                         'observability dashboard shows no repeated 500 errors',
+                        'Step 22 alert evaluation has been run and no unresolved critical incident blocks the release',
                         'admin ops workflow still works after deploy',
                         'known mocks are explicitly disclosed in demo or pilot notes',
                     ],
@@ -178,6 +180,7 @@ final class OperationalTelemetryService
             'smoke-admin-ops-moderation.ps1' => 'Admin ops',
             'smoke-production-readiness.ps1' => 'Production readiness',
             'smoke-observability-ops.ps1' => 'Step 21 observability ops',
+            'smoke-incident-response-status.ps1' => 'Step 22 incident response status',
         ];
 
         $rows = [];

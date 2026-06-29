@@ -96,7 +96,8 @@ function stepper(active) {
     ['governance', '09', 'Govern'],
     ['ops', '10', 'Ops'],
     ['readiness', '11', 'Ready'],
-    ['observability', '12', 'Observe']
+    ['observability', '12', 'Observe'],
+    ['incidents', '13', 'Respond']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -1320,6 +1321,184 @@ async function createBackupNow() {
   }
 }
 
+function incidentResponseDashboard() {
+  setActiveNav('incidents');
+  if (S.auth.user?.role !== 'admin') {
+    return layout('Incident Response', authRequiredPanel('the Step 22 incident response console'), { currentStep: 'incidents' });
+  }
+
+  const response = S.api.incidentResponse || {};
+  const statusPage = S.api.statusPage || response.status_page || {};
+  const alerts = S.api.alerts || response.active_alerts || [];
+  const incidents = S.api.incidents || response.active_incidents || [];
+  const rules = S.api.alertRules || [];
+  const updates = S.api.statusUpdates || statusPage.recent_updates || [];
+  const maintenance = S.api.maintenanceWindows || statusPage.maintenance_windows || [];
+  const components = statusPage.components || [];
+
+  const alertRows = alerts.slice(0, 8).map(alert => `<tr><td><span class="badge ${alert.severity === 'critical' || alert.severity === 'high' ? 'danger' : alert.severity === 'medium' ? 'orange' : 'blue'}">${safe(alert.severity)}</span></td><td>${safe(alert.name)}</td><td>${safe(alert.status)}</td><td>${safe(alert.metric_value)} / ${safe(alert.threshold_value)}</td><td><button class="mini-button" onclick="acknowledgeAlert('${safe(alert.id)}')">Ack</button> <button class="mini-button" onclick="resolveAlert('${safe(alert.id)}')">Resolve</button></td></tr>`).join('') || '<tr><td colspan="5">No active alerts. Run evaluation after smoke tests.</td></tr>';
+  const incidentRows = incidents.slice(0, 8).map(incident => `<tr><td><span class="badge ${incident.severity === 'critical' || incident.severity === 'high' ? 'danger' : incident.severity === 'medium' ? 'orange' : 'blue'}">${safe(incident.severity)}</span></td><td>${safe(incident.title)}</td><td>${safe(incident.status)}</td><td>${safe(incident.updated_at)}</td><td><button class="mini-button" onclick="moveIncidentToMonitoring('${safe(incident.id)}')">Monitor</button> <button class="mini-button" onclick="resolveIncident('${safe(incident.id)}')">Resolve</button></td></tr>`).join('') || '<tr><td colspan="5">No active incidents.</td></tr>';
+  const ruleRows = rules.slice(0, 6).map(rule => `<div class="timeline-row"><div class="timeline-time">${safe(rule.severity)}</div><div class="timeline-content"><strong>${safe(rule.name)}</strong><p class="muted small">${safe(rule.metric)} ${safe(rule.comparator)} ${safe(rule.threshold_value)} · ${safe(rule.window_minutes)} min window · ${rule.enabled ? 'enabled' : 'disabled'}</p></div></div>`).join('') || '<p class="muted small">Alert rules unavailable.</p>';
+  const updateRows = updates.slice(0, 6).map(update => `<div class="timeline-row"><div class="timeline-time">${safe(update.status)}</div><div class="timeline-content"><strong>${safe(update.component)}</strong><p class="muted small">${safe(update.message)} · ${safe(update.created_at)}</p></div></div>`).join('') || '<p class="muted small">No status updates yet.</p>';
+  const maintenanceRows = maintenance.slice(0, 4).map(item => `<div class="timeline-row"><div class="timeline-time">${safe(item.status)}</div><div class="timeline-content"><strong>${safe(item.title)}</strong><p class="muted small">${safe(item.starts_at)} → ${safe(item.ends_at)}</p><button class="mini-button" onclick="closeMaintenanceWindow('${safe(item.id)}')">Close</button></div></div>`).join('') || '<p class="muted small">No active maintenance windows.</p>';
+  const componentRows = components.map(component => `<div class="timeline-row"><div class="timeline-time">${safe(component.status)}</div><div class="timeline-content"><strong>${safe(component.name)}</strong></div></div>`).join('') || '<p class="muted small">Status components unavailable.</p>';
+
+  return layout('Incident Response', html`
+    <section class="section-head"><div><p class="eyebrow">Step 22 · Incident Response & Status Management</p><h2>From observability to action.</h2></div><p class="muted">This console converts Step 21 telemetry into alert evaluation, incident tracking, status updates and maintenance windows for a controlled beta/pilot workflow.</p></section>
+    <section class="grid four">
+      ${metric(statusPage.status || 'unknown', 'Status page')}
+      ${metric((response.alert_summary?.open || 0) + (response.alert_summary?.acknowledged || 0), 'Active alerts')}
+      ${metric(incidents.length, 'Active incidents')}
+      ${metric(maintenance.length, 'Maintenance windows')}
+    </section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="evaluateOperationalAlerts()" ${S.busy ? 'disabled' : ''}>Evaluate alerts</button><button class="btn secondary" onclick="createDemoIncident()" ${S.busy ? 'disabled' : ''}>Create demo incident</button><button class="btn secondary" onclick="postStatusUpdate()" ${S.busy ? 'disabled' : ''}>Post status update</button><button class="btn secondary" onclick="scheduleMaintenanceWindow()" ${S.busy ? 'disabled' : ''}>Schedule maintenance</button></div><p class="muted small">The public local/pilot status payload is exposed at <code>/api/status</code>. Admin mutation endpoints remain protected.</p></section>
+    <section class="section grid two"><div class="panel stack"><h3>Active alerts</h3><table class="table"><tr><th>Severity</th><th>Name</th><th>Status</th><th>Value</th><th>Action</th></tr>${alertRows}</table></div><div class="panel stack"><h3>Active incidents</h3><table class="table"><tr><th>Severity</th><th>Title</th><th>Status</th><th>Updated</th><th>Action</th></tr>${incidentRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Status components</h3><div class="timeline">${componentRows}</div></div><div class="panel stack"><h3>Status updates</h3><div class="timeline">${updateRows}</div></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Alert rules</h3><div class="timeline">${ruleRows}</div></div><div class="panel stack"><h3>Maintenance windows</h3><div class="timeline">${maintenanceRows}</div></div></section>
+  `, { currentStep: 'incidents' });
+}
+
+async function evaluateOperationalAlerts() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate alerts.');
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.evaluateAlerts();
+    const created = payload.alert_evaluation.created_alerts?.length || 0;
+    const updated = payload.alert_evaluation.updated_alerts?.length || 0;
+    toast(`Alert evaluation completed: ${created} created, ${updated} updated.`);
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Alert evaluation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function acknowledgeAlert(id) {
+  setBusy(true);
+  try {
+    await window.REBORN_API.acknowledgeAlert(id);
+    toast('Alert acknowledged.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Acknowledge failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function resolveAlert(id) {
+  setBusy(true);
+  try {
+    await window.REBORN_API.resolveAlert(id, 'Resolved from Step 22 incident console.');
+    toast('Alert resolved.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Resolve failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function createDemoIncident() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create incidents.');
+  setBusy(true);
+  try {
+    const firstAlert = (S.api.alerts || [])[0];
+    const payload = await window.REBORN_API.createIncident({
+      title: 'Pilot operational review',
+      severity: firstAlert?.severity || 'medium',
+      summary: firstAlert ? `Incident opened from alert: ${firstAlert.name}` : 'Manual incident created to validate the Step 22 workflow.',
+      impact: 'Local/pilot operators should verify readiness, backups and API logs before demo use.',
+      linked_alert_id: firstAlert?.id || undefined
+    });
+    toast(`Incident created: ${String(payload.incident.id).slice(0, 8)}`);
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Incident creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function moveIncidentToMonitoring(id) {
+  setBusy(true);
+  try {
+    await window.REBORN_API.updateIncidentStatus(id, { status: 'monitoring', component: 'platform', message: 'Operator moved the incident to monitoring from the Step 22 console.' });
+    toast('Incident moved to monitoring.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Incident update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function resolveIncident(id) {
+  setBusy(true);
+  try {
+    await window.REBORN_API.updateIncidentStatus(id, { status: 'resolved', component: 'platform', message: 'Incident resolved from the Step 22 console.' });
+    toast('Incident resolved.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Incident resolve failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function postStatusUpdate() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to post status updates.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.createStatusUpdate({ component: 'platform', status: 'operational_update', message: 'Manual operator status update from the Step 22 console.' });
+    toast('Status update posted.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Status update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function scheduleMaintenanceWindow() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to schedule maintenance.');
+  setBusy(true);
+  try {
+    const starts = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+    const ends = new Date(Date.now() + 65 * 60 * 1000).toISOString();
+    await window.REBORN_API.createMaintenanceWindow({ title: 'Pilot maintenance window', status: 'scheduled', starts_at: starts, ends_at: ends, reason: 'Step 22 operational workflow validation.' });
+    toast('Maintenance window scheduled.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Maintenance scheduling failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function closeMaintenanceWindow(id) {
+  setBusy(true);
+  try {
+    await window.REBORN_API.closeMaintenanceWindow(id);
+    toast('Maintenance window closed.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Maintenance close failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 function aiGeneration() {
   return layout('AI generation', html`
     <section class="grid two"><div class="panel stack"><p class="eyebrow">AI repair model</p><h2>Generate only when repair knowledge is missing.</h2><p class="muted">AI generation is positioned as a repair fallback, not as the product. Generated models need validation before becoming verified graph assets.</p><div class="timeline"><div class="timeline-row"><div class="timeline-time">Step 1</div><div class="timeline-content"><strong>Geometry proposal</strong><p class="muted small">AI estimates shape from photos, dimensions and similar parts.</p></div></div><div class="timeline-row"><div class="timeline-time">Step 2</div><div class="timeline-content"><strong>Constraint check</strong><p class="muted small">Wall thickness, tolerance, material and mechanical risk.</p></div></div><div class="timeline-row"><div class="timeline-time">Step 3</div><div class="timeline-content"><strong>Provider validation</strong><p class="muted small">Provider flags printability before order confirmation.</p></div></div></div><div class="actions"><a class="btn orange" href="#/provider-network">Validate with provider</a><a class="btn secondary" href="#/repair-paths">Back to safer paths</a></div></div><aside class="panel stack"><h3>AI Premium trigger</h3><p class="muted">This flow consumes Repair Credits and creates potential marketplace assets if the model becomes verified.</p>${badges([['3 credits', 'orange'], ['Validation required', 'danger'], ['Learning event', 'blue']])}</aside></section>
@@ -1372,6 +1551,7 @@ const routes = {
   '/ops': opsConsole,
   '/readiness': productionReadiness,
   '/observability': observabilityDashboard,
+  '/incidents': incidentResponseDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -1469,6 +1649,13 @@ async function refreshApiData(options = {}) {
       readinessSnapshots: bootstrap.readiness_snapshots || S.api.readinessSnapshots || [],
       deploymentRunbook: bootstrap.deployment_runbook || S.api.deploymentRunbook,
       smokeTests: bootstrap.smoke_tests || S.api.smokeTests,
+      statusPage: bootstrap.status_page || S.api.statusPage,
+      incidentResponse: bootstrap.incident_response || S.api.incidentResponse,
+      alertRules: bootstrap.alert_rules || S.api.alertRules || [],
+      alerts: bootstrap.alerts || S.api.alerts || [],
+      incidents: bootstrap.incidents || S.api.incidents || [],
+      statusUpdates: bootstrap.status_updates || S.api.statusUpdates || [],
+      maintenanceWindows: bootstrap.maintenance_windows || S.api.maintenanceWindows || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
@@ -2550,6 +2737,15 @@ window.recordOpsModerationAction = recordOpsModerationAction;
 window.createOpsEscalation = createOpsEscalation;
 window.resolveOpsReviewItem = resolveOpsReviewItem;
 window.createReadinessSnapshot = createReadinessSnapshot;
+window.evaluateOperationalAlerts = evaluateOperationalAlerts;
+window.acknowledgeAlert = acknowledgeAlert;
+window.resolveAlert = resolveAlert;
+window.createDemoIncident = createDemoIncident;
+window.moveIncidentToMonitoring = moveIncidentToMonitoring;
+window.resolveIncident = resolveIncident;
+window.postStatusUpdate = postStatusUpdate;
+window.scheduleMaintenanceWindow = scheduleMaintenanceWindow;
+window.closeMaintenanceWindow = closeMaintenanceWindow;
 window.handleLogin = handleLogin;
 window.loginAsDemo = loginAsDemo;
 window.handleLogout = handleLogout;

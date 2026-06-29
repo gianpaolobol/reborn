@@ -73,6 +73,10 @@ return static function (Router $router, RepairController $repairController, Auth
                 'backup_automation',
                 'deployment_runbook',
                 'smoke_test_summary',
+                'incident_response',
+                'alert_rules',
+                'status_page',
+                'maintenance_windows',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -92,6 +96,22 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->post('/api/v1/platform/backups', [$platformController, 'createBackup']);
     $router->get('/api/v1/platform/deployment-runbook', [$platformController, 'deploymentRunbook']);
     $router->get('/api/v1/platform/smoke-tests-summary', [$platformController, 'smokeTestsSummary']);
+    $router->get('/api/status', [$platformController, 'statusPage']);
+    $router->get('/api/v1/platform/status-page', [$platformController, 'statusPage']);
+    $router->get('/api/v1/platform/incident-response', [$platformController, 'incidentResponse']);
+    $router->get('/api/v1/platform/alert-rules', [$platformController, 'alertRules']);
+    $router->post('/api/v1/platform/alerts/evaluate', [$platformController, 'evaluateAlerts']);
+    $router->get('/api/v1/platform/alerts', [$platformController, 'alerts']);
+    $router->post('/api/v1/platform/alerts/{id}/acknowledge', [$platformController, 'acknowledgeAlert']);
+    $router->post('/api/v1/platform/alerts/{id}/resolve', [$platformController, 'resolveAlert']);
+    $router->get('/api/v1/platform/incidents', [$platformController, 'incidents']);
+    $router->post('/api/v1/platform/incidents', [$platformController, 'createIncident']);
+    $router->post('/api/v1/platform/incidents/{id}/status', [$platformController, 'updateIncidentStatus']);
+    $router->get('/api/v1/platform/status-updates', [$platformController, 'statusUpdates']);
+    $router->post('/api/v1/platform/status-updates', [$platformController, 'createStatusUpdate']);
+    $router->get('/api/v1/platform/maintenance-windows', [$platformController, 'maintenanceWindows']);
+    $router->post('/api/v1/platform/maintenance-windows', [$platformController, 'createMaintenanceWindow']);
+    $router->post('/api/v1/platform/maintenance-windows/{id}/close', [$platformController, 'closeMaintenanceWindow']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

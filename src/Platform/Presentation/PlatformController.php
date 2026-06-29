@@ -7,6 +7,7 @@ namespace Reborn\Platform\Presentation;
 use Reborn\Identity\Application\AuthContext;
 use Reborn\Identity\Domain\User;
 use Reborn\Platform\Application\BackupService;
+use Reborn\Platform\Application\IncidentResponseService;
 use Reborn\Platform\Application\OperationalTelemetryService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
@@ -18,6 +19,7 @@ final class PlatformController
         private readonly ProductionReadinessService $readiness,
         private readonly OperationalTelemetryService $telemetry,
         private readonly BackupService $backups,
+        private readonly IncidentResponseService $incidents,
         private readonly AuthContext $auth,
     ) {
     }
@@ -107,4 +109,102 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         return JsonResponse::ok(['smoke_tests' => $this->telemetry->smokeTestsSummary()], $request->requestId());
     }
+    public function incidentResponse(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['incident_response' => $this->incidents->dashboard()], $request->requestId());
+    }
+
+    public function alertRules(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['alert_rules' => $this->incidents->alertRules()], $request->requestId());
+    }
+
+    public function evaluateAlerts(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['alert_evaluation' => $this->incidents->evaluateAlerts($user->id)], $request->requestId());
+    }
+
+    public function alerts(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['alerts' => $this->incidents->alerts($status, $limit)], $request->requestId());
+    }
+
+    public function acknowledgeAlert(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['alert' => $this->incidents->acknowledgeAlert((string) $request->param('id'), $user->id)], $request->requestId());
+    }
+
+    public function resolveAlert(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $body = $request->body();
+        $message = trim((string) ($body['message'] ?? 'Resolved by operator.'));
+        return JsonResponse::ok(['alert' => $this->incidents->resolveAlert((string) $request->param('id'), $user->id, $message)], $request->requestId());
+    }
+
+    public function incidents(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['incidents' => $this->incidents->incidents($status, $limit)], $request->requestId());
+    }
+
+    public function createIncident(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['incident' => $this->incidents->createIncident($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function updateIncidentStatus(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['incident' => $this->incidents->updateIncidentStatus((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function statusPage(Request $request): JsonResponse
+    {
+        return JsonResponse::ok(['status_page' => $this->incidents->statusPage()], $request->requestId());
+    }
+
+    public function statusUpdates(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(100, (int) $request->query('limit', 20)));
+        return JsonResponse::ok(['status_updates' => $this->incidents->statusUpdates($limit)], $request->requestId());
+    }
+
+    public function createStatusUpdate(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['status_update' => $this->incidents->createStatusUpdate($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function maintenanceWindows(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(100, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['maintenance_windows' => $this->incidents->maintenanceWindows($status, $limit)], $request->requestId());
+    }
+
+    public function createMaintenanceWindow(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['maintenance_window' => $this->incidents->createMaintenanceWindow($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function closeMaintenanceWindow(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['maintenance_window' => $this->incidents->closeMaintenanceWindow((string) $request->param('id'), $user->id)], $request->requestId());
+    }
+
 }

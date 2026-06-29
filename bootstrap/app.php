@@ -75,6 +75,7 @@ use Reborn\Operations\Application\ResolveOpsReviewItemService;
 use Reborn\Operations\Infrastructure\SqliteAdminOperationsRepository;
 use Reborn\Operations\Presentation\AdminOperationsController;
 use Reborn\Platform\Application\BackupService;
+use Reborn\Platform\Application\IncidentResponseService;
 use Reborn\Platform\Application\ObservabilityRecorder;
 use Reborn\Platform\Application\OperationalTelemetryService;
 use Reborn\Platform\Application\ProductionReadinessService;
@@ -335,6 +336,7 @@ $productionReadinessService = new ProductionReadinessService(
     dirname(__DIR__)
 );
 $backupService = new BackupService($pdo, $config['database'], dirname(__DIR__));
+$incidentResponseService = new IncidentResponseService($pdo, $productionReadinessService, $backupService);
 $operationalTelemetryService = new OperationalTelemetryService(
     $pdo,
     $productionReadinessService,
@@ -346,6 +348,7 @@ $platformController = new PlatformController(
     $productionReadinessService,
     $operationalTelemetryService,
     $backupService,
+    $incidentResponseService,
     $authContext
 );
 

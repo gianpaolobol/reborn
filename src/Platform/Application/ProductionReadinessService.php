@@ -32,6 +32,7 @@ final class ProductionReadinessService
             'runtime' => $this->runtimeCheck(),
             'observability' => $this->observabilityCheck(),
             'backup' => $this->backupCheck(),
+            'incident_response' => $this->incidentResponseCheck(),
         ];
 
         $status = 'ready';
@@ -83,15 +84,17 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v2_step21',
+            'checklist_version' => 'production_readiness_v3_step22',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
                 'real payment providers have signed webhook verification',
                 'backup and restore procedure has been tested',
+                'alert evaluation and status page workflow are verified',
                 'privacy/legal liability terms for repair outcomes are approved',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
+            'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
         ];
     }
 
@@ -162,10 +165,10 @@ final class ProductionReadinessService
             $count = (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn();
             $latest = $this->pdo->query('SELECT filename FROM migrations ORDER BY executed_at DESC, id DESC LIMIT 1')->fetchColumn();
             return [
-                'status' => $count >= 15 ? 'ok' : 'warn',
+                'status' => $count >= 16 ? 'ok' : 'warn',
                 'executed_count' => $count,
                 'latest' => $latest ?: null,
-                'message' => $count >= 15 ? 'All MVP hardening and observability migrations are present.' : 'Some migrations may still need to run.',
+                'message' => $count >= 16 ? 'All MVP hardening, observability and incident-response migrations are present.' : 'Some migrations may still need to run.',
             ];
         } catch (Throwable $exception) {
             return ['status' => 'fail', 'message' => 'Migration metadata is unavailable.', 'error' => $exception->getMessage()];
@@ -281,6 +284,36 @@ final class ProductionReadinessService
         ];
     }
 
+
+    /** @return array<string, mixed> */
+    private function incidentResponseCheck(): array
+    {
+        try {
+            $tables = ['platform_alert_rules', 'platform_alerts', 'platform_incidents', 'platform_status_updates', 'platform_maintenance_windows'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $rules = 0;
+            if ($missing === []) {
+                $rules = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_alert_rules WHERE enabled = 1')->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? ($rules > 0 ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Incident response tables are available.' : 'Incident response tables are not fully migrated yet.',
+                'enabled_alert_rules' => $rules,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Incident response checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
     /** @return array<string, mixed> */
     private function runtimeCheck(): array
     {
