@@ -1,58 +1,113 @@
 # Re-born
 
-**Re-born** è una Repair Intelligence Platform: un ecosistema SaaS che combina AI, Knowledge Graph, marketplace di produzione distribuita, royalty per maker, rete di provider e strumenti enterprise per rendere la riparazione semplice, accessibile e scalabile.
+**Re-born** è una **Repair Intelligence Platform** internazionale.
 
-> L’utente non vuole uno STL. Vuole che il proprio oggetto torni a funzionare.
+Mission: **Allow anyone to repair anything.**
 
-## Stato del repository
+Re-born non è un marketplace di STL. È un sistema operativo per la riparazione: identifica prodotti e componenti rotti, propone il percorso migliore, recupera o genera ricambi, coordina maker e provider locali, gestisce pagamenti/royalty e apprende da ogni riparazione.
 
-Questa repository è la fonte di verità del progetto Re-born.
+> L'utente non cerca uno STL. Vuole che il proprio oggetto torni a funzionare.
 
-Contiene:
+Repository ufficiale: https://github.com/gianpaolobol/reborn
 
-- documentazione prodotto;
+---
+
+## Stato del progetto
+
+Fase attuale: **strategic product definition / Re-born OS bootstrap**.
+
+Sono già presenti le basi di:
+
 - Product Book;
-- PRD;
+- PRD MVP;
 - UX Bible;
 - Design System;
-- architettura software;
-- database schema;
-- API contract;
+- Domain Driven Design;
+- architettura applicativa;
+- database schema concettuale;
+- API contract concettuale;
 - roadmap;
-- handoff per nuovi agenti/sviluppatori.
+- handoff master.
 
-## Struttura
+Il documento madre è:
+
+```text
+PRODUCT.md
+```
+
+---
+
+## Struttura repository
 
 ```text
 reborn/
+├── PRODUCT.md
+├── README.md
 ├── docs/
-├── backend/
-├── frontend/
+│   ├── 00-master-index/
+│   ├── 01-foundation/
+│   ├── 02-product-book/
+│   ├── 03-prd/
+│   ├── 04-ux-bible/
+│   ├── 05-design-system/
+│   ├── 06-wireframes/
+│   ├── 07-architecture/
+│   ├── 08-database/
+│   ├── 09-api/
+│   ├── 10-security/
+│   ├── 11-frontend/
+│   ├── 12-backend/
+│   ├── 13-testing/
+│   ├── 14-roadmap/
+│   ├── 15-investor/
+│   ├── 16-operations/
+│   └── 17-handoff/
+├── src/
+├── public/
 ├── database/
-├── api/
-├── infrastructure/
 ├── tests/
-├── tools/
 └── scripts/
 ```
 
+---
+
 ## Principio guida
 
-Ogni scelta deve rafforzare almeno uno di questi asset:
+Ogni modifica deve rafforzare almeno uno di questi asset:
 
 - Repair Knowledge Graph;
 - AI Learning;
 - Community;
-- Network Effect;
 - Marketplace Liquidity;
 - Enterprise Value;
-- Sustainability Impact.
+- Sustainability Impact;
+- Objects Saved.
+
+---
 
 ## Roadmap immediata
 
-1. Completare Product Book.
-2. Scrivere PRD MVP.
-3. Progettare UX Bible.
-4. Definire Design System.
-5. Avviare prototipo frontend.
-6. Implementare backend DDD.
+1. Pubblicare il repository su GitHub.
+2. Consolidare Product Book.
+3. Scrivere PRD completo con user stories e acceptance criteria.
+4. Progettare UX Bible con sitemap 100+ schermate.
+5. Definire Design System e primi wireframe.
+6. Solo dopo: prototipo e codice.
+
+---
+
+## Comandi Git iniziali
+
+```powershell
+git add .
+git commit -m "docs: bootstrap Re-born OS"
+git push -u origin main
+```
+
+Se GitHub richiede autenticazione:
+
+```powershell
+winget install --id GitHub.cli
+gh auth login
+git push -u origin main
+```
