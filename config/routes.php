@@ -100,6 +100,11 @@ return static function (Router $router, RepairController $repairController, Auth
                 'beta_readiness',
                 'pilot_cohorts',
                 'pilot_participants',
+                'partner_onboarding',
+                'partner_accounts',
+                'partner_readiness',
+                'partner_agreements',
+                'partner_integrations',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -185,6 +190,21 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/platform/pilot-participants', [$platformController, 'pilotParticipants']);
     $router->post('/api/v1/platform/pilot-participants', [$platformController, 'addPilotParticipant']);
     $router->post('/api/v1/platform/pilot-participants/{id}', [$platformController, 'updatePilotParticipant']);
+
+    $router->get('/api/v1/platform/partner-onboarding', [$platformController, 'partnerOnboarding']);
+    $router->get('/api/v1/platform/partners', [$platformController, 'partners']);
+    $router->post('/api/v1/platform/partners', [$platformController, 'createPartner']);
+    $router->get('/api/v1/platform/partners/{id}/readiness', [$platformController, 'partnerReadiness']);
+    $router->post('/api/v1/platform/partners/{id}/readiness/evaluate', [$platformController, 'evaluatePartnerReadiness']);
+    $router->get('/api/v1/platform/partner-tasks', [$platformController, 'partnerTasks']);
+    $router->post('/api/v1/platform/partner-tasks/{id}/status', [$platformController, 'updatePartnerTaskStatus']);
+    $router->get('/api/v1/platform/partner-agreements', [$platformController, 'partnerAgreements']);
+    $router->post('/api/v1/platform/partners/{id}/agreements', [$platformController, 'createPartnerAgreement']);
+    $router->post('/api/v1/platform/partner-agreements/{id}/status', [$platformController, 'updatePartnerAgreementStatus']);
+    $router->get('/api/v1/platform/partner-integrations', [$platformController, 'partnerIntegrations']);
+    $router->post('/api/v1/platform/partners/{id}/integrations', [$platformController, 'createPartnerIntegration']);
+    $router->post('/api/v1/platform/partner-integrations/{id}/status', [$platformController, 'updatePartnerIntegrationStatus']);
+    $router->get('/api/v1/platform/partner-readiness-reviews', [$platformController, 'partnerReadinessReviews']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

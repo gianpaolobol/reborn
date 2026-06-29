@@ -101,7 +101,8 @@ function stepper(active) {
     ['notifications', '14', 'Notify'],
     ['service-governance', '15', 'SLA'],
     ['privacy-governance', '16', 'Privacy'],
-    ['release-management', '17', 'Release']
+    ['release-management', '17', 'Release'],
+    ['partner-onboarding', '18', 'Partners']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -2072,6 +2073,126 @@ async function addDemoPilotParticipant() {
   }
 }
 
+
+function partnerOnboardingDashboard() {
+  setActiveNav('partner-onboarding');
+  if (!isAuthenticated()) {
+    return layout('Partner Onboarding', authRequiredPanel('the Step 27 partner onboarding governance console'), { currentStep: 'partner-onboarding' });
+  }
+
+  const dashboard = S.api.partnerOnboarding || {};
+  const summary = dashboard.summary || {};
+  const partners = S.api.partners || dashboard.partners || [];
+  const tasks = S.api.partnerTasks || dashboard.onboarding_tasks || [];
+  const agreements = S.api.partnerAgreements || dashboard.agreements || [];
+  const integrations = S.api.partnerIntegrations || dashboard.integrations || [];
+  const reviews = S.api.partnerReadinessReviews || dashboard.latest_readiness_reviews || [];
+  const actionRows = (dashboard.operator_actions || []).map(item => `<li>${safe(item)}</li>`).join('') || '<li>No immediate partner action.</li>';
+  const partnerRows = partners.slice(0, 10).map(partner => `<tr><td><span class="badge ${partner.status === 'active' ? 'green' : partner.status === 'onboarding' ? 'orange' : 'blue'}">${safe(partner.status)}</span></td><td>${safe(partner.name)}</td><td>${safe(partner.partner_type)}</td><td>${safe(partner.tier)}</td><td>${safe(partner.readiness_score)}%</td><td><button class="mini-button" onclick="evaluatePartnerReadiness('${safe(partner.id)}')">Evaluate</button></td></tr>`).join('') || '<tr><td colspan="6">No partners configured.</td></tr>';
+  const taskRows = tasks.slice(0, 12).map(task => `<tr><td><span class="badge ${task.status === 'completed' || task.status === 'waived' ? 'green' : task.status === 'blocked' ? 'danger' : 'orange'}">${safe(task.status)}</span></td><td>${safe(task.partner_name)}</td><td>${safe(task.name)}</td><td>${task.required ? 'required' : 'optional'}</td><td><button class="mini-button" onclick="completePartnerTask('${safe(task.id)}')" ${task.status === 'completed' ? 'disabled' : ''}>Complete</button></td></tr>`).join('') || '<tr><td colspan="5">No onboarding tasks configured.</td></tr>';
+  const agreementRows = agreements.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'accepted' ? 'green' : item.status === 'sent' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.partner_name)}</td><td>${safe(item.title)}</td><td>${safe(item.agreement_type)}</td><td><button class="mini-button" onclick="acceptPartnerAgreement('${safe(item.id)}')" ${item.status === 'accepted' ? 'disabled' : ''}>Accept</button></td></tr>`).join('') || '<tr><td colspan="5">No agreements configured.</td></tr>';
+  const integrationRows = integrations.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : item.status === 'testing' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.partner_name)}</td><td>${safe(item.name)}</td><td>${safe(item.integration_type)}</td><td><button class="mini-button" onclick="testPartnerIntegration('${safe(item.id)}')">Test</button></td></tr>`).join('') || '<tr><td colspan="5">No integrations configured.</td></tr>';
+  const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'ready_for_pilot' ? 'green' : item.status === 'blocked' ? 'danger' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.partner_name)}</td><td>${safe(item.readiness_score)}%</td><td>${safe(item.reviewed_at)}</td></tr>`).join('') || '<tr><td colspan="4">No readiness reviews yet.</td></tr>';
+
+  return layout('Partner Onboarding', `
+    <section class="section-head"><div><p class="eyebrow">Step 27 · Enterprise & Partner Onboarding Governance</p><h2>Qualify providers, makers and enterprise partners before pilot use.</h2></div><p class="muted">Step 27 adds partner accounts, onboarding tasks, agreements, integrations and readiness reviews so beta participants are governed before real operational exposure.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.partners_total ?? 0)}</strong><span>Total partners</span></div><div class="metric"><strong>${safe(summary.partners_onboarding ?? 0)}</strong><span>Onboarding</span></div><div class="metric"><strong>${safe(summary.open_required_tasks ?? 0)}</strong><span>Open required tasks</span></div><div class="metric"><strong>${safe(summary.accepted_agreements ?? 0)}</strong><span>Accepted agreements</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoPartner()" ${S.busy ? 'disabled' : ''}>Create demo partner</button><button class="btn secondary" onclick="evaluateFirstPartnerReadiness()" ${S.busy || partners.length === 0 ? 'disabled' : ''}>Evaluate first partner</button><a class="btn secondary" href="#/release-management">Open release gates</a></div><ul class="muted small">${actionRows}</ul></section>
+    <section class="section panel stack"><h3>Partners</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Type</th><th>Tier</th><th>Score</th><th>Action</th></tr>${partnerRows}</table></section>
+    <section class="section grid two"><div class="panel stack"><h3>Onboarding tasks</h3><table class="table"><tr><th>Status</th><th>Partner</th><th>Task</th><th>Required</th><th>Action</th></tr>${taskRows}</table></div><div class="panel stack"><h3>Agreements</h3><table class="table"><tr><th>Status</th><th>Partner</th><th>Agreement</th><th>Type</th><th>Action</th></tr>${agreementRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Integrations</h3><table class="table"><tr><th>Status</th><th>Partner</th><th>Name</th><th>Type</th><th>Action</th></tr>${integrationRows}</table></div><div class="panel stack"><h3>Readiness reviews</h3><table class="table"><tr><th>Status</th><th>Partner</th><th>Score</th><th>Reviewed</th></tr>${reviewRows}</table></div></section>
+  `, { currentStep: 'partner-onboarding' });
+}
+
+async function createDemoPartner() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create partners.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.createPartner({
+      name: `Pilot Repair Partner ${new Date().getMinutes()}${new Date().getSeconds()}`,
+      partner_type: 'provider',
+      tier: 'pilot',
+      status: 'onboarding',
+      contact_name: 'Pilot Contact',
+      contact_email: 'pilot.partner@reborn.local',
+      notes: 'Demo partner created from Step 27 console.'
+    });
+    toast('Demo partner created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Partner creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function evaluateFirstPartnerReadiness() {
+  const partner = (S.api.partners || [])[0];
+  if (!partner) return toast('Create a partner first.');
+  return evaluatePartnerReadiness(partner.id);
+}
+
+async function evaluatePartnerReadiness(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate partners.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.evaluatePartnerReadiness(id);
+    toast('Partner readiness evaluated.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Partner readiness failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function completePartnerTask(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to update partner tasks.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.updatePartnerTaskStatus(id, 'completed', 'Completed from Step 27 prototype console.');
+    toast('Partner task completed.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Task update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function acceptPartnerAgreement(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to update partner agreements.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.updatePartnerAgreementStatus(id, 'accepted');
+    toast('Partner agreement accepted for pilot evidence.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Agreement update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function testPartnerIntegration(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to update integrations.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.updatePartnerIntegrationStatus(id, 'testing');
+    toast('Partner integration marked as testing.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Integration update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -2093,6 +2214,7 @@ const routes = {
   '/service-governance': serviceGovernanceDashboard,
   '/privacy-governance': privacyGovernanceDashboard,
   '/release-management': releaseManagementDashboard,
+  '/partner-onboarding': partnerOnboardingDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -2224,6 +2346,12 @@ async function refreshApiData(options = {}) {
       releaseDecisions: bootstrap.release_decisions || S.api.releaseDecisions || [],
       pilotCohorts: bootstrap.pilot_cohorts || S.api.pilotCohorts || [],
       pilotParticipants: bootstrap.pilot_participants || S.api.pilotParticipants || [],
+      partnerOnboarding: bootstrap.partner_onboarding || S.api.partnerOnboarding,
+      partners: bootstrap.partners || S.api.partners || [],
+      partnerTasks: bootstrap.partner_tasks || S.api.partnerTasks || [],
+      partnerAgreements: bootstrap.partner_agreements || S.api.partnerAgreements || [],
+      partnerIntegrations: bootstrap.partner_integrations || S.api.partnerIntegrations || [],
+      partnerReadinessReviews: bootstrap.partner_readiness_reviews || S.api.partnerReadinessReviews || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
@@ -3326,6 +3454,12 @@ window.createDemoRelease = createDemoRelease;
 window.toggleFeatureFlag = toggleFeatureFlag;
 window.activatePilotCohort = activatePilotCohort;
 window.addDemoPilotParticipant = addDemoPilotParticipant;
+window.createDemoPartner = createDemoPartner;
+window.evaluateFirstPartnerReadiness = evaluateFirstPartnerReadiness;
+window.evaluatePartnerReadiness = evaluatePartnerReadiness;
+window.completePartnerTask = completePartnerTask;
+window.acceptPartnerAgreement = acceptPartnerAgreement;
+window.testPartnerIntegration = testPartnerIntegration;
 window.render = render;
 
 window.addEventListener('hashchange', render);

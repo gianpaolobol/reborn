@@ -771,6 +771,63 @@
       });
     }
 
+
+    async getPartnerOnboarding() {
+      return this.request('/api/v1/platform/partner-onboarding');
+    }
+
+    async getPartners(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/partners?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createPartner(payload = {}) {
+      return this.request('/api/v1/platform/partners', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async evaluatePartnerReadiness(id) {
+      return this.request(`/api/v1/platform/partners/${encodeURIComponent(id)}/readiness/evaluate`, { method: 'POST' });
+    }
+
+    async getPartnerTasks(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/partner-tasks?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async updatePartnerTaskStatus(id, status = 'completed', evidence = 'Completed from Step 27 prototype console.') {
+      return this.request(`/api/v1/platform/partner-tasks/${encodeURIComponent(id)}/status`, {
+        method: 'POST',
+        body: { status, evidence }
+      });
+    }
+
+    async getPartnerAgreements(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/partner-agreements?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async updatePartnerAgreementStatus(id, status = 'accepted', notes = 'Accepted from Step 27 prototype console for local pilot governance evidence.') {
+      return this.request(`/api/v1/platform/partner-agreements/${encodeURIComponent(id)}/status`, {
+        method: 'POST',
+        body: { status, notes }
+      });
+    }
+
+    async getPartnerIntegrations(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/partner-integrations?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async updatePartnerIntegrationStatus(id, status = 'testing', notes = 'Checked from Step 27 prototype console.') {
+      return this.request(`/api/v1/platform/partner-integrations/${encodeURIComponent(id)}/status`, {
+        method: 'POST',
+        body: { status, notes }
+      });
+    }
+
+    async getPartnerReadinessReviews(limit = 50) {
+      return this.request(`/api/v1/platform/partner-readiness-reviews?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -915,7 +972,13 @@
           release_gates: [],
           release_decisions: [],
           pilot_cohorts: [],
-          pilot_participants: []
+          pilot_participants: [],
+          partner_onboarding: null,
+          partners: [],
+          partner_tasks: [],
+          partner_agreements: [],
+          partner_integrations: [],
+          partner_readiness_reviews: []
         };
       }
 
@@ -970,6 +1033,12 @@
       let releaseDecisions = { release_decisions: [] };
       let pilotCohorts = { pilot_cohorts: [] };
       let pilotParticipants = { pilot_participants: [] };
+      let partnerOnboarding = { partner_onboarding: null };
+      let partnersList = { partners: [] };
+      let partnerTasks = { partner_tasks: [] };
+      let partnerAgreements = { partner_agreements: [] };
+      let partnerIntegrations = { partner_integrations: [] };
+      let partnerReadinessReviews = { partner_readiness_reviews: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -1263,6 +1332,36 @@
         } catch (_error) {
           pilotParticipants = { pilot_participants: [] };
         }
+        try {
+          partnerOnboarding = await this.getPartnerOnboarding();
+        } catch (_error) {
+          partnerOnboarding = { partner_onboarding: null };
+        }
+        try {
+          partnersList = await this.getPartners('all', 30);
+        } catch (_error) {
+          partnersList = { partners: [] };
+        }
+        try {
+          partnerTasks = await this.getPartnerTasks('all', 40);
+        } catch (_error) {
+          partnerTasks = { partner_tasks: [] };
+        }
+        try {
+          partnerAgreements = await this.getPartnerAgreements('all', 30);
+        } catch (_error) {
+          partnerAgreements = { partner_agreements: [] };
+        }
+        try {
+          partnerIntegrations = await this.getPartnerIntegrations('all', 30);
+        } catch (_error) {
+          partnerIntegrations = { partner_integrations: [] };
+        }
+        try {
+          partnerReadinessReviews = await this.getPartnerReadinessReviews(30);
+        } catch (_error) {
+          partnerReadinessReviews = { partner_readiness_reviews: [] };
+        }
 
       }
 
@@ -1424,7 +1523,13 @@
         release_gates: releaseGates.release_gates || [],
         release_decisions: releaseDecisions.release_decisions || [],
         pilot_cohorts: pilotCohorts.pilot_cohorts || [],
-        pilot_participants: pilotParticipants.pilot_participants || []
+        pilot_participants: pilotParticipants.pilot_participants || [],
+        partner_onboarding: partnerOnboarding.partner_onboarding || null,
+        partners: partnersList.partners || [],
+        partner_tasks: partnerTasks.partner_tasks || [],
+        partner_agreements: partnerAgreements.partner_agreements || [],
+        partner_integrations: partnerIntegrations.partner_integrations || [],
+        partner_readiness_reviews: partnerReadinessReviews.partner_readiness_reviews || []
       };
     }
   }

@@ -37,6 +37,7 @@ final class ProductionReadinessService
             'service_governance' => $this->serviceGovernanceCheck(),
             'privacy_governance' => $this->privacyGovernanceCheck(),
             'release_management' => $this->releaseManagementCheck(),
+            'partner_onboarding' => $this->partnerOnboardingCheck(),
         ];
 
         $status = 'ready';
@@ -100,6 +101,7 @@ final class ProductionReadinessService
                 'privacy notices, consent capture, data subject request and retention dry-run are reviewed',
                 'privacy/legal liability terms for repair outcomes are approved',
                 'feature flags, release gates and pilot cohort rules are reviewed',
+                'partner onboarding tasks, agreements, integrations and readiness reviews are approved',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
@@ -107,6 +109,7 @@ final class ProductionReadinessService
             'step_24_status' => 'Service level objectives, SLA evaluations and operational policy governance v1 implemented.',
             'step_25_status' => 'Privacy notices, consent ledger, processing records, retention dry-run and data subject request workflow v1 implemented.',
             'step_26_status' => 'Beta release management, feature flags, release gates and pilot cohort readiness v1 implemented.',
+            'step_27_status' => 'Enterprise and partner onboarding governance, agreements, integrations and readiness reviews v1 implemented.',
         ];
     }
 
@@ -177,10 +180,10 @@ final class ProductionReadinessService
             $count = (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn();
             $latest = $this->pdo->query('SELECT filename FROM migrations ORDER BY executed_at DESC, id DESC LIMIT 1')->fetchColumn();
             return [
-                'status' => $count >= 20 ? 'ok' : 'warn',
+                'status' => $count >= 21 ? 'ok' : 'warn',
                 'executed_count' => $count,
                 'latest' => $latest ?: null,
-                'message' => $count >= 20 ? 'All MVP hardening, observability, incident-response, notification, service-governance, privacy-governance and release-management migrations are present.' : 'Some migrations may still need to run.',
+                'message' => $count >= 21 ? 'All MVP hardening, observability, incident-response, notification, service-governance, privacy-governance, release-management and partner-onboarding migrations are present.' : 'Some migrations may still need to run.',
             ];
         } catch (Throwable $exception) {
             return ['status' => 'fail', 'message' => 'Migration metadata is unavailable.', 'error' => $exception->getMessage()];
@@ -469,6 +472,43 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Release management checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function partnerOnboardingCheck(): array
+    {
+        try {
+            $tables = ['platform_partner_accounts', 'platform_partner_onboarding_tasks', 'platform_partner_agreements', 'platform_partner_integrations', 'platform_partner_readiness_reviews'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $partners = 0;
+            $tasks = 0;
+            $agreements = 0;
+            if ($missing === []) {
+                $partners = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_partner_accounts WHERE status IN ('prospect', 'onboarding', 'active')")->fetchColumn();
+                $tasks = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_partner_onboarding_tasks')->fetchColumn();
+                $agreements = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_partner_agreements')->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? (($partners > 0 && $tasks > 0 && $agreements > 0) ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Partner onboarding governance tables are available.' : 'Partner onboarding tables are not fully migrated yet.',
+                'partners' => $partners,
+                'onboarding_tasks' => $tasks,
+                'agreements' => $agreements,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Partner onboarding checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 

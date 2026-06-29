@@ -13,6 +13,7 @@ use Reborn\Platform\Application\NotificationCenterService;
 use Reborn\Platform\Application\OperationalGovernanceService;
 use Reborn\Platform\Application\PrivacyGovernanceService;
 use Reborn\Platform\Application\ReleaseManagementService;
+use Reborn\Platform\Application\PartnerOnboardingService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -28,6 +29,7 @@ final class PlatformController
         private readonly OperationalGovernanceService $governance,
         private readonly PrivacyGovernanceService $privacy,
         private readonly ReleaseManagementService $releases,
+        private readonly PartnerOnboardingService $partners,
         private readonly AuthContext $auth,
     ) {
     }
@@ -537,6 +539,100 @@ final class PlatformController
     {
         $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         return JsonResponse::ok(['pilot_participant' => $this->releases->updatePilotParticipant((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+
+    public function partnerOnboarding(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['partner_onboarding' => $this->partners->dashboard()], $request->requestId());
+    }
+
+    public function partners(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['partners' => $this->partners->partners($status, $limit)], $request->requestId());
+    }
+
+    public function createPartner(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['partner' => $this->partners->createPartner($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function partnerReadiness(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['partner_readiness' => $this->partners->partnerReadiness((string) $request->param('id'))], $request->requestId());
+    }
+
+    public function evaluatePartnerReadiness(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['partner_readiness_review' => $this->partners->evaluatePartnerReadiness((string) $request->param('id'), $user->id)], $request->requestId());
+    }
+
+    public function partnerTasks(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['partner_tasks' => $this->partners->tasks($status, $limit)], $request->requestId());
+    }
+
+    public function updatePartnerTaskStatus(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['partner_task' => $this->partners->updateTaskStatus((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function partnerAgreements(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['partner_agreements' => $this->partners->agreements($status, $limit)], $request->requestId());
+    }
+
+    public function createPartnerAgreement(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['partner_agreement' => $this->partners->createAgreement((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function updatePartnerAgreementStatus(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['partner_agreement' => $this->partners->updateAgreementStatus((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function partnerIntegrations(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['partner_integrations' => $this->partners->integrations($status, $limit)], $request->requestId());
+    }
+
+    public function createPartnerIntegration(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['partner_integration' => $this->partners->createIntegration((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function updatePartnerIntegrationStatus(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['partner_integration' => $this->partners->updateIntegrationStatus((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function partnerReadinessReviews(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['partner_readiness_reviews' => $this->partners->readinessReviews($limit)], $request->requestId());
     }
 
 }

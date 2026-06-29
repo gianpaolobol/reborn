@@ -474,3 +474,26 @@ Open the admin console:
 ```text
 http://127.0.0.1:8080/prototype/index.html#/release-management
 ```
+
+## Step 27 — Enterprise & Partner Onboarding Governance v1
+
+Step 27 connects beta release control to a governed partner ecosystem.
+
+Added:
+
+- partner accounts for providers, makers and enterprise design partners;
+- onboarding tasks with required evidence;
+- partner agreements and pilot terms records;
+- manual/API/email/webhook integration records;
+- partner readiness reviews and readiness scores;
+- admin prototype console `#/partner-onboarding`;
+- readiness check `partner_onboarding`;
+- smoke test `scripts/smoke-partner-onboarding-governance.ps1`.
+
+Important: Step 27 does **not** create legally binding contracts, production partner APIs, provider payouts or maker royalties. It creates the governance records needed to decide which partners can safely participate in a local/pilot beta.
+
+Run after setup and server start:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-partner-onboarding-governance.ps1
+```

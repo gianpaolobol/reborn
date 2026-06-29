@@ -105,15 +105,15 @@ final class OperationalTelemetryService
     public function deploymentRunbook(): array
     {
         return [
-            'runbook_version' => 'deployment_runbook_v7_step26',
+            'runbook_version' => 'deployment_runbook_v8_step27',
             'purpose' => 'Move Re-born from local MVP to controlled pilot without pretending it is enterprise-grade production yet.',
             'phases' => [
                 [
                     'name' => '1. Local preflight',
                     'checks' => [
-                        'git status is clean except intended Step 26 files',
+                        'git status is clean except intended Step 27 files',
                         'php scripts/setup-dev.php completes',
-                        'all smoke tests pass from a second PowerShell window, including Step 26 release management',
+                        'all smoke tests pass from a second PowerShell window, including Step 26 release management and Step 27 partner onboarding',
                         'manual backup has been created through API or scripts/backup-sqlite.ps1',
                     ],
                 ],
@@ -134,7 +134,7 @@ final class OperationalTelemetryService
                         'operator can inspect API logs and readiness snapshots',
                         'operator can evaluate alerts and update the local/pilot status page',
                         'operator can dispatch Step 23 mock notifications and start escalation runs',
-                        'operator can evaluate SLA governance, privacy retention dry-runs and release gates',
+                        'operator can evaluate SLA governance, privacy retention dry-runs, release gates and partner readiness',
                     ],
                 ],
                 [
@@ -147,7 +147,7 @@ final class OperationalTelemetryService
                         'Step 24 SLA evaluation has no unreviewed breach blocking the pilot',
                         'Step 25 privacy governance has reviewed notices, retention dry-run and open DSR status',
                         'admin ops workflow still works after deploy',
-                        'Step 26 release gates and pilot cohort rules have been reviewed',
+                        'Step 26 release gates, pilot cohort rules and Step 27 partner readiness reviews have been reviewed',
                         'known mocks are explicitly disclosed in demo or pilot notes',
                     ],
                 ],
@@ -191,6 +191,7 @@ final class OperationalTelemetryService
             'smoke-service-governance-sla.ps1' => 'Step 24 service governance SLA',
             'smoke-privacy-data-governance.ps1' => 'Step 25 privacy data governance',
             'smoke-beta-release-management.ps1' => 'Step 26 beta release management',
+            'smoke-partner-onboarding-governance.ps1' => 'Step 27 partner onboarding governance',
         ];
 
         $rows = [];
