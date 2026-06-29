@@ -27,6 +27,17 @@ use Reborn\Marketplace\Application\RequestRepairPathDecisionService;
 use Reborn\Marketplace\Infrastructure\SqliteRepairPathDecisionRepository;
 use Reborn\Marketplace\Presentation\RepairPathDecisionController;
 use Reborn\Provider\Application\ProviderMatchingService;
+use Reborn\Provider\Application\GetProviderMatchService;
+use Reborn\Provider\Application\GetProviderQuoteRequestService;
+use Reborn\Provider\Application\ListProviderMatchesService;
+use Reborn\Provider\Application\ListProviderQuoteRequestsService;
+use Reborn\Provider\Application\ProviderMatchEngine;
+use Reborn\Provider\Application\ProviderQuoteEngine;
+use Reborn\Provider\Application\RequestProviderMatchService;
+use Reborn\Provider\Application\RequestProviderQuoteService;
+use Reborn\Provider\Infrastructure\SqliteProviderMatchRepository;
+use Reborn\Provider\Infrastructure\SqliteProviderQuoteRequestRepository;
+use Reborn\Provider\Presentation\ProviderMatchController;
 use Reborn\Repair\Application\AddRepairAttachmentService;
 use Reborn\Repair\Application\CreateRepairCaseService;
 use Reborn\Repair\Application\DiagnoseRepairCaseService;
@@ -77,6 +88,8 @@ $repairRepository = new SqliteRepairCaseRepository($pdo);
 $attachmentRepository = new SqliteRepairAttachmentRepository($pdo);
 $recognitionJobRepository = new SqliteRecognitionJobRepository($pdo);
 $repairPathDecisionRepository = new SqliteRepairPathDecisionRepository($pdo);
+$providerMatchRepository = new SqliteProviderMatchRepository($pdo);
+$providerQuoteRequestRepository = new SqliteProviderQuoteRequestRepository($pdo);
 $knowledgeEngine = new KnowledgeEngine($pdo);
 $recognitionEngine = new RecognitionEngine($knowledgeEngine);
 $decisionService = new RepairPathDecisionService($pdo);
@@ -126,8 +139,31 @@ $repairPathDecisionController = new RepairPathDecisionController(
     new RepairCaseAccessPolicy()
 );
 
+$providerMatchController = new ProviderMatchController(
+    new RequestProviderMatchService(
+        $repairRepository,
+        $repairPathDecisionRepository,
+        $providerMatchRepository,
+        new ProviderMatchEngine($pdo),
+        $eventBus
+    ),
+    new ListProviderMatchesService($repairRepository, $providerMatchRepository),
+    new GetProviderMatchService($providerMatchRepository),
+    new RequestProviderQuoteService(
+        $providerMatchRepository,
+        $providerQuoteRequestRepository,
+        new ProviderQuoteEngine(),
+        $eventBus
+    ),
+    new ListProviderQuoteRequestsService($repairRepository, $providerQuoteRequestRepository),
+    new GetProviderQuoteRequestService($providerQuoteRequestRepository),
+    new GetRepairCaseService($repairRepository),
+    $authContext,
+    new RepairCaseAccessPolicy()
+);
+
 $router = new Router();
-(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $authContext, $pdo);
+(require dirname(__DIR__) . '/config/routes.php')($router, $repairController, $authController, $dashboardController, $recognitionJobController, $repairPathDecisionController, $providerMatchController, $authContext, $pdo);
 
 return [
     'router' => $router,

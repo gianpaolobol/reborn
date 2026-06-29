@@ -132,11 +132,33 @@ function getActiveRepairPaths() {
 }
 
 function getActiveProviders() {
+  const match = activeProviderMatch();
+  const matchedProviders = match?.result_json?.ranked_providers;
+  if (Array.isArray(matchedProviders) && matchedProviders.length) {
+    return matchedProviders.map(provider => ({
+      id: provider.provider_id,
+      name: provider.name,
+      type: (provider.matched_capabilities || [])[0] || 'Repair provider',
+      distance: `${provider.city || 'Local'}, ${provider.country || ''}`,
+      rating: Number(provider.rating || 0).toFixed(1),
+      jobs: 'matched',
+      price: formatEuro(Number(provider.estimated_quote_cents || 0)),
+      eta: `${provider.estimated_days || provider.average_lead_time_days || '?'} days`,
+      trust: Math.round(Number(provider.match_score || 0) * 100),
+      material: (provider.matched_capabilities || provider.capabilities || []).slice(0, 3).join(' / ') || 'Mixed capabilities',
+      matchScore: Number(provider.match_score || 0),
+      providerId: provider.provider_id,
+      quoteCents: Number(provider.estimated_quote_cents || 0),
+      qualityChecks: provider.quality_checks || []
+    }));
+  }
+
   if (!S.api.providers.length) return D.providers;
 
   return S.api.providers.map(provider => {
     const capabilities = Array.isArray(provider.capabilities) ? provider.capabilities : [];
     return {
+      id: provider.id,
       name: provider.name,
       type: capabilities[0] || 'Repair provider',
       distance: `${provider.city || 'Local'}, ${provider.country || ''}`,
@@ -145,7 +167,8 @@ function getActiveProviders() {
       price: 'Quote after validation',
       eta: `${provider.average_lead_time_days || '?'} days`,
       trust: Math.round((Number(provider.rating || 0) / 5) * 100),
-      material: capabilities.slice(0, 3).join(' / ') || 'Mixed capabilities'
+      material: capabilities.slice(0, 3).join(' / ') || 'Mixed capabilities',
+      providerId: provider.id
     };
   });
 }
@@ -386,6 +409,22 @@ function activeRepairPathDecision() {
   return S.api.repairPathDecision || activeRepairPathDecisions()[0] || null;
 }
 
+function activeProviderMatches() {
+  return Array.isArray(S.api.providerMatches) ? S.api.providerMatches : [];
+}
+
+function activeProviderMatch() {
+  return S.api.providerMatch || activeProviderMatches()[0] || null;
+}
+
+function activeQuoteRequests() {
+  return Array.isArray(S.api.quoteRequests) ? S.api.quoteRequests : [];
+}
+
+function activeQuoteRequest() {
+  return S.api.quoteRequest || activeQuoteRequests()[0] || null;
+}
+
 function mockRecognitionResult() {
   return {
     object_guess: { label: 'appliance knob / plastic cover / hinge / wearable case', confidence: 0.72 },
@@ -406,6 +445,38 @@ function mockRepairPathDecisionResult() {
       { type: 'identify_part', title: 'Find an existing verified part', description: 'Search verified sources before creating new geometry.', score: 0.74, estimated_price_cents: 1200, estimated_days: 3, next_actions: ['Check graph match', 'Compare dimensions'], risk_flags: { fit_unknown: true } }
     ],
     guardrails: ['Do not sell a file before the repair path is validated.', 'AI geometry is a draft until checks confirm dimensions.']
+  };
+}
+
+function mockProviderMatchResult() {
+  return {
+    repair_context: { repair_case_id: S.api.repairCase?.id || 'mock-case', recommended_path: activeRepairPathDecision()?.result_json?.recommended_path || 'find_provider', selected_path_title: 'Provider-assisted repair validation', estimated_price_cents: 2990, estimated_days: 4, repairability_score: 0.78, dimensional_risk: true, requires_provider_validation: true },
+    ranked_providers: [
+      { provider_id: 'provider-bologna-lab', name: 'Bologna Repair Lab', city: 'Bologna', country: 'IT', capabilities: ['FDM', 'PETG', 'TPU', 'CAD validation'], matched_capabilities: ['CAD validation', 'FDM', 'PETG'], rating: 4.8, average_lead_time_days: 3, match_score: 0.91, estimated_quote_cents: 3970, estimated_days: 4, match_reason: 'Best local validation fit for repair-first fulfilment.', quality_checks: ['confirm_dimensions_before_production', 'validate_material_and_tolerance'] },
+      { provider_id: 'provider-milan-maker', name: 'Milano Distributed Manufacturing', city: 'Milano', country: 'IT', capabilities: ['FDM', 'SLA', 'ASA', 'small batch'], matched_capabilities: ['FDM', 'SLA'], rating: 4.7, average_lead_time_days: 4, match_score: 0.84, estimated_quote_cents: 4290, estimated_days: 5, match_reason: 'Strong additive manufacturing capacity and backup material choices.', quality_checks: ['confirm_dimensions_before_production', 'validate_material_and_tolerance'] },
+      { provider_id: 'provider-barcelona-circular', name: 'Barcelona Circular Fab', city: 'Barcelona', country: 'ES', capabilities: ['FDM', 'SLS partner', 'repair validation'], matched_capabilities: ['repair validation', 'SLS partner'], rating: 4.6, average_lead_time_days: 5, match_score: 0.81, estimated_quote_cents: 4590, estimated_days: 6, match_reason: 'Best fallback for professional validation and SLS partner routing.', quality_checks: ['provider_quote_required', 'validate_material_and_tolerance'] }
+    ],
+    guardrails: ['Provider matching is a repair fulfilment step, not a generic print marketplace search.', 'Quotes remain preliminary until provider validates geometry, material and tolerance constraints.']
+  };
+}
+
+function mockQuoteRequest(providerId = 'provider-bologna-lab') {
+  const match = activeProviderMatch();
+  const provider = (match?.result_json?.ranked_providers || mockProviderMatchResult().ranked_providers).find(p => p.provider_id === providerId) || mockProviderMatchResult().ranked_providers[0];
+  const production = Number(provider.estimated_quote_cents || 2990);
+  const validation = 900;
+  const platformFee = Math.round((production + validation) * 0.12);
+  return {
+    id: 'mock-quote-request',
+    provider_match_id: match?.id || 'mock-provider-match',
+    repair_case_id: S.api.repairCase?.id || 'mock-case',
+    provider_id: provider.provider_id,
+    requested_by: S.auth.user?.id || 'mock-user',
+    status: 'estimated',
+    quote_json: { currency: 'EUR', provider: { id: provider.provider_id, name: provider.name, city: provider.city, country: provider.country, match_score: provider.match_score }, repair_scope: { recommended_path: match?.result_json?.repair_context?.recommended_path || 'find_provider', selected_path_title: 'Provider-assisted repair validation' }, line_items: [{ label: 'Provider validation and repair planning', amount_cents: validation }, { label: 'Local repair production / fulfilment estimate', amount_cents: production }, { label: 'Re-born platform fee', amount_cents: platformFee }], subtotal_cents: production + validation, platform_fee_cents: platformFee, provider_payout_cents: production + validation, total_cents: production + validation + platformFee, estimated_days: provider.estimated_days, assumptions: ['Quote is preliminary until provider reviews photos, dimensions and material constraints.'] },
+    created_at: new Date().toISOString(),
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    accepted_at: null
   };
 }
 
@@ -583,7 +654,7 @@ function repairPaths() {
     <section class="grid three">
       ${paths.map(path => `<article class="card interactive ${S.selectedPath === path.id ? 'selected' : ''}" onclick="REBORN_STATE.set('selectedPath', '${safe(path.id)}'); toast('${safe(path.title)} selected.'); render();"><div class="section-head"><h3>${safe(path.title)}</h3><span class="badge ${path.id === 'find_provider' || path.id === 'print' || path.id === 'provider_assisted_repair' ? 'green' : path.id === 'generate_part' || path.id === 'ai' || path.id === 'ai_generated_cad' ? 'orange' : 'blue'}">Score ${safe(path.score)}</span></div><p class="muted">${safe(path.recommendation)}</p><table class="table"><tr><th>Cost</th><td>${safe(path.cost)}</td></tr><tr><th>ETA</th><td>${safe(path.eta)}</td></tr><tr><th>Impact</th><td>${safe(path.impact)}</td></tr></table></article>`).join('')}
     </section>
-    <section class="section panel stack"><h3>Recommended plan</h3><p class="muted">The MVP path should move from evidence to validation to fulfilment. Existing parts are preferred when verified; AI generation and maker work remain repair fallbacks with explicit validation.</p><div class="actions"><a class="btn green" href="#/part-detail">Continue with repair model</a><a class="btn secondary" href="#/ai-generation">Generate with AI instead</a><button class="btn secondary" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Re-run decision</button></div></section>
+    <section class="section panel stack"><h3>Recommended plan</h3><p class="muted">The MVP path should move from evidence to validation to fulfilment. Existing parts are preferred when verified; AI generation and maker work remain repair fallbacks with explicit validation.</p><div class="actions"><button class="btn green" onclick="runProviderMatch()" ${S.busy || !S.api.repairCase ? 'disabled' : ''}>Match providers</button><a class="btn secondary" href="#/part-detail">Continue with repair model</a><a class="btn secondary" href="#/ai-generation">Generate with AI instead</a><button class="btn secondary" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Re-run decision</button></div></section>
   `, { currentStep: 'repair-paths' });
 }
 
@@ -596,15 +667,36 @@ function partDetail() {
   `, { currentStep: 'repair-paths' });
 }
 
+function providerMatchPanel() {
+  const match = activeProviderMatch();
+  const quote = activeQuoteRequest();
+  const context = match?.result_json?.repair_context;
+  return html`<section class="grid two">
+    <div class="panel stack">
+      <p class="eyebrow">Step 13 · Provider Match Engine</p>
+      <h2>Route the repair to the best fulfilment provider.</h2>
+      <p class="muted">Matching uses the active repair case, Step 12 decision and provider capabilities. It is not a generic print-service search.</p>
+      ${context ? `<div class="notice"><strong>Repair context</strong><span>${safe(context.selected_path_title || context.recommended_path)} · ${formatEuro(Number(context.estimated_price_cents || 0))} · ${safe(String(context.estimated_days || '?'))} days baseline</span></div>` : '<p class="muted small">Run provider matching after repair paths have been ranked.</p>'}
+      <div class="actions"><button class="btn green" onclick="runProviderMatch()" ${S.busy || !S.api.repairCase ? 'disabled' : ''}>Match providers</button><a class="btn secondary" href="#/repair-paths">Back to repair paths</a></div>
+    </div>
+    <aside class="panel dark-panel stack">
+      <h3>Quote Engine v1</h3>
+      ${quote ? `<div class="price">${formatEuro(Number(quote.quote_json?.total_cents || 0))}</div><p class="muted">${safe(quote.quote_json?.provider?.name || quote.provider_id)} · ${safe(String(quote.quote_json?.estimated_days || '?'))} days · expires ${safe(new Date(quote.expires_at).toLocaleDateString('it-IT'))}</p>${badges([[quote.status, 'green'], ['platform fee included', 'blue'], ['validation required', 'orange']])}` : '<p class="muted">Select a matched provider and request a quote to create a persistent quote estimate.</p>'}
+    </aside>
+  </section>`;
+}
+
 function providerNetwork() {
   setActiveNav('provider-network');
   const providers = getActiveProviders();
+  const match = activeProviderMatch();
   return layout('Providers', html`
-    <section class="section-head"><div><p class="eyebrow">Distributed manufacturing</p><h2>Local providers ranked by trust and fit.</h2></div><p class="muted">Professional services and independent makers can both compete when quality, constraints and trust are explicit.</p></section>
-    <section class="stack">
-      ${providers.map(p => `<article class="card provider-card interactive ${S.selectedProvider === p.name ? 'selected' : ''}" onclick="REBORN_STATE.set('selectedProvider', '${safe(p.name)}'); toast('${safe(p.name)} selected.'); render();"><div class="stack"><div><h3>${safe(p.name)}</h3><p class="muted">${safe(p.type)} · ${safe(p.distance)} · ${safe(p.jobs)} completed jobs</p></div>${badges([[`Rating ${p.rating}`, 'green'], [`Trust ${p.trust}`, 'blue'], [p.material, 'orange'], [p.eta, '']])}</div><div><div class="price">${safe(p.price)}</div><p class="muted small">estimated total</p></div></article>`).join('')}
+    <section class="section-head"><div><p class="eyebrow">Provider Match & Quote Engine v1</p><h2>Local providers ranked by trust and repair fit.</h2></div><p class="muted">Professional services and independent makers can both compete when quality, constraints and trust are explicit.</p></section>
+    ${providerMatchPanel()}
+    <section class="stack section">
+      ${providers.map(p => `<article class="card provider-card interactive ${S.selectedProvider === p.name ? 'selected' : ''}" onclick="REBORN_STATE.set('selectedProvider', '${safe(p.name)}'); toast('${safe(p.name)} selected.'); render();"><div class="stack"><div><h3>${safe(p.name)}</h3><p class="muted">${safe(p.type)} · ${safe(p.distance)} · ${safe(p.jobs)} · ${safe(p.matchScore ? 'match score' : 'provider record')}</p></div>${badges([[`Rating ${p.rating}`, 'green'], [`Trust ${p.trust}`, 'blue'], [p.material, 'orange'], [p.eta, '']])}</div><div><div class="price">${safe(p.price)}</div><p class="muted small">estimated total</p><div class="actions"><button class="btn green" onclick="event.stopPropagation(); requestProviderQuote('${safe(p.providerId || p.id || p.name)}')" ${S.busy || !match ? 'disabled' : ''}>Request quote</button></div></div></article>`).join('')}
     </section>
-    <section class="section panel stack"><h3>Provider agreement preview</h3><p class="muted">Re-born collects a platform fee on every fulfilled repair. Provider receives clear model constraints, quality checks and delivery expectations before accepting.</p><div class="actions"><a class="btn green" href="#/checkout">Continue to repair order</a><a class="btn secondary" href="#/provider">Open provider view</a></div></section>
+    <section class="section panel stack"><h3>Provider agreement preview</h3><p class="muted">Re-born collects a platform fee on every fulfilled repair. Provider receives clear model constraints, quality checks and delivery expectations before accepting.</p><div class="actions"><a class="btn green" href="#/checkout">Continue to repair order</a><a class="btn secondary" href="#/provider">Open provider view</a><button class="btn secondary" onclick="runProviderMatch()" ${S.busy || !S.api.repairCase ? 'disabled' : ''}>Re-run match</button></div></section>
   `, { currentStep: 'repair-paths' });
 }
 
@@ -718,6 +810,10 @@ async function refreshApiData(options = {}) {
       recognitionJob: (bootstrap.recognition_jobs || [])[0] || S.api.recognitionJob,
       repairPathDecisions: bootstrap.repair_path_decisions || [],
       repairPathDecision: (bootstrap.repair_path_decisions || [])[0] || S.api.repairPathDecision,
+      providerMatches: bootstrap.provider_matches || [],
+      providerMatch: (bootstrap.provider_matches || [])[0] || S.api.providerMatch,
+      quoteRequests: bootstrap.quote_requests || [],
+      quoteRequest: (bootstrap.quote_requests || [])[0] || S.api.quoteRequest,
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
@@ -776,7 +872,7 @@ async function createRepairCaseFromValues(payload) {
   try {
     const result = await window.REBORN_API.createRepairCase(payload);
     const repairCase = result.repair_case;
-    S.setApi({ repairCase, repairCases: [repairCase, ...S.api.repairCases], repairPaths: [], repairAttachments: [], recognitionJobs: [], recognitionJob: null, repairPathDecisions: [], repairPathDecision: null, diagnosis: null, lastSyncAt: new Date().toISOString() });
+    S.setApi({ repairCase, repairCases: [repairCase, ...S.api.repairCases], repairPaths: [], repairAttachments: [], recognitionJobs: [], recognitionJob: null, repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, diagnosis: null, lastSyncAt: new Date().toISOString() });
     toast('Live repair case created.');
     location.hash = '#/capture';
     return repairCase;
@@ -978,6 +1074,10 @@ async function runRepairPathDecision() {
       repairPathDecision: payload.decision,
       repairPathDecisions: decisions.repair_path_decisions || [payload.decision],
       repairPaths: paths.repair_paths || payload.repair_paths || [],
+      providerMatches: [],
+      providerMatch: null,
+      quoteRequests: [],
+      quoteRequest: null,
       message: 'Repair Path Decision Engine ranked concrete repair paths.',
       status: 'live',
       lastError: null,
@@ -1020,6 +1120,105 @@ function runMockRepairPathDecision() {
   S.setApi({ repairPathDecision: decision, repairPathDecisions: [decision], repairPaths: paths });
   toast('Mock repair paths ranked.');
   location.hash = '#/repair-paths';
+  render();
+}
+
+async function runProviderMatch() {
+  if (S.api.status !== 'live') {
+    runMockProviderMatch();
+    return;
+  }
+
+  const repairCase = S.api.repairCase;
+  if (!repairCase) {
+    toast('Create a repair case before matching providers.');
+    location.hash = '#/start';
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const decision = activeRepairPathDecision();
+    const payload = await window.REBORN_API.requestProviderMatch(repairCase.id, decision?.id || null);
+    const matches = await window.REBORN_API.getProviderMatches(repairCase.id).catch(() => ({ provider_matches: [payload.provider_match] }));
+    S.setApi({
+      providerMatch: payload.provider_match,
+      providerMatches: matches.provider_matches || [payload.provider_match],
+      quoteRequests: [],
+      quoteRequest: null,
+      message: 'Provider Match Engine ranked fulfilment options for the repair.',
+      status: 'live',
+      lastError: null,
+      lastSyncAt: new Date().toISOString()
+    });
+    toast('Providers matched.');
+    location.hash = '#/provider-network';
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Provider matching failed: ${error.message}`, lastError: error.message });
+    toast(`Provider matching failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+function runMockProviderMatch() {
+  const result = mockProviderMatchResult();
+  const match = {
+    id: 'mock-provider-match',
+    repair_case_id: S.api.repairCase?.id || 'mock-case',
+    repair_path_decision_id: activeRepairPathDecision()?.id || 'mock-path-decision',
+    requested_by: S.auth.user?.id || 'mock-user',
+    status: 'completed',
+    result_json: result,
+    created_at: new Date().toISOString(),
+    completed_at: new Date().toISOString()
+  };
+  S.setApi({ providerMatch: match, providerMatches: [match] });
+  toast('Mock providers matched.');
+  location.hash = '#/provider-network';
+  render();
+}
+
+async function requestProviderQuote(providerId) {
+  if (S.api.status !== 'live') {
+    runMockProviderQuote(providerId);
+    return;
+  }
+
+  const repairCase = S.api.repairCase;
+  const match = activeProviderMatch();
+  if (!repairCase || !match) {
+    toast('Run provider matching before requesting a quote.');
+    return;
+  }
+
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.requestProviderQuote(match.id, providerId);
+    const quotes = await window.REBORN_API.getQuoteRequests(repairCase.id).catch(() => ({ quote_requests: [payload.quote_request] }));
+    S.setApi({
+      quoteRequest: payload.quote_request,
+      quoteRequests: quotes.quote_requests || [payload.quote_request],
+      message: 'Quote Engine created a preliminary repair quote.',
+      status: 'live',
+      lastError: null,
+      lastSyncAt: new Date().toISOString()
+    });
+    toast('Repair quote estimated.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Quote request failed: ${error.message}`, lastError: error.message });
+    toast(`Quote failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+function runMockProviderQuote(providerId) {
+  const quote = mockQuoteRequest(providerId);
+  S.setApi({ quoteRequest: quote, quoteRequests: [quote] });
+  toast('Mock quote estimated.');
   render();
 }
 

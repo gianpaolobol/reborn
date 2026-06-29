@@ -8,12 +8,13 @@ use Reborn\Identity\Application\AuthContext;
 use Reborn\Identity\Domain\User;
 use Reborn\Identity\Presentation\AuthController;
 use Reborn\Marketplace\Presentation\RepairPathDecisionController;
+use Reborn\Provider\Presentation\ProviderMatchController;
 use Reborn\Repair\Presentation\RepairController;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
 use Reborn\Shared\Http\Router;
 
-return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, AuthContext $auth, PDO $pdo): void {
+return static function (Router $router, RepairController $repairController, AuthController $authController, DashboardController $dashboardController, RecognitionJobController $recognitionJobController, RepairPathDecisionController $repairPathDecisionController, ProviderMatchController $providerMatchController, AuthContext $auth, PDO $pdo): void {
     $router->get('/api/health', static function (Request $request): JsonResponse {
         return JsonResponse::ok([
             'status' => 'ok',
@@ -34,6 +35,8 @@ return static function (Router $router, RepairController $repairController, Auth
                 'repair_uploads',
                 'ai_recognition_jobs',
                 'repair_path_decision_engine',
+                'provider_match_engine',
+                'provider_quote_engine',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -63,6 +66,12 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/repair-cases/{id}/repair-path-decisions', [$repairPathDecisionController, 'index']);
     $router->post('/api/v1/repair-cases/{id}/repair-path-decisions', [$repairPathDecisionController, 'store']);
     $router->get('/api/v1/repair-path-decisions/{id}', [$repairPathDecisionController, 'show']);
+    $router->get('/api/v1/repair-cases/{id}/provider-matches', [$providerMatchController, 'index']);
+    $router->post('/api/v1/repair-cases/{id}/provider-matches', [$providerMatchController, 'store']);
+    $router->get('/api/v1/provider-matches/{id}', [$providerMatchController, 'show']);
+    $router->post('/api/v1/provider-matches/{id}/quote-requests', [$providerMatchController, 'storeQuote']);
+    $router->get('/api/v1/repair-cases/{id}/quote-requests', [$providerMatchController, 'quotes']);
+    $router->get('/api/v1/quote-requests/{id}', [$providerMatchController, 'showQuote']);
 
     $router->get('/api/v1/providers', static function (Request $request) use ($pdo): JsonResponse {
         $stmt = $pdo->query('SELECT id, name, city, country, capabilities, rating, average_lead_time_days FROM providers ORDER BY rating DESC, name ASC');

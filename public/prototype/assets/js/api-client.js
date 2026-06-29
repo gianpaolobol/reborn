@@ -197,6 +197,36 @@
       return this.request(`/api/v1/repair-path-decisions/${encodeURIComponent(decisionId)}`);
     }
 
+    async requestProviderMatch(caseId, repairPathDecisionId = null) {
+      return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/provider-matches`, {
+        method: 'POST',
+        body: repairPathDecisionId ? { repair_path_decision_id: repairPathDecisionId } : {}
+      });
+    }
+
+    async getProviderMatches(caseId) {
+      return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/provider-matches`);
+    }
+
+    async getProviderMatch(providerMatchId) {
+      return this.request(`/api/v1/provider-matches/${encodeURIComponent(providerMatchId)}`);
+    }
+
+    async requestProviderQuote(providerMatchId, providerId) {
+      return this.request(`/api/v1/provider-matches/${encodeURIComponent(providerMatchId)}/quote-requests`, {
+        method: 'POST',
+        body: { provider_id: providerId }
+      });
+    }
+
+    async getQuoteRequests(caseId) {
+      return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/quote-requests`);
+    }
+
+    async getQuoteRequest(quoteRequestId) {
+      return this.request(`/api/v1/quote-requests/${encodeURIComponent(quoteRequestId)}`);
+    }
+
     async listRepairPaths(caseId) {
       return this.request(`/api/v1/repair-paths?case_id=${encodeURIComponent(caseId)}`);
     }
@@ -229,7 +259,9 @@
           repair_paths: [],
           repair_attachments: [],
           recognition_jobs: [],
-          repair_path_decisions: []
+          repair_path_decisions: [],
+          provider_matches: [],
+          quote_requests: []
         };
       }
 
@@ -248,6 +280,8 @@
       let attachments = { attachments: [] };
       let recognitionJobs = { recognition_jobs: [] };
       let repairPathDecisions = { repair_path_decisions: [] };
+      let providerMatches = { provider_matches: [] };
+      let quoteRequests = { quote_requests: [] };
 
       if (latestCase && this.getToken()) {
         try {
@@ -270,6 +304,16 @@
         } catch (_error) {
           repairPathDecisions = { repair_path_decisions: [] };
         }
+        try {
+          providerMatches = await this.getProviderMatches(latestCase.id);
+        } catch (_error) {
+          providerMatches = { provider_matches: [] };
+        }
+        try {
+          quoteRequests = await this.getQuoteRequests(latestCase.id);
+        } catch (_error) {
+          quoteRequests = { quote_requests: [] };
+        }
       }
 
       return {
@@ -281,7 +325,9 @@
         repair_paths: paths.repair_paths || [],
         repair_attachments: attachments.attachments || [],
         recognition_jobs: recognitionJobs.recognition_jobs || [],
-        repair_path_decisions: repairPathDecisions.repair_path_decisions || []
+        repair_path_decisions: repairPathDecisions.repair_path_decisions || [],
+        provider_matches: providerMatches.provider_matches || [],
+        quote_requests: quoteRequests.quote_requests || []
       };
     }
   }
