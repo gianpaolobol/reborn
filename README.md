@@ -6,6 +6,24 @@ Repository ufficiale: https://github.com/gianpaolobol/reborn
 
 ---
 
+## Continuous Integration
+
+Re-born includes a GitHub Actions smoke test pipeline:
+
+```text
+.github/workflows/smoke-tests.yml
+```
+
+The CI workflow runs on push to `main`, pull requests to `main` and manual `workflow_dispatch`. It uses PHP 8.4 with `pdo_sqlite` and `sqlite3`, creates a local SQLite database, starts the PHP built-in server and runs the full smoke regression suite through:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\ci-smoke-tests.ps1 -BaseUrl http://127.0.0.1:8080
+```
+
+Future steps that add smoke tests must update `scripts/ci-smoke-tests.ps1`.
+
+---
+
 ## Mission
 
 > Allow anyone to repair anything.
@@ -685,3 +703,22 @@ Prototype route:
 ```
 
 This step does not create audited financials, legal investment materials, certified ESG reports or public traction claims. It records local/pilot evidence, caveats and narrative governance so Re-born can be demonstrated honestly before beta and fundraising use.
+
+### Step 38 — Continuous Integration Smoke Test Pipeline v1
+
+Step 38 adds GitHub Actions CI for the Re-born smoke suite. The workflow sets up PHP 8.4 with `pdo_sqlite` and `sqlite3`, copies `.env.ci.example`, runs `php scripts/setup-dev.php`, starts the PHP built-in server, waits for `/api/health` and runs the full smoke regression suite via `scripts/ci-smoke-tests.ps1`.
+
+Workflow:
+
+```text
+.github/workflows/smoke-tests.yml
+```
+
+Local CI-equivalent smoke runner:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\ci-smoke-tests.ps1 -BaseUrl http://127.0.0.1:8080
+```
+
+This step does not deploy Re-born. It adds repeatable verification so future steps can be validated on GitHub instead of relying only on the local Windows environment or assistant sandbox.
+

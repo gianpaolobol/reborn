@@ -1,0 +1,82 @@
+name: Re-born Smoke Tests
+
+"on":
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reborn-smoke-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke-tests:
+    name: PHP 8.4 SQLite smoke suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP 8.4 with SQLite
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo, pdo_sqlite, sqlite3, fileinfo, json
+          coverage: none
+          ini-values: memory_limit=512M, max_execution_time=120
+
+      - name: Verify PHP runtime
+        run: |
+          php -v
+          php -m | grep -Ei 'PDO|pdo_sqlite|sqlite3|fileinfo|json'
+
+      - name: Verify PowerShell runtime
+        run: pwsh -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion'
+
+      - name: Prepare CI environment
+        run: |
+          cp .env.ci.example .env
+          mkdir -p storage/database storage/logs storage/uploads storage/backups
+
+      - name: Set up development database
+        run: php scripts/setup-dev.php
+
+      - name: Start PHP built-in server
+        run: |
+          nohup php -S 127.0.0.1:8080 -t public public/index.php > storage/logs/ci-php-server.log 2>&1 &
+          echo $! > storage/logs/ci-php-server.pid
+
+      - name: Wait for API health
+        run: |
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:8080/api/health > /tmp/reborn-health.json; then
+              cat /tmp/reborn-health.json
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "API did not become healthy in time. Server log follows:"
+          cat storage/logs/ci-php-server.log || true
+          exit 1
+
+      - name: Run full smoke test suite
+        run: pwsh ./scripts/ci-smoke-tests.ps1 -BaseUrl http://127.0.0.1:8080
+
+      - name: Upload runtime logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reborn-ci-runtime-logs
+          path: |
+            storage/logs/*.log
+            storage/logs/ci-smoke-results.json
+          if-no-files-found: ignore
