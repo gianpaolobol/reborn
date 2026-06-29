@@ -545,3 +545,35 @@ http://127.0.0.1:8080/prototype/index.html#/maker-economy
 ## Step 30 — AI Pipeline Governance & Human-in-the-Loop Review v1
 
 Adds AI provider registry, AI pipeline run ledger, human review workflow, dataset governance, AI safety rules, quality evaluations and an admin prototype console at `#/ai-governance`. This remains a local/pilot governance layer: no real external AI provider, STL generation or training job is enabled yet.
+
+## Step 31 — AI Provider Adapter Sandbox & Job Orchestration v1
+
+Step 31 prepares Re-born for future Meshy, Trellis, Rodin or internal AI worker integrations without enabling unsafe live calls.
+
+It adds:
+
+- sandbox AI provider adapters;
+- adapter health checks;
+- AI orchestration job queue;
+- job lifecycle and retry/cancel workflow;
+- job events timeline;
+- artifact stubs for future generated outputs;
+- provider cost ledger for reserved/spent mock costs;
+- AI provider sandbox audit log;
+- admin prototype console `#/ai-provider-sandbox`;
+- readiness check `ai_provider_sandbox`;
+- smoke test `scripts/smoke-ai-provider-sandbox-orchestration.ps1`.
+
+Important: Step 31 does **not** call Meshy, Trellis, Rodin or any external AI provider. It does not generate real STL/CAD files. It creates the local/pilot orchestration and governance layer required before real AI integrations are enabled.
+
+Smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-ai-provider-sandbox-orchestration.ps1
+```
+
+Open the admin console:
+
+```text
+http://127.0.0.1:8080/prototype/index.html#/ai-provider-sandbox
+```

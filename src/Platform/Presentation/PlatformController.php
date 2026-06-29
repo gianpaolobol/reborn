@@ -17,6 +17,7 @@ use Reborn\Platform\Application\PartnerOnboardingService;
 use Reborn\Platform\Application\MarketplaceRevenueService;
 use Reborn\Platform\Application\MakerEconomyService;
 use Reborn\Platform\Application\AiPipelineGovernanceService;
+use Reborn\Platform\Application\AiProviderSandboxService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -36,6 +37,7 @@ final class PlatformController
         private readonly MarketplaceRevenueService $revenue,
         private readonly MakerEconomyService $makerEconomy,
         private readonly AiPipelineGovernanceService $aiGovernance,
+        private readonly AiProviderSandboxService $aiSandbox,
         private readonly AuthContext $auth,
     ) {
     }
@@ -936,6 +938,87 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['ai_governance_audit_log' => $this->aiGovernance->auditLog($limit)], $request->requestId());
+    }
+
+
+    public function aiProviderSandbox(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['ai_provider_sandbox' => $this->aiSandbox->dashboard()], $request->requestId());
+    }
+
+    public function aiProviderAdapters(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        return JsonResponse::ok(['ai_provider_adapters' => $this->aiSandbox->adapters($status)], $request->requestId());
+    }
+
+    public function checkAiProviderAdapters(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['ai_adapter_health_check' => $this->aiSandbox->runHealthCheck($user->id)], $request->requestId());
+    }
+
+    public function aiOrchestrationJobs(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['ai_orchestration_jobs' => $this->aiSandbox->jobs($status, $limit)], $request->requestId());
+    }
+
+    public function createAiOrchestrationJob(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['ai_orchestration_job' => $this->aiSandbox->createJob($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function advanceAiOrchestrationJob(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['ai_orchestration_job' => $this->aiSandbox->advanceJob((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function retryAiOrchestrationJob(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['ai_orchestration_job' => $this->aiSandbox->retryJob((string) $request->param('id'), $user->id)], $request->requestId());
+    }
+
+    public function cancelAiOrchestrationJob(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['ai_orchestration_job' => $this->aiSandbox->cancelJob((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function aiJobEvents(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $jobId = trim((string) $request->query('job_id', '')) ?: null;
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['ai_job_events' => $this->aiSandbox->jobEvents($jobId, $limit)], $request->requestId());
+    }
+
+    public function aiArtifactStubs(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['ai_artifact_stubs' => $this->aiSandbox->artifactStubs($limit)], $request->requestId());
+    }
+
+    public function aiProviderCostLedger(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['ai_provider_cost_ledger' => $this->aiSandbox->costLedger($limit)], $request->requestId());
+    }
+
+    public function aiProviderSandboxAuditLog(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['ai_provider_sandbox_audit_log' => $this->aiSandbox->auditLog($limit)], $request->requestId());
     }
 
 }

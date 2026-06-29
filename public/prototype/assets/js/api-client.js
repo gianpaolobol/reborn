@@ -1057,6 +1057,65 @@
       return this.request(`/api/v1/platform/ai-governance-audit-log?limit=${encodeURIComponent(limit)}`);
     }
 
+
+
+    async getAiProviderSandbox() {
+      return this.request('/api/v1/platform/ai-provider-sandbox');
+    }
+
+    async getAiProviderAdapters(status = 'all') {
+      return this.request(`/api/v1/platform/ai-provider-adapters?status=${encodeURIComponent(status)}`);
+    }
+
+    async checkAiProviderAdapters() {
+      return this.request('/api/v1/platform/ai-provider-adapters/health-check', { method: 'POST' });
+    }
+
+    async getAiOrchestrationJobs(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/ai-orchestration-jobs?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createAiOrchestrationJob(payload = {}) {
+      return this.request('/api/v1/platform/ai-orchestration-jobs', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async advanceAiOrchestrationJob(id, payload = {}) {
+      return this.request(`/api/v1/platform/ai-orchestration-jobs/${encodeURIComponent(id)}/advance`, {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async retryAiOrchestrationJob(id) {
+      return this.request(`/api/v1/platform/ai-orchestration-jobs/${encodeURIComponent(id)}/retry`, { method: 'POST' });
+    }
+
+    async cancelAiOrchestrationJob(id, reason = 'Cancelled from prototype console.') {
+      return this.request(`/api/v1/platform/ai-orchestration-jobs/${encodeURIComponent(id)}/cancel`, {
+        method: 'POST',
+        body: { reason }
+      });
+    }
+
+    async getAiJobEvents(limit = 50) {
+      return this.request(`/api/v1/platform/ai-job-events?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getAiArtifactStubs(limit = 50) {
+      return this.request(`/api/v1/platform/ai-artifact-stubs?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getAiProviderCostLedger(limit = 50) {
+      return this.request(`/api/v1/platform/ai-provider-cost-ledger?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getAiProviderSandboxAuditLog(limit = 50) {
+      return this.request(`/api/v1/platform/ai-provider-sandbox-audit-log?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -1215,7 +1274,14 @@
           payout_accounts: [],
           payout_runs: [],
           payout_items: [],
-          revenue_audit_log: []
+          revenue_audit_log: [],
+          ai_provider_sandbox: null,
+          ai_provider_adapters: [],
+          ai_orchestration_jobs: [],
+          ai_job_events: [],
+          ai_artifact_stubs: [],
+          ai_provider_cost_ledger: [],
+          ai_provider_sandbox_audit_log: []
         };
       }
 
@@ -1301,6 +1367,13 @@
       let aiQualityEvaluations = { ai_quality_evaluations: [] };
       let aiSafetyRules = { ai_safety_rules: [] };
       let aiGovernanceAuditLog = { ai_governance_audit_log: [] };
+      let aiProviderSandbox = { ai_provider_sandbox: null };
+      let aiProviderAdapters = { ai_provider_adapters: [] };
+      let aiOrchestrationJobs = { ai_orchestration_jobs: [] };
+      let aiJobEvents = { ai_job_events: [] };
+      let aiArtifactStubs = { ai_artifact_stubs: [] };
+      let aiProviderCostLedger = { ai_provider_cost_ledger: [] };
+      let aiProviderSandboxAuditLog = { ai_provider_sandbox_audit_log: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -1751,6 +1824,42 @@
           aiGovernanceAuditLog = { ai_governance_audit_log: [] };
         }
 
+        try {
+          aiProviderSandbox = await this.getAiProviderSandbox();
+        } catch (_error) {
+          aiProviderSandbox = { ai_provider_sandbox: null };
+        }
+        try {
+          aiProviderAdapters = await this.getAiProviderAdapters('all');
+        } catch (_error) {
+          aiProviderAdapters = { ai_provider_adapters: [] };
+        }
+        try {
+          aiOrchestrationJobs = await this.getAiOrchestrationJobs('active', 30);
+        } catch (_error) {
+          aiOrchestrationJobs = { ai_orchestration_jobs: [] };
+        }
+        try {
+          aiJobEvents = await this.getAiJobEvents(30);
+        } catch (_error) {
+          aiJobEvents = { ai_job_events: [] };
+        }
+        try {
+          aiArtifactStubs = await this.getAiArtifactStubs(30);
+        } catch (_error) {
+          aiArtifactStubs = { ai_artifact_stubs: [] };
+        }
+        try {
+          aiProviderCostLedger = await this.getAiProviderCostLedger(30);
+        } catch (_error) {
+          aiProviderCostLedger = { ai_provider_cost_ledger: [] };
+        }
+        try {
+          aiProviderSandboxAuditLog = await this.getAiProviderSandboxAuditLog(30);
+        } catch (_error) {
+          aiProviderSandboxAuditLog = { ai_provider_sandbox_audit_log: [] };
+        }
+
       }
 
       if (latestCase && this.getToken()) {
@@ -1942,7 +2051,14 @@
         ai_dataset_items: aiDatasetItems.ai_dataset_items || [],
         ai_quality_evaluations: aiQualityEvaluations.ai_quality_evaluations || [],
         ai_safety_rules: aiSafetyRules.ai_safety_rules || [],
-        ai_governance_audit_log: aiGovernanceAuditLog.ai_governance_audit_log || []
+        ai_governance_audit_log: aiGovernanceAuditLog.ai_governance_audit_log || [],
+        ai_provider_sandbox: aiProviderSandbox.ai_provider_sandbox || null,
+        ai_provider_adapters: aiProviderAdapters.ai_provider_adapters || [],
+        ai_orchestration_jobs: aiOrchestrationJobs.ai_orchestration_jobs || [],
+        ai_job_events: aiJobEvents.ai_job_events || [],
+        ai_artifact_stubs: aiArtifactStubs.ai_artifact_stubs || [],
+        ai_provider_cost_ledger: aiProviderCostLedger.ai_provider_cost_ledger || [],
+        ai_provider_sandbox_audit_log: aiProviderSandboxAuditLog.ai_provider_sandbox_audit_log || []
       };
     }
   }

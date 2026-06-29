@@ -105,7 +105,8 @@ function stepper(active) {
     ['partner-onboarding', '18', 'Partners'],
     ['marketplace-revenue', '19', 'Revenue'],
     ['maker-economy', '20', 'Makers'],
-    ['ai-governance', '21', 'AI Gov']
+    ['ai-governance', '21', 'AI Gov'],
+    ['ai-provider-sandbox', '22', 'AI Ops']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -2614,6 +2615,86 @@ async function evaluateDemoAiQuality() {
   }
 }
 
+
+function aiProviderSandboxDashboard() {
+  setActiveNav('ai-provider-sandbox');
+  if (!S.auth.user) {
+    return layout('AI Provider Sandbox', authRequiredPanel('the Step 31 AI provider sandbox console'), { currentStep: 'ai-provider-sandbox' });
+  }
+
+  const dashboard = S.api.aiProviderSandbox || {};
+  const summary = dashboard.summary || {};
+  const adapters = S.api.aiProviderAdapters || dashboard.adapters || [];
+  const jobs = S.api.aiOrchestrationJobs || dashboard.jobs || [];
+  const events = S.api.aiJobEvents || dashboard.recent_events || [];
+  const artifacts = S.api.aiArtifactStubs || dashboard.artifact_stubs || [];
+  const ledger = S.api.aiProviderCostLedger || dashboard.cost_ledger || [];
+  const audit = S.api.aiProviderSandboxAuditLog || [];
+  const actionRows = Object.entries(dashboard.operator_actions || {}).map(([key, value]) => `<li><strong>${safe(key)}</strong> — ${safe(value)}</li>`).join('') || '<li>No immediate sandbox action.</li>';
+
+  const adapterRows = adapters.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'ready' ? 'green' : item.secret_status === 'missing' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.name)}</td><td>${safe(item.provider_key)}</td><td>${safe(item.capability)}</td><td>${safe(item.last_health_status || 'not_checked')}</td></tr>`).join('') || '<tr><td colspan="5">No AI adapters configured.</td></tr>';
+  const jobRows = jobs.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'succeeded' ? 'green' : item.status === 'failed' ? 'blue' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.job_code)}</td><td>${safe(item.job_type)}</td><td>${safe(item.adapter_key)}</td><td><button class="mini-button" onclick="advanceAiSandboxJob('${safe(item.id)}','running')" ${item.status !== 'queued' ? 'disabled' : ''}>Run</button><button class="mini-button" onclick="advanceAiSandboxJob('${safe(item.id)}','succeeded')" ${item.status === 'succeeded' || item.status === 'failed' || item.status === 'cancelled' ? 'disabled' : ''}>Succeed</button></td></tr>`).join('') || '<tr><td colspan="5">No sandbox jobs queued.</td></tr>';
+  const eventRows = events.slice(0, 8).map(item => `<li><strong>${safe(item.event_type)}</strong> · ${safe(item.job_code || item.job_id)} — ${safe(item.message)}</li>`).join('') || '<li>No job events yet.</li>';
+  const artifactRows = artifacts.slice(0, 8).map(item => `<tr><td>${safe(item.artifact_type)}</td><td>${safe(item.status)}</td><td>${safe(item.job_code)}</td><td>${item.review_required ? 'Yes' : 'No'}</td></tr>`).join('') || '<tr><td colspan="4">No artifact stubs yet.</td></tr>';
+  const ledgerRows = ledger.slice(0, 8).map(item => `<tr><td>${safe(item.direction)}</td><td>${safe(item.adapter_key)}</td><td>${formatEuro(item.amount_cents)}</td><td>${safe(item.description)}</td></tr>`).join('') || '<tr><td colspan="4">No provider cost records yet.</td></tr>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No sandbox audit records yet.</li>';
+
+  return layout('AI Provider Sandbox', `
+    <section class="section-head"><div><p class="eyebrow">Step 31 · AI Provider Adapter Sandbox & Job Orchestration</p><h2>Prepare Meshy, Trellis and Rodin integrations without making unsafe live calls.</h2></div><p class="muted">Step 31 adds adapter governance, mock job queue, retry/cancel lifecycle, provider cost ledger and artifact placeholders. External provider calls remain disabled.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.adapters_total ?? 0)}</strong><span>Adapters</span></div><div class="metric"><strong>${safe(summary.jobs_active ?? 0)}</strong><span>Active jobs</span></div><div class="metric"><strong>${safe(summary.adapters_secret_missing ?? 0)}</strong><span>Missing secrets</span></div><div class="metric"><strong>${formatEuro(summary.reserved_cost_cents ?? 0)}</strong><span>Reserved mock cost</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoAiSandboxJob()" ${S.busy ? 'disabled' : ''}>Queue sandbox job</button><button class="btn secondary" onclick="checkAiSandboxAdapters()" ${S.busy ? 'disabled' : ''}>Health check adapters</button><a class="btn secondary" href="#/ai-governance">Open AI governance</a></div><ul class="muted small">${actionRows}</ul></section>
+    <section class="section grid two"><div class="panel stack"><h3>Provider adapters</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Provider</th><th>Capability</th><th>Health</th></tr>${adapterRows}</table></div><div class="panel stack"><h3>Orchestration jobs</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Type</th><th>Adapter</th><th>Action</th></tr>${jobRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Job events</h3><ul class="muted small">${eventRows}</ul></div><div class="panel stack"><h3>Artifact stubs</h3><table class="table"><tr><th>Type</th><th>Status</th><th>Job</th><th>Review</th></tr>${artifactRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Provider cost ledger</h3><table class="table"><tr><th>Direction</th><th>Adapter</th><th>Amount</th><th>Description</th></tr>${ledgerRows}</table></div><div class="panel stack"><h3>Sandbox audit</h3><ul class="muted small">${auditRows}</ul></div></section>
+  `, { currentStep: 'ai-provider-sandbox' });
+}
+
+async function createDemoAiSandboxJob() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to queue AI sandbox jobs.');
+  setBusy(true);
+  try {
+    const suffix = `${new Date().getMinutes()}${new Date().getSeconds()}`;
+    await window.REBORN_API.createAiOrchestrationJob({ adapter_key: 'mock_meshy_image_to_3d', job_type: 'image_to_3d_model', input_summary: `Sandbox image-to-3D job from prototype console ${suffix}. No external API call.`, priority: 42, estimated_cost_cents: 180 });
+    toast('AI sandbox job queued.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`AI sandbox job failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function advanceAiSandboxJob(id, status) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to advance AI jobs.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.advanceAiOrchestrationJob(id, { status, actual_cost_cents: status === 'succeeded' ? 180 : 0 });
+    toast(`AI sandbox job marked ${status}.`);
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`AI job update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function checkAiSandboxAdapters() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to check adapters.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.checkAiProviderAdapters();
+    toast('AI adapter health check completed.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`AI adapter health check failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -2639,6 +2720,7 @@ const routes = {
   '/marketplace-revenue': marketplaceRevenueDashboard,
   '/maker-economy': makerEconomyDashboard,
   '/ai-governance': aiGovernanceDashboard,
+  '/ai-provider-sandbox': aiProviderSandboxDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -2793,6 +2875,21 @@ async function refreshApiData(options = {}) {
       repairBounties: bootstrap.repair_bounties || S.api.repairBounties || [],
       bountySubmissions: bootstrap.bounty_submissions || S.api.bountySubmissions || [],
       makerEconomyAuditLog: bootstrap.maker_economy_audit_log || S.api.makerEconomyAuditLog || [],
+      aiGovernance: bootstrap.ai_governance || S.api.aiGovernance || null,
+      aiModelProviders: bootstrap.ai_model_providers || S.api.aiModelProviders || [],
+      aiPipelineRuns: bootstrap.ai_pipeline_runs || S.api.aiPipelineRuns || [],
+      aiHumanReviews: bootstrap.ai_human_reviews || S.api.aiHumanReviews || [],
+      aiDatasetItems: bootstrap.ai_dataset_items || S.api.aiDatasetItems || [],
+      aiQualityEvaluations: bootstrap.ai_quality_evaluations || S.api.aiQualityEvaluations || [],
+      aiSafetyRules: bootstrap.ai_safety_rules || S.api.aiSafetyRules || [],
+      aiGovernanceAuditLog: bootstrap.ai_governance_audit_log || S.api.aiGovernanceAuditLog || [],
+      aiProviderSandbox: bootstrap.ai_provider_sandbox || S.api.aiProviderSandbox || null,
+      aiProviderAdapters: bootstrap.ai_provider_adapters || S.api.aiProviderAdapters || [],
+      aiOrchestrationJobs: bootstrap.ai_orchestration_jobs || S.api.aiOrchestrationJobs || [],
+      aiJobEvents: bootstrap.ai_job_events || S.api.aiJobEvents || [],
+      aiArtifactStubs: bootstrap.ai_artifact_stubs || S.api.aiArtifactStubs || [],
+      aiProviderCostLedger: bootstrap.ai_provider_cost_ledger || S.api.aiProviderCostLedger || [],
+      aiProviderSandboxAuditLog: bootstrap.ai_provider_sandbox_audit_log || S.api.aiProviderSandboxAuditLog || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {

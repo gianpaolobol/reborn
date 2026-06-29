@@ -122,6 +122,10 @@ return static function (Router $router, RepairController $repairController, Auth
                 'ai_human_review',
                 'ai_dataset_governance',
                 'ai_quality_evaluations',
+                'ai_provider_adapter_sandbox',
+                'ai_job_orchestration',
+                'ai_provider_cost_ledger',
+                'ai_artifact_stubs',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -268,6 +272,19 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->post('/api/v1/platform/ai-quality-evaluations/evaluate', [$platformController, 'evaluateAiQuality']);
     $router->get('/api/v1/platform/ai-safety-rules', [$platformController, 'aiSafetyRules']);
     $router->get('/api/v1/platform/ai-governance-audit-log', [$platformController, 'aiGovernanceAuditLog']);
+
+    $router->get('/api/v1/platform/ai-provider-sandbox', [$platformController, 'aiProviderSandbox']);
+    $router->get('/api/v1/platform/ai-provider-adapters', [$platformController, 'aiProviderAdapters']);
+    $router->post('/api/v1/platform/ai-provider-adapters/health-check', [$platformController, 'checkAiProviderAdapters']);
+    $router->get('/api/v1/platform/ai-orchestration-jobs', [$platformController, 'aiOrchestrationJobs']);
+    $router->post('/api/v1/platform/ai-orchestration-jobs', [$platformController, 'createAiOrchestrationJob']);
+    $router->post('/api/v1/platform/ai-orchestration-jobs/{id}/advance', [$platformController, 'advanceAiOrchestrationJob']);
+    $router->post('/api/v1/platform/ai-orchestration-jobs/{id}/retry', [$platformController, 'retryAiOrchestrationJob']);
+    $router->post('/api/v1/platform/ai-orchestration-jobs/{id}/cancel', [$platformController, 'cancelAiOrchestrationJob']);
+    $router->get('/api/v1/platform/ai-job-events', [$platformController, 'aiJobEvents']);
+    $router->get('/api/v1/platform/ai-artifact-stubs', [$platformController, 'aiArtifactStubs']);
+    $router->get('/api/v1/platform/ai-provider-cost-ledger', [$platformController, 'aiProviderCostLedger']);
+    $router->get('/api/v1/platform/ai-provider-sandbox-audit-log', [$platformController, 'aiProviderSandboxAuditLog']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);
