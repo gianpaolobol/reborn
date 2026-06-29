@@ -20,6 +20,7 @@ use Reborn\Platform\Application\AiPipelineGovernanceService;
 use Reborn\Platform\Application\AiProviderSandboxService;
 use Reborn\Platform\Application\GeometryPrintabilityService;
 use Reborn\Platform\Application\ProviderRoutingGovernanceService;
+use Reborn\Platform\Application\FulfilmentDispatchGovernanceService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -42,6 +43,7 @@ final class PlatformController
         private readonly AiProviderSandboxService $aiSandbox,
         private readonly GeometryPrintabilityService $geometry,
         private readonly ProviderRoutingGovernanceService $routing,
+        private readonly FulfilmentDispatchGovernanceService $dispatch,
         private readonly AuthContext $auth,
     ) {
     }
@@ -1180,6 +1182,95 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['provider_routing_audit_log' => $this->routing->auditLog($limit)], $request->requestId());
+    }
+
+
+    public function dispatchGovernance(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['dispatch_governance' => $this->dispatch->dashboard()], $request->requestId());
+    }
+
+    public function dispatchPolicies(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        return JsonResponse::ok(['dispatch_policies' => $this->dispatch->dispatchPolicies($status)], $request->requestId());
+    }
+
+    public function dispatches(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['dispatches' => $this->dispatch->dispatches($status, $limit)], $request->requestId());
+    }
+
+    public function createDispatch(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['dispatch_result' => $this->dispatch->createDispatch($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function advanceDispatch(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['dispatch' => $this->dispatch->advanceDispatch((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function shipmentEvents(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $dispatchId = trim((string) $request->query('dispatch_id', '')) ?: null;
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['shipment_events' => $this->dispatch->shipmentTrackingEvents($dispatchId, $limit)], $request->requestId());
+    }
+
+    public function recordShipmentEvent(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['shipment_event' => $this->dispatch->recordShipmentEvent((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function proofOfRepairRecords(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['proof_of_repair_records' => $this->dispatch->proofOfRepairRecords($status, $limit)], $request->requestId());
+    }
+
+    public function createProofOfRepair(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['proof_of_repair' => $this->dispatch->createProofOfRepair((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function reviewProofOfRepair(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['proof_of_repair' => $this->dispatch->reviewProofOfRepair((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function dispatchReviewItems(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['dispatch_review_items' => $this->dispatch->dispatchReviews($status, $limit)], $request->requestId());
+    }
+
+    public function reviewDispatchItem(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['dispatch_review_item' => $this->dispatch->reviewDispatch((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function dispatchAuditLog(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['dispatch_audit_log' => $this->dispatch->auditLog($limit)], $request->requestId());
     }
 
 }

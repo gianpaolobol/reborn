@@ -1207,6 +1207,61 @@
       return this.request(`/api/v1/platform/provider-routing-audit-log?limit=${encodeURIComponent(limit)}`);
     }
 
+
+
+    async getDispatchGovernance() {
+      return this.request('/api/v1/platform/dispatch-governance');
+    }
+
+    async getDispatchPolicies(status = 'active') {
+      return this.request(`/api/v1/platform/dispatch-policies?status=${encodeURIComponent(status)}`);
+    }
+
+    async getDispatches(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/dispatches?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createDispatch(payload = {}) {
+      return this.request('/api/v1/platform/dispatches', { method: 'POST', body: payload });
+    }
+
+    async advanceDispatch(id, payload = {}) {
+      return this.request(`/api/v1/platform/dispatches/${encodeURIComponent(id)}/advance`, { method: 'POST', body: payload });
+    }
+
+    async getShipmentEvents(dispatchId = null, limit = 50) {
+      const query = dispatchId ? `dispatch_id=${encodeURIComponent(dispatchId)}&limit=${encodeURIComponent(limit)}` : `limit=${encodeURIComponent(limit)}`;
+      return this.request(`/api/v1/platform/shipment-events?${query}`);
+    }
+
+    async recordShipmentEvent(id, payload = {}) {
+      return this.request(`/api/v1/platform/dispatches/${encodeURIComponent(id)}/shipment-events`, { method: 'POST', body: payload });
+    }
+
+    async getProofOfRepairRecords(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/proof-of-repair-records?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createProofOfRepair(id, payload = {}) {
+      return this.request(`/api/v1/platform/dispatches/${encodeURIComponent(id)}/proof-of-repair`, { method: 'POST', body: payload });
+    }
+
+    async reviewProofOfRepair(id, payload = {}) {
+      return this.request(`/api/v1/platform/proof-of-repair-records/${encodeURIComponent(id)}/review`, { method: 'POST', body: payload });
+    }
+
+    async getDispatchReviewItems(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/dispatch-review-items?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async reviewDispatchItem(id, payload = {}) {
+      return this.request(`/api/v1/platform/dispatch-review-items/${encodeURIComponent(id)}/review`, { method: 'POST', body: payload });
+    }
+
+    async getDispatchAuditLog(limit = 50) {
+      return this.request(`/api/v1/platform/dispatch-audit-log?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -1380,7 +1435,14 @@
           routing_requests: [],
           routing_matches: [],
           routing_review_items: [],
-          provider_routing_audit_log: []
+          provider_routing_audit_log: [],
+          dispatch_governance: null,
+          dispatch_policies: [],
+          dispatches: [],
+          shipment_events: [],
+          proof_of_repair_records: [],
+          dispatch_review_items: [],
+          dispatch_audit_log: []
         };
       }
 
@@ -1489,6 +1551,13 @@
       let routingMatches = { routing_matches: [] };
       let routingReviewItems = { routing_review_items: [] };
       let providerRoutingAuditLog = { provider_routing_audit_log: [] };
+      let dispatchGovernance = { dispatch_governance: null };
+      let dispatchPolicies = { dispatch_policies: [] };
+      let dispatches = { dispatches: [] };
+      let shipmentEvents = { shipment_events: [] };
+      let proofOfRepairRecords = { proof_of_repair_records: [] };
+      let dispatchReviewItems = { dispatch_review_items: [] };
+      let dispatchAuditLog = { dispatch_audit_log: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -2056,6 +2125,42 @@
           providerRoutingAuditLog = { provider_routing_audit_log: [] };
         }
 
+        try {
+          dispatchGovernance = await this.getDispatchGovernance();
+        } catch (_error) {
+          dispatchGovernance = { dispatch_governance: null };
+        }
+        try {
+          dispatchPolicies = await this.getDispatchPolicies('active');
+        } catch (_error) {
+          dispatchPolicies = { dispatch_policies: [] };
+        }
+        try {
+          dispatches = await this.getDispatches('all', 30);
+        } catch (_error) {
+          dispatches = { dispatches: [] };
+        }
+        try {
+          shipmentEvents = await this.getShipmentEvents(null, 30);
+        } catch (_error) {
+          shipmentEvents = { shipment_events: [] };
+        }
+        try {
+          proofOfRepairRecords = await this.getProofOfRepairRecords('all', 30);
+        } catch (_error) {
+          proofOfRepairRecords = { proof_of_repair_records: [] };
+        }
+        try {
+          dispatchReviewItems = await this.getDispatchReviewItems('active', 30);
+        } catch (_error) {
+          dispatchReviewItems = { dispatch_review_items: [] };
+        }
+        try {
+          dispatchAuditLog = await this.getDispatchAuditLog(30);
+        } catch (_error) {
+          dispatchAuditLog = { dispatch_audit_log: [] };
+        }
+
       }
 
       if (latestCase && this.getToken()) {
@@ -2270,7 +2375,14 @@
         routing_requests: routingRequests.routing_requests || [],
         routing_matches: routingMatches.routing_matches || [],
         routing_review_items: routingReviewItems.routing_review_items || [],
-        provider_routing_audit_log: providerRoutingAuditLog.provider_routing_audit_log || []
+        provider_routing_audit_log: providerRoutingAuditLog.provider_routing_audit_log || [],
+        dispatch_governance: dispatchGovernance.dispatch_governance || null,
+        dispatch_policies: dispatchPolicies.dispatch_policies || [],
+        dispatches: dispatches.dispatches || [],
+        shipment_events: shipmentEvents.shipment_events || [],
+        proof_of_repair_records: proofOfRepairRecords.proof_of_repair_records || [],
+        dispatch_review_items: dispatchReviewItems.dispatch_review_items || [],
+        dispatch_audit_log: dispatchAuditLog.dispatch_audit_log || []
       };
     }
   }

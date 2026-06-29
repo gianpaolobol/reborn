@@ -611,3 +611,22 @@ Prototype route:
 ```text
 /prototype/index.html#/provider-routing
 ```
+
+
+### Step 34 — Fulfilment Dispatch, Shipment Tracking & Proof-of-Repair Governance v1
+
+Step 34 adds dispatch policies, fulfilment dispatch records, local/mock shipment tracking events, proof-of-repair records, dispatch review items and dispatch audit logging.
+
+Smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-dispatch-proof-governance.ps1
+```
+
+Prototype route:
+
+```text
+/prototype/index.html#/dispatch-governance
+```
+
+This step does not book real couriers or create real shipment labels. It records the governance workflow needed before routed repair fulfilments can be operated in a pilot or beta environment.

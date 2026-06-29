@@ -88,6 +88,7 @@ use Reborn\Platform\Application\AiPipelineGovernanceService;
 use Reborn\Platform\Application\AiProviderSandboxService;
 use Reborn\Platform\Application\GeometryPrintabilityService;
 use Reborn\Platform\Application\ProviderRoutingGovernanceService;
+use Reborn\Platform\Application\FulfilmentDispatchGovernanceService;
 use Reborn\Platform\Application\OperationalTelemetryService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Platform\Presentation\PlatformController;
@@ -359,6 +360,7 @@ $aiPipelineGovernanceService = new AiPipelineGovernanceService($pdo);
 $aiProviderSandboxService = new AiProviderSandboxService($pdo);
 $geometryPrintabilityService = new GeometryPrintabilityService($pdo);
 $providerRoutingGovernanceService = new ProviderRoutingGovernanceService($pdo);
+$fulfilmentDispatchGovernanceService = new FulfilmentDispatchGovernanceService($pdo);
 $operationalTelemetryService = new OperationalTelemetryService(
     $pdo,
     $productionReadinessService,
@@ -382,6 +384,7 @@ $platformController = new PlatformController(
     $aiProviderSandboxService,
     $geometryPrintabilityService,
     $providerRoutingGovernanceService,
+    $fulfilmentDispatchGovernanceService,
     $authContext
 );
 

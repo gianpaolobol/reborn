@@ -44,6 +44,7 @@ final class ProductionReadinessService
             'ai_provider_sandbox' => $this->aiProviderSandboxCheck(),
             'geometry_printability' => $this->geometryPrintabilityCheck(),
             'provider_routing' => $this->providerRoutingCheck(),
+            'dispatch_governance' => $this->dispatchGovernanceCheck(),
         ];
 
         $status = 'ready';
@@ -95,7 +96,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v13_step32',
+            'checklist_version' => 'production_readiness_v15_step34',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -113,6 +114,7 @@ final class ProductionReadinessService
                 'AI provider usage, human review gates, dataset consent/licensing and quality evaluation are reviewed before real AI integrations',
                 'AI provider adapters, job orchestration, provider costs, retry rules and artifact stubs are reviewed before any live external AI call',
                 'CAD/geometry validation, printability findings and human review decisions are completed before provider routing or maker publication',
+                'provider routing, dispatch tracking and proof-of-repair governance are reviewed before real fulfilment operations',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
@@ -126,6 +128,8 @@ final class ProductionReadinessService
             'step_30_status' => 'AI pipeline governance, human-in-the-loop review, dataset governance and AI quality evaluation v1 implemented.',
             'step_31_status' => 'AI provider adapter sandbox, mock job orchestration, cost ledger and artifact stubs v1 implemented.',
             'step_32_status' => 'CAD/geometry validation, printability governance and human review workflow v1 implemented.',
+            'step_33_status' => 'Provider capability, machine profile and fulfilment routing governance v1 implemented.',
+            'step_34_status' => 'Fulfilment dispatch, shipment tracking and proof-of-repair governance v1 implemented.',
         ];
     }
 
@@ -196,10 +200,10 @@ final class ProductionReadinessService
             $count = (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn();
             $latest = $this->pdo->query('SELECT filename FROM migrations ORDER BY executed_at DESC, id DESC LIMIT 1')->fetchColumn();
             return [
-                'status' => $count >= 25 ? 'ok' : 'warn',
+                'status' => $count >= 28 ? 'ok' : 'warn',
                 'executed_count' => $count,
                 'latest' => $latest ?: null,
-                'message' => $count >= 25 ? 'All MVP hardening, governance, marketplace, maker economy, AI governance and AI provider sandbox migrations are present.' : 'Some migrations may still need to run.',
+                'message' => $count >= 28 ? 'All MVP hardening, governance, marketplace, maker economy, AI governance, geometry, routing and dispatch migrations are present.' : 'Some migrations may still need to run.',
             ];
         } catch (Throwable $exception) {
             return ['status' => 'fail', 'message' => 'Migration metadata is unavailable.', 'error' => $exception->getMessage()];
@@ -787,6 +791,46 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Provider routing governance checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function dispatchGovernanceCheck(): array
+    {
+        try {
+            $tables = ['platform_dispatch_policies', 'platform_fulfilment_dispatches', 'platform_shipment_tracking_events', 'platform_proof_of_repair_records', 'platform_dispatch_review_items', 'platform_dispatch_audit_log'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $policies = 0;
+            $dispatches = 0;
+            $trackingEvents = 0;
+            $proofs = 0;
+            if ($missing === []) {
+                $policies = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_dispatch_policies WHERE status = 'active'")->fetchColumn();
+                $dispatches = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_fulfilment_dispatches')->fetchColumn();
+                $trackingEvents = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_shipment_tracking_events')->fetchColumn();
+                $proofs = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_proof_of_repair_records')->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? ($policies > 0 ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Dispatch, shipment tracking and proof-of-repair governance tables are available. Real courier booking and return logistics remain out of scope for the local pilot.' : 'Dispatch governance tables are not fully migrated yet.',
+                'dispatch_policies' => $policies,
+                'dispatches' => $dispatches,
+                'tracking_events' => $trackingEvents,
+                'proof_of_repair_records' => $proofs,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Dispatch governance checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 

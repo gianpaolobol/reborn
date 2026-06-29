@@ -194,6 +194,11 @@ final class OperationalTelemetryService
             'smoke-partner-onboarding-governance.ps1' => 'Step 27 partner onboarding governance',
             'smoke-marketplace-revenue-governance.ps1' => 'Step 28 marketplace revenue governance',
             'smoke-maker-economy-governance.ps1' => 'Step 29 maker economy governance',
+            'smoke-ai-pipeline-governance.ps1' => 'Step 30 AI pipeline governance',
+            'smoke-ai-provider-sandbox-orchestration.ps1' => 'Step 31 AI provider sandbox orchestration',
+            'smoke-geometry-printability-governance.ps1' => 'Step 32 geometry printability governance',
+            'smoke-provider-routing-governance.ps1' => 'Step 33 provider routing governance',
+            'smoke-dispatch-proof-governance.ps1' => 'Step 34 dispatch proof governance',
         ];
 
         $rows = [];

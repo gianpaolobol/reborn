@@ -133,6 +133,10 @@ return static function (Router $router, RepairController $repairController, Auth
                 'machine_profile_governance',
                 'provider_fulfilment_routing',
                 'routing_human_review',
+                'fulfilment_dispatch_governance',
+                'shipment_tracking_governance',
+                'proof_of_repair_governance',
+                'dispatch_human_review',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -315,6 +319,20 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->get('/api/v1/platform/routing-review-items', [$platformController, 'routingReviews']);
     $router->post('/api/v1/platform/routing-review-items/{id}/review', [$platformController, 'reviewRoutingItem']);
     $router->get('/api/v1/platform/provider-routing-audit-log', [$platformController, 'providerRoutingAuditLog']);
+
+    $router->get('/api/v1/platform/dispatch-governance', [$platformController, 'dispatchGovernance']);
+    $router->get('/api/v1/platform/dispatch-policies', [$platformController, 'dispatchPolicies']);
+    $router->get('/api/v1/platform/dispatches', [$platformController, 'dispatches']);
+    $router->post('/api/v1/platform/dispatches', [$platformController, 'createDispatch']);
+    $router->post('/api/v1/platform/dispatches/{id}/advance', [$platformController, 'advanceDispatch']);
+    $router->get('/api/v1/platform/shipment-events', [$platformController, 'shipmentEvents']);
+    $router->post('/api/v1/platform/dispatches/{id}/shipment-events', [$platformController, 'recordShipmentEvent']);
+    $router->get('/api/v1/platform/proof-of-repair-records', [$platformController, 'proofOfRepairRecords']);
+    $router->post('/api/v1/platform/dispatches/{id}/proof-of-repair', [$platformController, 'createProofOfRepair']);
+    $router->post('/api/v1/platform/proof-of-repair-records/{id}/review', [$platformController, 'reviewProofOfRepair']);
+    $router->get('/api/v1/platform/dispatch-review-items', [$platformController, 'dispatchReviewItems']);
+    $router->post('/api/v1/platform/dispatch-review-items/{id}/review', [$platformController, 'reviewDispatchItem']);
+    $router->get('/api/v1/platform/dispatch-audit-log', [$platformController, 'dispatchAuditLog']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

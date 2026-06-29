@@ -108,7 +108,8 @@ function stepper(active) {
     ['ai-governance', '21', 'AI Gov'],
     ['ai-provider-sandbox', '22', 'AI Ops'],
     ['geometry-printability', '23', 'Geometry'],
-    ['provider-routing', '24', 'Routing']
+    ['provider-routing', '24', 'Routing'],
+    ['dispatch-governance', '25', 'Dispatch']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -2873,6 +2874,118 @@ async function approveRoutingReview(id) {
   }
 }
 
+
+function dispatchGovernanceDashboard() {
+  setActiveNav('dispatch-governance');
+  if (!S.auth.user) {
+    return layout('Dispatch Governance', authRequiredPanel('the Step 34 dispatch governance console'), { currentStep: 'dispatch-governance' });
+  }
+
+  const dashboard = S.api.dispatchGovernance || {};
+  const summary = dashboard.summary || {};
+  const policies = S.api.dispatchPolicies || dashboard.policies || [];
+  const dispatches = S.api.dispatches || dashboard.latest_dispatches || [];
+  const events = S.api.shipmentEvents || dashboard.latest_tracking_events || [];
+  const proofs = S.api.proofOfRepairRecords || dashboard.pending_proofs || [];
+  const reviews = S.api.dispatchReviewItems || dashboard.open_reviews || [];
+  const audit = S.api.dispatchAuditLog || [];
+
+  const policyRows = policies.slice(0, 6).map(item => `<li><strong>${safe(item.policy_key)}</strong> — ${safe(item.description)}</li>`).join('') || '<li>No active dispatch policies.</li>';
+  const dispatchRows = dispatches.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'completed' || item.status === 'proof_accepted' ? 'green' : item.status === 'needs_review' || item.status === 'blocked' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.dispatch_code)}</td><td>${safe(item.provider_name || 'provider pending')}</td><td>${safe(item.machine_name || 'machine pending')}</td><td>${safe(item.tracking_number || 'pending')}</td><td><button class="mini-button" onclick="advanceDispatch('${safe(item.id)}', 'confirm_dispatch')" ${S.busy ? 'disabled' : ''}>Dispatch</button><button class="mini-button" onclick="advanceDispatch('${safe(item.id)}', 'mark_delivered')" ${S.busy ? 'disabled' : ''}>Deliver</button></td></tr>`).join('') || '<tr><td colspan="6">No dispatches yet.</td></tr>';
+  const eventRows = events.slice(0, 10).map(item => `<tr><td>${safe(item.dispatch_code)}</td><td>${safe(item.event_type)}</td><td>${safe(item.status)}</td><td>${safe(item.location || 'n/a')}</td><td>${safe(item.message)}</td></tr>`).join('') || '<tr><td colspan="5">No tracking events yet.</td></tr>';
+  const proofRows = proofs.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'accepted' ? 'green' : item.status === 'rework_required' || item.status === 'rejected' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.dispatch_code)}</td><td>${safe(item.proof_type)}</td><td>${safe(item.quality_score)}</td><td>${safe(item.summary)}</td><td><button class="mini-button" onclick="reviewProofOfRepair('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Accept</button></td></tr>`).join('') || '<tr><td colspan="6">No proof-of-repair records yet.</td></tr>';
+  const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.priority === 'high' ? 'orange' : 'blue'}">${safe(item.priority)}</span></td><td>${safe(item.status)}</td><td>${safe(item.dispatch_code)}</td><td>${safe(item.review_reason)}</td><td><button class="mini-button" onclick="approveDispatchReview('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Approve</button></td></tr>`).join('') || '<tr><td colspan="5">No active dispatch reviews.</td></tr>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No dispatch audit records yet.</li>';
+
+  return layout('Dispatch Governance', `
+    <section class="section-head"><div><p class="eyebrow">Step 34 · Fulfilment Dispatch, Shipment Tracking & Proof-of-Repair Governance</p><h2>Move routed repairs through pilot dispatch, tracking and proof-of-repair review.</h2></div><p class="muted">Step 34 is an operational governance layer. It creates local/mock dispatches and tracking evidence; it does not book real couriers or create shipping labels.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.dispatches ?? 0)}</strong><span>Dispatches</span></div><div class="metric"><strong>${safe(summary.active_dispatches ?? 0)}</strong><span>Active dispatches</span></div><div class="metric"><strong>${safe(summary.tracking_events ?? 0)}</strong><span>Tracking events</span></div><div class="metric"><strong>${safe(summary.proofs_pending_review ?? 0)}</strong><span>Proofs pending</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoDispatch()" ${S.busy ? 'disabled' : ''}>Create dispatch from best route</button><button class="btn secondary" onclick="submitProofForFirstDispatch()" ${S.busy ? 'disabled' : ''}>Submit proof</button><a class="btn secondary" href="#/provider-routing">Open routing</a><a class="btn secondary" href="#/fulfilment">Fulfilment</a></div><p class="muted small">Dispatches rely on Step 33 routing matches. If none exists, create/evaluate a routing request first.</p></section>
+    <section class="section grid two"><div class="panel stack"><h3>Dispatches</h3><table class="table"><tr><th>Status</th><th>Dispatch</th><th>Provider</th><th>Machine</th><th>Tracking</th><th>Action</th></tr>${dispatchRows}</table></div><div class="panel stack"><h3>Dispatch policies</h3><ul class="muted small">${policyRows}</ul></div></section>
+    <section class="section panel stack"><h3>Shipment / pickup tracking events</h3><table class="table"><tr><th>Dispatch</th><th>Event</th><th>Status</th><th>Location</th><th>Message</th></tr>${eventRows}</table></section>
+    <section class="section grid two"><div class="panel stack"><h3>Proof-of-repair records</h3><table class="table"><tr><th>Status</th><th>Dispatch</th><th>Type</th><th>Quality</th><th>Summary</th><th>Action</th></tr>${proofRows}</table></div><div class="panel stack"><h3>Dispatch reviews</h3><table class="table"><tr><th>Priority</th><th>Status</th><th>Dispatch</th><th>Reason</th><th>Action</th></tr>${reviewRows}</table></div></section>
+    <section class="section panel stack"><h3>Dispatch audit</h3><ul class="muted small">${auditRows}</ul></section>
+  `, { currentStep: 'dispatch-governance' });
+}
+
+async function createDemoDispatch() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create dispatches.');
+  setBusy(true);
+  try {
+    const match = (S.api.routingMatches || [])[0];
+    await window.REBORN_API.createDispatch({ routing_match_id: match?.id || null, fulfilment_mode: 'shipped', carrier: 'mock_carrier', destination_country: 'IT', package_requirements: { protective_packaging: true, pilot_label: true }, operator_notes: 'Created from Step 34 prototype console.' });
+    toast('Dispatch created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Dispatch creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function advanceDispatch(id, action) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to advance dispatches.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.advanceDispatch(id, { action, location: 'pilot_operations', message: `Prototype action ${action} recorded.` });
+    toast('Dispatch advanced.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Dispatch update failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function submitProofForFirstDispatch() {
+  const dispatch = (S.api.dispatches || [])[0];
+  if (!dispatch) return toast('No dispatch available. Create one first.');
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to submit proof.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.createProofOfRepair(dispatch.id, { proof_type: 'photo_and_notes', summary: 'Pilot evidence: part printed, fitted and basic functional test passed.', quality_score: 82, evidence: { photo_stub: 'local://proof/step34-demo.jpg', functional_test_passed: true } });
+    toast('Proof-of-repair submitted.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Proof submission failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function reviewProofOfRepair(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to review proof.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.reviewProofOfRepair(id, { decision: 'accepted_with_notes', notes: 'Accepted for pilot demo. Real customer acceptance remains deferred.' });
+    toast('Proof-of-repair reviewed.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Proof review failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function approveDispatchReview(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to review dispatches.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.reviewDispatchItem(id, { decision: 'approved_for_dispatch', notes: 'Approved for local pilot dispatch. Real carrier booking remains deferred.' });
+    toast('Dispatch review completed.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Dispatch review failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -2901,6 +3014,7 @@ const routes = {
   '/ai-provider-sandbox': aiProviderSandboxDashboard,
   '/geometry-printability': geometryPrintabilityDashboard,
   '/provider-routing': providerRoutingDashboard,
+  '/dispatch-governance': dispatchGovernanceDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -3086,6 +3200,13 @@ async function refreshApiData(options = {}) {
       routingMatches: bootstrap.routing_matches || S.api.routingMatches || [],
       routingReviewItems: bootstrap.routing_review_items || S.api.routingReviewItems || [],
       providerRoutingAuditLog: bootstrap.provider_routing_audit_log || S.api.providerRoutingAuditLog || [],
+      dispatchGovernance: bootstrap.dispatch_governance || S.api.dispatchGovernance || null,
+      dispatchPolicies: bootstrap.dispatch_policies || S.api.dispatchPolicies || [],
+      dispatches: bootstrap.dispatches || S.api.dispatches || [],
+      shipmentEvents: bootstrap.shipment_events || S.api.shipmentEvents || [],
+      proofOfRepairRecords: bootstrap.proof_of_repair_records || S.api.proofOfRepairRecords || [],
+      dispatchReviewItems: bootstrap.dispatch_review_items || S.api.dispatchReviewItems || [],
+      dispatchAuditLog: bootstrap.dispatch_audit_log || S.api.dispatchAuditLog || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
