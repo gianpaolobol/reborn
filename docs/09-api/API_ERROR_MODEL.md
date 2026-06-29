@@ -1,36 +1,53 @@
-# API — Error Model
+# API Error Model
 
-## Standard error response
+All API errors should use a consistent format.
 
 ```json
 {
-  "success": false,
-  "data": null,
   "error": {
-    "code": "REPAIR_CASE_NOT_FOUND",
-    "message": "Repair case not found.",
+    "code": "repair_case_not_found",
+    "message": "The repair case could not be found.",
     "details": {},
     "request_id": "req_123"
   }
 }
 ```
 
+---
+
 ## Error categories
 
-- AUTHENTICATION_ERROR
-- AUTHORIZATION_ERROR
-- VALIDATION_ERROR
-- UPLOAD_ERROR
-- AI_JOB_ERROR
-- LOW_CONFIDENCE_RESULT
-- NOT_FOUND
-- CONFLICT
-- RATE_LIMITED
-- PAYMENT_ERROR
-- WALLET_ERROR
-- PROVIDER_UNAVAILABLE
-- INTERNAL_ERROR
+- validation_error;
+- authentication_required;
+- permission_denied;
+- not_found;
+- conflict;
+- unsupported_file;
+- ai_processing_failed;
+- provider_unavailable;
+- payment_failed;
+- rate_limited;
+- internal_error.
 
-## Regola UX
+---
 
-Ogni errore API che arriva al frontend deve poter essere tradotto in una frase umana e in un'azione successiva.
+## UX rule
+
+API errors must be translatable into human actions.
+
+Bad:
+
+```json
+{"error":"invalid"}
+```
+
+Good:
+
+```json
+{
+  "error": {
+    "code": "photo_too_blurry",
+    "message": "The uploaded photo is too blurry to analyze. Upload a sharper photo of the broken component."
+  }
+}
+```

@@ -1,29 +1,16 @@
-# Wireframes — Re-born
+# Wireframes
 
-Questa cartella conterrà wireframe testuali, low-fidelity e high-fidelity.
+This folder will contain low-fidelity wireframes before UI mockups and implementation.
 
-## Priorità wireframe
+First wireframes to create:
 
-1. Homepage / categoria
-2. Start repair
-3. Upload foto
-4. AI recognition states
-5. Repair path comparison
-6. Part/model detail
-7. Provider quote
-8. Checkout
-9. Validation
-10. Maker upload
-11. Provider onboarding
-12. Company dashboard
-
-## Regola
-
-Ogni wireframe deve mostrare:
-
-- problema utente;
-- azione primaria;
-- informazione necessaria;
-- stato di fiducia;
-- prossimo passo;
-- impatto sul Knowledge Graph.
+1. Homepage;
+2. Start repair;
+3. Upload photos;
+4. Diagnosis summary;
+5. Repair path selector;
+6. Provider quote request;
+7. Maker upload;
+8. Provider dashboard;
+9. Admin repair review;
+10. Outcome confirmation.

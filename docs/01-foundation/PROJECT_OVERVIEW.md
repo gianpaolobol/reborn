@@ -1,32 +1,42 @@
 # Project Overview
 
-## Nome
+Re-born is a Repair Intelligence Platform built to make repair easier, smarter and more accessible.
 
-Re-born
+The platform starts from a simple human problem: an object is broken, missing a part, no longer usable or too costly to replace.
 
-## Categoria
+Re-born guides the user through:
 
-Repair Intelligence Platform.
+1. object identification;
+2. component identification;
+3. repair path selection;
+4. spare part or CAD discovery;
+5. AI-assisted model generation when no solution exists;
+6. local production through a distributed provider network;
+7. repair confirmation;
+8. system learning.
 
-## Non è
+---
 
-- un semplice marketplace STL;
-- un repository CAD;
-- un service di stampa 3D;
-- una copia di Hubs, MakerWorld, Printables, Thingiverse o Reaplace.
+## Product thesis
 
-## È
+The repair economy lacks an intelligent coordination layer.
 
-Una piattaforma che permette di identificare, ricostruire, condividere, produrre e validare ricambi tramite AI, Knowledge Graph e produzione distribuita.
+Today, knowledge is fragmented across forums, spare-part sites, 3D repositories, YouTube tutorials, manufacturer portals, local repairers, makers and 3D printing services.
 
-## Mission
+Re-born becomes the coordination layer that transforms fragments into a structured repair graph.
 
-Permettere a chiunque, ovunque, di riparare qualsiasi oggetto attraverso AI, progettazione collaborativa e una rete distribuita di produttori locali.
+---
 
-## Vision
+## Strategic wedge
 
-Diventare l’infrastruttura europea e poi globale della riparazione distribuita.
+The initial wedge is not “repair everything”.
 
-## Core Insight
+The initial wedge is:
 
-Le persone non cercano STL, CAD o stampa 3D. Cercano una soluzione concreta: “voglio che il mio oggetto torni a funzionare”.
+- consumer objects with broken or missing plastic components;
+- parts that can be reproduced, replaced or modeled;
+- repair cases where 3D printing and CAD are useful;
+- users who can provide photos and measurements;
+- maker/provider community able to supply local production.
+
+This wedge creates data, liquidity and trust for expansion into broader repair categories.

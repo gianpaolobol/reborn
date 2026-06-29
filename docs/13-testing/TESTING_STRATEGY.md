@@ -1,29 +1,38 @@
-# Testing Strategy — Re-born
+# Testing Strategy
 
-## Livelli
+## Test levels
 
-1. Unit test per Domain Services.
-2. Integration test per repository e database.
-3. API test per endpoint principali.
-4. UX flow test manuali per Repair Journey.
-5. Security test su upload, auth, ruoli e wallet.
-6. Data quality test su Knowledge Graph.
+### Domain tests
 
-## Test MVP obbligatori
+Validate entities, value objects and domain rules.
 
-- creazione utente;
-- creazione repair case;
-- upload immagine;
-- risultato AI low confidence;
-- selezione repair path;
-- upload modello maker;
-- registrazione provider;
-- richiesta preventivo;
-- ordine base;
-- calcolo royalty;
-- validazione riparazione;
-- aggiornamento Repair Score.
+### Application tests
 
-## Regola
+Validate use cases such as creating repair cases and selecting repair paths.
 
-Un flusso non è completato se non misura l'esito della riparazione.
+### Integration tests
+
+Validate repositories, database interactions and external provider boundaries.
+
+### UI tests
+
+Validate critical repair flows.
+
+---
+
+## Critical scenarios
+
+- create repair case;
+- upload valid/invalid files;
+- classify repair case;
+- recommend path;
+- request provider quote;
+- upload model;
+- submit outcome;
+- update trust signal.
+
+---
+
+## Quality principle
+
+Test the repair journey first. Secondary marketplace features come later.

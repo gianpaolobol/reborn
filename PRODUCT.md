@@ -1,369 +1,321 @@
-# PRODUCT.md — Re-born
+# Re-born — Product Operating System
 
-Version: 0.2.0  
-Status: Master Product Baseline  
-Date: 2026-06-29  
-Repository: https://github.com/gianpaolobol/reborn  
-Mission: **Allow anyone to repair anything.**
-
----
-
-## 1. Product identity
-
-**Re-born** è una **Repair Intelligence Platform** internazionale.
-
-Non è un semplice marketplace di file STL, un sito di preventivi per stampa 3D o una libreria CAD. È un sistema operativo per la riparazione: identifica oggetti e componenti rotti, propone il percorso migliore, recupera o genera ricambi, coordina la produzione distribuita e apprende da ogni riparazione.
-
-### Vision
-
-Diventare l'infrastruttura mondiale della **Repair Intelligence**: il punto in cui persone, maker, service di stampa, aziende, ricambi, AI e conoscenza tecnica convergono per prolungare la vita degli oggetti.
-
-### Core insight
-
-L'utente non cerca uno STL.  
-L'utente non vuole capire CAD, slicer, materiali, tolleranze o provider.  
-L'utente vuole una sola cosa:
-
-> Il mio oggetto deve tornare a funzionare.
-
-Ogni schermata, ogni API, ogni tabella, ogni modello di business e ogni decisione tecnica devono partire da questo principio.
+**Versione:** 0.2  
+**Data:** 2026-06-29  
+**Repository:** https://github.com/gianpaolobol/reborn  
+**Mission:** Allow anyone to repair anything.
 
 ---
 
-## 2. Category definition
+## 1. Definizione sintetica
 
-Re-born crea e presidia la categoria **Repair Intelligence Platform**.
+Re-born è una **Repair Intelligence Platform** internazionale.
 
-### Re-born non è
+Non è un semplice marketplace di file 3D, non è un archivio STL, non è una directory di stampatori e non è un portale generico di ricambi. Re-born è il sistema che guida una persona dal problema reale — “questo oggetto non funziona più” — fino alla soluzione migliore: riparazione, ricambio esistente, modello CAD, generazione AI, stampa locale o intervento di un provider.
 
-- Thingiverse
-- Printables
-- MakerWorld
-- Hubs
-- Reaplace
-- un marketplace STL
-- un service di stampa 3D
-- una directory di FabLab
-- un generatore AI di modelli 3D isolato
+La piattaforma combina:
 
-### Re-born è
+- riconoscimento AI di prodotti, componenti e guasti;
+- Knowledge Graph dei prodotti, dei pezzi, dei materiali, dei modelli e delle riparazioni;
+- marketplace CAD e ricambi;
+- rete distribuita di provider di stampa 3D, service professionali e maker qualificati;
+- wallet, crediti, royalty, bounty e sistemi di reputazione;
+- apprendimento continuo da ogni riparazione completata.
 
-- un motore di diagnosi e decisione per la riparazione;
-- un Knowledge Graph dei prodotti, dei componenti, dei guasti e delle soluzioni;
-- un marketplace di ricambi digitali e fisici;
-- una rete distribuita di maker, provider e repair hub;
-- una piattaforma economica con wallet, royalty, bounty e crediti;
-- un'infrastruttura enterprise per brand, cataloghi ufficiali, analytics ESG e API.
+Il principio guida è semplice:
+
+> L’utente non cerca uno STL. L’utente vuole che il suo oggetto torni a funzionare.
 
 ---
 
-## 3. Strategic product thesis
+## 2. Visione
 
-Milioni di oggetti vengono sostituiti per la rottura di piccoli componenti perché:
+Diventare il riferimento mondiale della Repair Intelligence: il livello intelligente che connette persone, oggetti rotti, conoscenza tecnica, AI, ricambi, maker e manifattura distribuita.
 
-1. il componente non è identificabile;
-2. il ricambio non è reperibile;
-3. il prodotto non è documentato;
-4. il modello CAD non esiste;
-5. chi può modellarlo non incontra chi lo cerca;
-6. chi può produrlo localmente non è connesso al bisogno;
-7. non esiste una memoria globale delle riparazioni riuscite o fallite.
+In futuro Re-born dovrà poter rispondere a domande come:
 
-Re-born risolve questo vuoto trasformando ogni riparazione in un dato strutturato che alimenta il sistema.
+- Che oggetto è questo?
+- Quale componente è rotto?
+- Esiste già un ricambio compatibile?
+- Esiste un modello CAD verificato?
+- Serve generarlo tramite AI?
+- Quale materiale è più adatto?
+- Chi può produrlo vicino a me?
+- Quanto costa?
+- Qual è la probabilità che la riparazione funzioni?
+- Cosa abbiamo imparato da riparazioni simili?
 
 ---
 
-## 4. Repair Intelligence Engine™
+## 3. Posizionamento
 
-Il **Repair Intelligence Engine™** è il cervello della piattaforma.
+Re-born NON deve essere percepito come:
+
+- Thingiverse;
+- Printables;
+- MakerWorld;
+- Hubs;
+- un clone di Reaplace;
+- un preventivatore di stampa 3D;
+- un e-commerce di ricambi.
+
+Re-born deve essere percepito come:
+
+- il sistema operativo della riparazione;
+- un assistente intelligente per riportare in vita oggetti;
+- una piattaforma di conoscenza, produzione e apprendimento;
+- un’infrastruttura internazionale per l’economia circolare.
+
+---
+
+## 4. North Star
+
+La metrica guida è:
+
+**Objects Successfully Repaired**
+
+Una riparazione è considerata completata quando:
+
+1. l’oggetto o componente è stato identificato;
+2. è stato proposto un percorso di riparazione;
+3. l’utente ha ottenuto un ricambio, modello, stampa o supporto;
+4. l’utente o il provider conferma l’esito;
+5. il Knowledge Graph viene aggiornato.
+
+Metriche secondarie:
+
+- repair attempts started;
+- repair completion rate;
+- objects saved from waste;
+- verified models uploaded;
+- provider fulfilment success rate;
+- average time to repair;
+- AI recognition accuracy;
+- CAD model fit success;
+- repeat provider usage;
+- marketplace liquidity;
+- enterprise adoption.
+
+---
+
+## 5. Repair Intelligence Engine™
+
+Il cuore di Re-born è il **Repair Intelligence Engine™**.
 
 È composto da cinque motori:
 
-### 4.1 Recognition Engine
+### 5.1 Recognition Engine
 
-Identifica:
+Riconosce oggetti, categorie, componenti, guasti e segnali visivi da immagini, testo e dati caricati dall’utente.
+
+Input:
+
+- foto dell’oggetto;
+- foto del pezzo rotto;
+- descrizione testuale;
+- marca, modello, misure;
+- file CAD o STL;
+- storico di riparazioni simili.
+
+Output:
+
+- categoria prodotto;
+- prodotto candidato;
+- componente candidato;
+- confidenza;
+- dati mancanti;
+- percorso successivo consigliato.
+
+### 5.2 Knowledge Engine
+
+Interroga il Knowledge Graph per trovare connessioni tra:
 
 - prodotto;
-- brand;
-- famiglia;
-- modello;
 - componente;
-- guasto probabile;
-- vincoli dimensionali;
-- livello di confidenza.
-
-Input possibili:
-
-- foto;
-- video;
-- file STL/OBJ/STEP;
-- descrizione testuale;
-- QR/serial number;
-- codice componente;
-- manuale o esploso tecnico.
-
-### 4.2 Knowledge Engine
-
-Collega:
-
-- brand;
-- prodotti;
-- versioni;
-- componenti;
-- guasti;
 - materiali;
+- ricambi;
 - modelli CAD;
-- compatibilità;
 - provider;
-- feedback;
-- tutorial;
-- success rate;
-- fallimenti.
+- casi di riparazione;
+- errori noti;
+- istruzioni;
+- compatibilità.
 
-### 4.3 Decision Engine
+### 5.3 Decision Engine
 
-Decide il percorso più adatto:
+Sceglie il miglior percorso di riparazione tra:
 
-- ricambio esistente;
-- modello community;
-- modello ufficiale del brand;
-- richiesta a maker;
+- ricambio originale;
+- ricambio compatibile;
+- modello CAD esistente;
+- modello generato AI;
+- richiesta a maker/community;
 - bounty;
-- ricostruzione AI;
-- riparazione manuale;
 - provider locale;
-- repair café / hub territoriale;
-- non riparabile con motivazione trasparente.
+- riparazione manuale;
+- non riparabilità motivata.
 
-### 4.4 Learning Engine
+### 5.4 Learning Engine
 
-Aggiorna il sistema dopo ogni evento:
+Aggiorna il sistema dopo ogni interazione utile:
 
-- stampa riuscita;
-- stampa fallita;
-- installazione riuscita;
-- installazione fallita;
-- materiale non adatto;
-- tolleranza errata;
-- provider affidabile/non affidabile;
-- modello compatibile/non compatibile;
-- feedback utente.
+- conferme utente;
+- errori di riconoscimento;
+- misure corrette;
+- modelli validati;
+- recensioni provider;
+- failure reports;
+- materiali più efficaci;
+- correzioni della community.
 
-### 4.5 Trust Engine
+### 5.5 Trust Engine
 
-Misura affidabilità di:
+Determina affidabilità e ranking di:
 
+- modelli CAD;
 - maker;
 - provider;
-- modelli;
-- materiali;
-- brand;
-- repair path;
-- output AI;
-- recensioni;
-- validazioni.
+- ricambi;
+- istruzioni;
+- riparazioni;
+- suggerimenti AI.
 
----
-
-## 5. Repair Knowledge Graph™
-
-Il vero asset difendibile di Re-born è il **Repair Knowledge Graph™**.
-
-### Entità centrali
-
-- User
-- Maker
-- Provider
-- Company
-- Brand
-- Product
-- Product Family
-- Product Version
-- Component
-- Failure Mode
-- Repair Case
-- Repair Path
-- CAD Model
-- Part
-- Part Version
-- Material Profile
-- Printer Profile
-- Compatibility
-- Tutorial
-- Validation Event
-- Feedback
-- Repair Score
-- Repair DNA
-- Repair Passport
-- Wallet Transaction
-- Bounty
-
-### Obiettivo
-
-Ogni riparazione deve aumentare la qualità del grafo, non solo generare una transazione.
+Il Trust Engine non deve essere solo reputazionale: deve combinare qualità tecnica, esiti reali, puntualità, coerenza, dispute, revisioni e prove d’uso.
 
 ---
 
 ## 6. Repair Journey Framework™
 
-Re-born non gestisce file. Gestisce **eventi di riparazione**.
+Il percorso standard è:
 
-### Fasi
-
-1. **Break** — qualcosa si rompe.
-2. **Capture** — l'utente carica foto, descrizione o file.
-3. **Identify** — il sistema identifica prodotto/componente/guasto.
-4. **Understand** — il Knowledge Graph recupera casi simili.
-5. **Decide** — il Decision Engine propone i percorsi possibili.
-6. **Source** — il sistema trova/genera/chiede il ricambio.
-7. **Produce** — provider locale o maker produce il pezzo.
-8. **Deliver** — spedizione, ritiro o repair hub.
-9. **Install** — guida, tutorial, istruzioni.
-10. **Validate** — l'utente conferma se l'oggetto funziona.
-11. **Learn** — il sistema aggiorna il Knowledge Graph.
+1. **Start Repair** — l’utente parte dal problema, non dal file.
+2. **Identify Object** — AI e input guidato identificano prodotto/componente.
+3. **Diagnose Need** — viene chiarito cosa serve: ricambio, modello, istruzione, provider.
+4. **Find or Generate Solution** — Re-born cerca o genera il percorso migliore.
+5. **Produce or Obtain** — ricambio, download, stampa, spedizione, ritiro o provider.
+6. **Repair Execution** — istruzioni, supporto, tracking, conferme.
+7. **Verify Outcome** — esito, foto, feedback, qualità.
+8. **Learn** — aggiornamento Knowledge Graph e Trust Engine.
 
 ---
 
-## 7. Personas
+## 7. Bounded Context DDD
 
-### Repair User
+I bounded context iniziali sono:
 
-Vuole riparare un oggetto senza competenze tecniche.
+1. Identity Domain;
+2. Repair Domain;
+3. AI Domain;
+4. Marketplace Domain;
+5. Provider Domain;
+6. Knowledge Domain;
+7. Wallet Domain;
+8. Company Domain.
 
-KPI: tempo per arrivare a una soluzione chiara.
+Ogni bounded context deve avere:
 
-### Maker
-
-Modella componenti, pubblica soluzioni, guadagna royalty e reputazione.
-
-KPI: download, repair success rate, royalty, ranking.
-
-### Print Provider
-
-Service professionale, FabLab o privato evoluto che produce localmente.
-
-KPI: ordini, margine, rating, saturazione macchine.
-
-### Company / Brand
-
-Pubblica cataloghi ufficiali, riduce costi di assistenza, migliora ESG, abilita riparabilità.
-
-KPI: ricambi disponibili, oggetti salvati, riduzione ticket, report ESG.
-
-### Repair Café / Hub
-
-Nodo territoriale che supporta riparazione, validazione, community e formazione.
-
-KPI: eventi, oggetti salvati, validazioni, impatto locale.
+- modello di dominio proprio;
+- repository dedicati;
+- servizi applicativi;
+- eventi di dominio;
+- contratti API espliciti;
+- test funzionali.
 
 ---
 
-## 8. Business model
+## 8. Principi UX
 
-Re-born genera valore su più livelli.
+1. La piattaforma parla di riparazione, non di stampa 3D.
+2. Ogni schermata deve risolvere un problema reale.
+3. Ogni step deve ridurre incertezza.
+4. I termini tecnici compaiono solo quando servono.
+5. L’utente deve sempre sapere: cosa è stato capito, cosa manca, cosa succede dopo.
+6. La AI non deve fingere certezza: deve mostrare livello di confidenza e richiesta di verifica.
+7. Marketplace, provider, wallet e download devono essere subordinati al percorso di riparazione.
+8. Ogni interazione utile deve alimentare il Knowledge Graph.
 
-### Revenue streams
+---
 
-1. Commissione sulle stampe distribuite.
-2. Commissione marketplace CAD.
-3. Royalty automatiche ai maker.
-4. AI Premium per generazione/ricostruzione.
-5. Maker PRO.
-6. Provider PRO.
-7. Enterprise Portal.
-8. White Label.
-9. API Economy.
-10. Marketplace materiali.
-11. Marketplace componenti.
-12. Wallet e Repair Credits.
-13. Bounty System.
-14. Analytics ESG.
-15. Certificazioni/validazioni.
+## 9. Business Model
 
-### Regola business
+Flussi economici previsti:
 
-Ogni funzione deve aumentare almeno uno di questi asset:
+- commissione su stampa distribuita;
+- marketplace CAD;
+- royalty automatiche ai maker;
+- AI Premium;
+- Maker PRO;
+- Provider PRO;
+- Enterprise Portal;
+- White Label;
+- API Economy;
+- marketplace materiali;
+- marketplace componenti;
+- wallet e Repair Credits;
+- bounty system;
+- certificazioni e badge professionali;
+- dati aggregati e insight enterprise, nel rispetto di privacy e compliance.
+
+Ogni monetizzazione deve aumentare almeno uno di questi asset:
 
 - Knowledge Graph;
 - AI Learning;
-- Community;
-- Marketplace Liquidity;
-- Enterprise Value;
-- Sustainability Impact;
-- Objects Saved.
+- community;
+- marketplace liquidity;
+- enterprise value;
+- sustainability impact;
+- objects saved.
 
 ---
 
-## 9. Product principles
+## 10. Vincoli tecnici
 
-1. La UX parte sempre da “Che cosa vuoi riparare?”.
-2. Il file è un mezzo, non il prodotto.
-3. L'AI deve ridurre incertezza, non creare magia opaca.
-4. Ogni risultato deve mostrare livello di confidenza.
-5. Ogni modello deve avere compatibilità, versioni e success rate.
-6. Ogni provider deve avere capacità, materiali, tempi, zona e reputazione.
-7. Ogni maker deve poter monetizzare in modo trasparente.
-8. Ogni brand deve poter pubblicare ricambi ufficiali.
-9. Ogni riparazione riuscita deve alimentare il Knowledge Graph.
-10. Ogni fallimento deve diventare apprendimento.
+Stack iniziale:
 
----
+- PHP 8.3+;
+- HTML5;
+- CSS3;
+- Vanilla JavaScript;
+- SQLite in sviluppo;
+- MariaDB/MySQL in produzione;
+- Clean Architecture;
+- SOLID;
+- Repository Pattern;
+- Service Layer;
+- Domain Events;
+- no framework frontend nella prima fase.
 
-## 10. UX principles
+Vincoli architetturali:
 
-### La piattaforma deve sembrare un sistema di riparazione, non un e-commerce.
-
-L'utente deve percepire:
-
-- diagnosi;
-- percorso;
-- fiducia;
-- controllo;
-- avanzamento;
-- assistenza;
-- risultato.
-
-### Stati obbligatori
-
-Ogni schermata deve prevedere:
-
-- default;
-- loading;
-- empty;
-- error;
-- partial confidence;
-- blocked;
-- success;
-- mobile;
-- accessibility state.
+- separare dominio, applicazione, infrastruttura e interfacce;
+- non accoppiare il database alla logica di business;
+- evitare codice procedurale non isolato;
+- non inserire logica critica nel frontend;
+- preparare da subito i confini per API, provider esterni, AI e wallet.
 
 ---
 
-## 11. Design language
+## 11. Linguaggio visivo
 
-### Direzione
+Riferimenti:
 
-Industrial Soft-Futurism / Premium Repair Intelligence.
+- Apple;
+- Linear;
+- Arc Browser;
+- Nothing;
+- Autodesk;
+- Figma.
 
-### Riferimenti
-
-- Apple — chiarezza e gerarchia;
-- Linear — velocità operativa;
-- Arc Browser — identità proprietaria;
-- Nothing — minimalismo tecnico;
-- Autodesk — precisione professionale;
-- Figma — sistema e collaborazione.
-
-### Vietato
+Da evitare:
 
 - Bootstrap;
 - template acquistati;
-- gradient viola SaaS generici;
+- gradient viola generici;
 - glassmorphism pesante;
-- UI giocattolosa;
-- border radius eccessivo.
+- estetica crypto/NFT;
+- marketplace affollato da e-commerce.
 
-### Palette
+Palette:
 
 - Graphite;
 - Off White;
@@ -371,149 +323,43 @@ Industrial Soft-Futurism / Premium Repair Intelligence.
 - Electric Blue;
 - Safety Orange.
 
-### Radius
-
-Massimo 4 px.
+Border radius massimo: **4 px**.
 
 ---
 
-## 12. Technical constraints
-
-### Backend
-
-- PHP 8.3+
-- Clean Architecture
-- SOLID
-- Repository Pattern
-- Service Layer
-- Domain Events
-- DTO e validation layer
-- RBAC
-- audit log
-
-### Database
-
-- SQLite in sviluppo
-- MariaDB/MySQL in produzione
-- schema coerente con DDD
-- migrazioni versionate
-
-### Frontend
-
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- no framework frontend nella fase iniziale
-- componenti modulari
-- design tokens CSS
-
-### Architecture
-
-I moduli devono seguire i domini, non le pagine.
-
-Bounded context:
-
-1. Identity Domain
-2. Repair Domain
-3. AI Domain
-4. Marketplace Domain
-5. Provider Domain
-6. Knowledge Domain
-7. Wallet Domain
-8. Company Domain
-
----
-
-## 13. MVP definition
-
-L'MVP deve validare una sola ipotesi centrale:
-
-> Un utente reale è disposto a usare Re-born per passare da oggetto rotto a percorso concreto di riparazione, coinvolgendo AI, maker, modello o provider.
-
-### MVP includes
-
-- account utente;
-- creazione Repair Case;
-- upload immagini;
-- identificazione manuale/AI-assisted;
-- library ricambi;
-- upload modelli maker;
-- provider onboarding;
-- richiesta preventivo;
-- ordine base;
-- wallet ledger minimale;
-- royalty base;
-- feedback riparazione;
-- admin/moderazione.
-
-### MVP excludes
-
-- AI proprietaria avanzata;
-- app mobile nativa;
-- white label completa;
-- API pubblica monetizzata;
-- AR installation;
-- analytics enterprise avanzati.
-
----
-
-## 14. North Star Metrics
-
-### Primary
-
-**Objects Saved™** — numero di oggetti salvati dalla sostituzione.
-
-### Supporting metrics
-
-- Repair Cases created;
-- Repair Cases solved;
-- successful repair rate;
-- time to repair path;
-- models uploaded;
-- models validated;
-- provider response time;
-- repeat provider orders;
-- maker royalty generated;
-- AI confidence improvement;
-- Knowledge Graph entities added;
-- CO₂ / waste avoided estimate.
-
----
-
-## 15. Development order
-
-La sequenza corretta è:
-
-1. Product Book
-2. PRD
-3. UX Bible
-4. Design System
-5. Wireframe
-6. Mockup UI
-7. Prototype
-8. Backend
-9. Frontend
-10. Testing
-11. Pilot
-12. Marketplace expansion
-
-Non si parte dal codice prima che requisiti, UX e architettura siano coerenti.
-
----
-
-## 16. Agent rule
+## 12. Regola per gli agenti futuri
 
 Ogni agente che lavora su Re-born deve comportarsi come:
 
 - Chief Product Officer;
 - Chief Software Architect;
 - Lead UX/UI Designer;
-- startup operator orientato a scalabilità internazionale.
+- operatore di startup SaaS internazionale.
 
-Non deve generare codice o documenti scollegati dalla visione strategica.
+Ogni decisione deve essere valutata rispetto a questi criteri:
 
-Ogni modifica deve rispondere a tre domande:
+1. aumenta la capacità di riparare oggetti?
+2. alimenta il Knowledge Graph?
+3. migliora la fiducia del sistema?
+4. rende il prodotto più scalabile?
+5. evita di trasformare Re-born in un semplice marketplace?
+6. rispetta la missione “Allow anyone to repair anything”?
 
-1. Quale problema reale di riparazione risolve?
-2. Quale asset strategico rafforza?
-3. Quale dominio, schermata, API o tabella impatta?
+---
+
+## 13. Ordine di sviluppo
+
+L’ordine corretto è:
+
+1. Product Book;
+2. PRD;
+3. UX Bible;
+4. Design System;
+5. Wireframe;
+6. Mockup UI;
+7. Prototype;
+8. Backend;
+9. Frontend;
+10. integrazioni AI, wallet e provider.
+
+Non iniziare dal codice prima che Product Book, PRD e UX Bible siano abbastanza chiari.

@@ -1,47 +1,81 @@
-# Database — Knowledge Graph Schema
+# Knowledge Graph Schema
 
-## Obiettivo
+The MVP can implement this graph through relational tables.
 
-Il Knowledge Graph collega prodotti, componenti, guasti, soluzioni, modelli, provider e risultati reali.
+---
 
-## Nodi principali
+## Main graph entities
 
-- Brand
-- Product
-- ProductVersion
-- Component
-- FailureMode
-- RepairMethod
-- Part
-- PartVersion
-- CADModel
-- MaterialProfile
-- PrinterProfile
-- Provider
-- Maker
-- Tutorial
-- RepairCase
-- ValidationEvent
-- Feedback
+```text
+products
+product_models
+brands
+components
+component_variants
+repair_cases
+repair_paths
+cad_models
+cad_model_versions
+materials
+providers
+makers
+spare_parts
+bounties
+outcomes
+trust_signals
+knowledge_edges
+```
 
-## Relazioni principali
+---
 
-- Brand HAS_PRODUCT Product
-- Product HAS_VERSION ProductVersion
-- ProductVersion HAS_COMPONENT Component
-- Component FAILS_WITH FailureMode
-- FailureMode CAN_BE_REPAIRED_BY RepairMethod
-- RepairMethod USES_PART Part
-- Part HAS_VERSION PartVersion
-- PartVersion HAS_CAD_MODEL CADModel
-- PartVersion COMPATIBLE_WITH ProductVersion
-- PartVersion RECOMMENDS_MATERIAL MaterialProfile
-- Provider CAN_PRINT MaterialProfile
-- Provider OWNS_PRINTER PrinterProfile
-- RepairCase TARGETS Component
-- RepairCase VALIDATES PartVersion
-- Feedback UPDATES RepairScore
+## Generic edge table concept
 
-## Dato chiave
+```text
+knowledge_edges
+- id
+- source_type
+- source_id
+- relation_type
+- target_type
+- target_id
+- confidence
+- evidence_type
+- evidence_id
+- created_at
+- updated_at
+```
 
-La compatibilità non deve essere una nota testuale. Deve diventare relazione interrogabile.
+Example relation types:
+
+- HAS_COMPONENT
+- COMPATIBLE_WITH
+- REPLACED_BY
+- PRINTED_FROM
+- VERIFIED_BY_OUTCOME
+- CREATED_BY
+- FULFILLED_BY
+- FAILED_WITH
+- RECOMMENDED_FOR
+
+---
+
+## Evidence
+
+Every important relationship should have evidence when possible:
+
+- user confirmation;
+- admin correction;
+- provider fulfilment;
+- repair outcome;
+- maker submission;
+- AI recognition;
+- external reference;
+- enterprise validation.
+
+---
+
+## MVP rule
+
+Do not build a complex graph database first.
+
+Start with relational tables and explicit edges.

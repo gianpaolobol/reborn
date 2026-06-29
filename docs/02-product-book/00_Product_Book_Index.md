@@ -1,21 +1,44 @@
-# Product Book — Index
+# Re-born Product Book — Index
 
-Il Product Book è il documento strategico principale dopo `PRODUCT.md`.
+The Product Book defines the strategic product foundation of Re-born.
 
-## Capitoli
+It answers:
+
+- what Re-born is;
+- who it serves;
+- what problem it solves;
+- why it is different;
+- how it makes money;
+- how it learns;
+- how it scales.
+
+---
+
+## Chapters
 
 1. Vision
-2. Business Model
-3. Personas
-4. Repair Journey Framework™
-5. Repair Intelligence Engine™
-6. Repair Knowledge Graph™
-7. Competitive Positioning
-8. KPI and Metrics
+2. Mission and Positioning
+3. Business Model
+4. Personas
+5. Competitive Analysis
+6. Repair Journey Framework™
+7. Repair Intelligence Engine™
+8. Repair Knowledge Graph
+9. Go-To-Market
+10. KPI and Metrics
+11. Risks and Assumptions
 
-## Regola
+---
 
-Il Product Book definisce **perché** Re-born esiste e **quale categoria costruisce**.  
-Il PRD definisce **cosa costruire**.  
-La UX Bible definisce **come l'utente lo vive**.  
-L'architettura definisce **come il sistema lo sostiene**.
+## Current status
+
+Version 0.1 is a strategic foundation, not a final investor document.
+
+Before UI and code, this book must be reviewed against:
+
+- MVP scope;
+- technical feasibility;
+- first market wedge;
+- monetization priority;
+- data strategy;
+- legal and trust requirements.

@@ -1,113 +1,137 @@
 # Re-born
 
-**Re-born** è una **Repair Intelligence Platform** internazionale.
-
-Mission: **Allow anyone to repair anything.**
-
-Re-born non è un marketplace di STL. È un sistema operativo per la riparazione: identifica prodotti e componenti rotti, propone il percorso migliore, recupera o genera ricambi, coordina maker e provider locali, gestisce pagamenti/royalty e apprende da ogni riparazione.
-
-> L'utente non cerca uno STL. Vuole che il proprio oggetto torni a funzionare.
+**Re-born** is a Repair Intelligence Platform designed to allow anyone to repair anything.
 
 Repository ufficiale: https://github.com/gianpaolobol/reborn
 
 ---
 
-## Stato del progetto
+## Mission
 
-Fase attuale: **strategic product definition / Re-born OS bootstrap**.
+> Allow anyone to repair anything.
 
-Sono già presenti le basi di:
+Re-born helps people identify broken products and components, find or generate the right repair solution, produce spare parts locally through distributed providers, and learn from every completed repair.
 
-- Product Book;
-- PRD MVP;
-- UX Bible;
-- Design System;
-- Domain Driven Design;
-- architettura applicativa;
-- database schema concettuale;
-- API contract concettuale;
-- roadmap;
-- handoff master.
+---
 
-Il documento madre è:
+## What Re-born is
+
+Re-born is not a generic 3D model marketplace. It is a repair operating system combining:
+
+- AI recognition;
+- repair journeys;
+- product and component knowledge graph;
+- CAD and spare parts marketplace;
+- distributed manufacturing providers;
+- maker royalties;
+- wallet and repair credits;
+- enterprise repair intelligence;
+- sustainability metrics.
+
+---
+
+## Strategic principle
+
+The user is not looking for an STL file.
+
+The user wants this:
+
+> My object must work again.
+
+Every product, UX, backend and business decision must start from that principle.
+
+---
+
+## Current repository status
+
+This repository is currently in the **Product Operating System phase**.
+
+The goal is to version the strategic, product, UX and architectural foundations before starting implementation.
+
+Current focus:
+
+1. Product Book;
+2. PRD;
+3. UX Bible;
+4. Design System;
+5. Architecture;
+6. Database and API contracts;
+7. Roadmap and investor material.
+
+---
+
+## Documentation map
 
 ```text
-PRODUCT.md
+PRODUCT.md                           # Root product operating document
+docs/00-master-index/                # Global index
+docs/01-foundation/                  # Principles, glossary, decisions
+docs/02-product-book/                # Vision, model, personas, engine, metrics
+docs/03-prd/                         # Product requirements and MVP scope
+docs/04-ux-bible/                    # UX flows, screens, states, edge cases
+docs/05-design-system/               # Visual principles and tokens
+docs/07-architecture/                # DDD and application architecture
+docs/08-database/                    # Database and knowledge graph schema
+docs/09-api/                         # API contracts
+docs/10-security/                    # Security baseline
+docs/14-roadmap/                     # Roadmap
+docs/17-handoff/                     # Agent handoff documents
 ```
 
 ---
 
-## Struttura repository
+## Tech direction
 
-```text
-reborn/
-├── PRODUCT.md
-├── README.md
-├── docs/
-│   ├── 00-master-index/
-│   ├── 01-foundation/
-│   ├── 02-product-book/
-│   ├── 03-prd/
-│   ├── 04-ux-bible/
-│   ├── 05-design-system/
-│   ├── 06-wireframes/
-│   ├── 07-architecture/
-│   ├── 08-database/
-│   ├── 09-api/
-│   ├── 10-security/
-│   ├── 11-frontend/
-│   ├── 12-backend/
-│   ├── 13-testing/
-│   ├── 14-roadmap/
-│   ├── 15-investor/
-│   ├── 16-operations/
-│   └── 17-handoff/
-├── src/
-├── public/
-├── database/
-├── tests/
-└── scripts/
-```
+Initial stack:
+
+- PHP 8.3+;
+- HTML5;
+- CSS3;
+- Vanilla JavaScript;
+- SQLite for development;
+- MariaDB/MySQL for production;
+- Clean Architecture;
+- DDD;
+- Repository Pattern;
+- Domain Events;
+- Service Layer.
+
+Frontend frameworks are intentionally avoided during the first phase.
 
 ---
 
-## Principio guida
+## Development order
 
-Ogni modifica deve rafforzare almeno uno di questi asset:
+Do not start from implementation.
 
-- Repair Knowledge Graph;
-- AI Learning;
-- Community;
-- Marketplace Liquidity;
-- Enterprise Value;
-- Sustainability Impact;
-- Objects Saved.
+The correct order is:
 
----
-
-## Roadmap immediata
-
-1. Pubblicare il repository su GitHub.
-2. Consolidare Product Book.
-3. Scrivere PRD completo con user stories e acceptance criteria.
-4. Progettare UX Bible con sitemap 100+ schermate.
-5. Definire Design System e primi wireframe.
-6. Solo dopo: prototipo e codice.
+1. Product Book;
+2. PRD;
+3. UX Bible;
+4. Design System;
+5. Wireframes;
+6. UI mockups;
+7. Prototype;
+8. Backend;
+9. Frontend.
 
 ---
 
-## Comandi Git iniziali
+## GitHub setup
 
-```powershell
-git add .
-git commit -m "docs: bootstrap Re-born OS"
-git push -u origin main
-```
-
-Se GitHub richiede autenticazione:
+If the local commit already exists but the push failed because of authentication:
 
 ```powershell
 winget install --id GitHub.cli
 gh auth login
+git push -u origin main
+```
+
+If the remote is missing:
+
+```powershell
+git remote add origin https://github.com/gianpaolobol/reborn.git
+git branch -M main
 git push -u origin main
 ```

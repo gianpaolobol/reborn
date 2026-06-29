@@ -1,40 +1,77 @@
-# Design System — Design Tokens
+# Design Tokens
 
-## Palette iniziale
+## Color palette
 
 ```css
 :root {
-  --color-graphite-950: #101214;
-  --color-graphite-900: #171A1D;
-  --color-graphite-700: #30363B;
-  --color-graphite-500: #687077;
-
-  --color-offwhite-100: #F7F5F0;
-  --color-offwhite-200: #EEEAE2;
-
-  --color-repair-green: #1F9D63;
-  --color-electric-blue: #006CFF;
+  --color-graphite-900: #111315;
+  --color-graphite-800: #1B1F23;
+  --color-graphite-700: #2A3036;
+  --color-off-white: #F6F4EF;
+  --color-paper: #FFFFFF;
+  --color-repair-green: #32D583;
+  --color-electric-blue: #2F80ED;
   --color-safety-orange: #FF7A1A;
+  --color-border: #D8D6D0;
+  --color-muted: #6B7280;
+  --color-danger: #D92D20;
+}
+```
 
-  --radius-sm: 2px;
+---
+
+## Radius
+
+```css
+:root {
+  --radius-xs: 2px;
+  --radius-sm: 4px;
   --radius-md: 4px;
-  --radius-max: 4px;
+  --radius-lg: 4px;
+}
+```
 
+Border radius must not exceed 4px in the core product UI.
+
+---
+
+## Typography direction
+
+The product should use clean, technical and readable typography.
+
+Suggested roles:
+
+- titles: strong geometric/technical sans;
+- body: highly readable sans;
+- data labels: compact, precise sans.
+
+Avoid decorative startup fonts that reduce trust.
+
+---
+
+## Spacing scale
+
+```css
+:root {
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-12: 48px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
 }
 ```
 
-## Regole
+---
 
-- Nessun border radius superiore a 4px.
-- Electric Blue solo per azione primaria/intelligence.
-- Repair Green solo per esiti positivi, riparabilità, sostenibilità.
-- Safety Orange solo per warning, rischio, attenzione.
-- Graphite domina struttura e testo.
-- Off White domina superfici e sfondo.
+## UI mood
+
+- precise;
+- minimal;
+- technical;
+- repair-oriented;
+- not playful;
+- not generic SaaS;
+- not glossy.

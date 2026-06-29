@@ -1,55 +1,73 @@
-# Design System — Component Principles
+# Component Principles
 
-## Button
+## Buttons
 
-Un bottone deve descrivere l'azione concreta, non un generico “continua”.
+Buttons must be action-specific.
 
-Esempi:
+Preferred labels:
 
-- “Analizza oggetto”
-- “Conferma componente”
-- “Richiedi preventivo locale”
-- “Valida riparazione”
+- Start a repair;
+- Upload photos;
+- Confirm component;
+- Request quote;
+- Open bounty;
+- Mark repair as successful;
+- Add missing measurement.
 
-## Card
+Avoid generic labels like:
 
-Le card principali sono:
+- Submit;
+- Continue;
+- Buy now;
+- Go.
 
-- Repair Case Card
-- Repair Path Card
-- Part Card
-- Model Card
-- Provider Card
-- Maker Card
-- Repair DNA Card
-- Repair Passport Card
+---
 
-## Upload Zone
+## Cards
 
-Deve comunicare:
+Cards should represent repair objects, paths, models, providers or decisions.
 
-- cosa caricare;
-- formati accettati;
-- privacy;
-- utilità dell'input;
-- cosa succede dopo.
+Every card should clearly show:
 
-## Confidence UI
+- what it is;
+- why it matters;
+- trust/confidence;
+- next action.
 
-Ogni output AI deve mostrare:
+---
 
-- confidence score;
-- spiegazione;
-- possibilità di correggere;
-- impatto sul percorso successivo.
+## Repair path selector
 
-## Trust Badge
+A repair path selector compares solution routes.
 
-I badge devono essere tecnici e verificabili:
+It should show:
 
-- Official Part
-- Community Validated
-- Provider Verified
-- High Repair Success
-- AI Generated Draft
-- Needs Validation
+- cost estimate;
+- time estimate;
+- confidence;
+- verification status;
+- effort required;
+- sustainability impact if available.
+
+---
+
+## Confidence badge
+
+Confidence badges must not look like quality badges.
+
+AI confidence and verified trust are different concepts.
+
+Example:
+
+- AI confidence: Medium;
+- Model verification: Verified by 14 repairs.
+
+---
+
+## Empty states
+
+Empty states should educate and guide.
+
+Example:
+
+> No verified model exists yet for this component. You can open a bounty and let a maker create it.

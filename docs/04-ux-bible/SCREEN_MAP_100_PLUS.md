@@ -1,183 +1,187 @@
-# UX Bible — Screen Map 100+
+# Screen Map 100+
 
-Questa mappa definisce le schermate da progettare prima dello sviluppo.
+This is the planned screen inventory for the complete product.
+
+The MVP will implement only a subset, but the map prevents architectural blind spots.
+
+---
 
 ## Public / Marketing
 
-1. Homepage
-2. Come funziona
-3. Repair Intelligence spiegata
-4. Objects Saved impact page
-5. Maker landing
-6. Provider landing
-7. Company landing
-8. Pricing
-9. API page
-10. Sustainability page
-11. About
-12. FAQ
-13. Contact
-14. Legal / Terms
-15. Privacy
+001. Homepage
+002. How it works
+003. Start repair landing
+004. For makers
+005. For providers
+006. For companies
+007. Sustainability impact
+008. Pricing
+009. Trust and verification
+010. Blog / repair stories
+011. Case study detail
+012. Help center
+013. Contact
+014. Login
+015. Register
 
-## Auth / Identity
+---
 
-16. Login
-17. Register
-18. Email verification
-19. Forgot password
-20. Reset password
-21. Two-factor setup
-22. Role selection
-23. Profile setup
-24. Personal dashboard entry
-25. Account settings
+## Repair user onboarding
 
-## Repair User Flow
+016. Create account
+017. User profile
+018. Repair preferences
+019. Location permission
+020. Notification settings
+021. Skill level selection
+022. Saved objects
+023. Repair history
 
-26. Start repair
-27. “Che cosa vuoi riparare?” intake
-28. Object category selection
-29. Photo upload
-30. File upload
-31. Text description
-32. Damage description
-33. AI analysis loading
-34. AI partial confidence
-35. AI unknown result
-36. Product confirmation
-37. Component confirmation
-38. Manual correction
-39. Repair Case overview
-40. Suggested repair paths
-41. Existing part result
-42. Community model result
-43. Official part result
-44. AI generation option
-45. Bounty option
-46. Provider option
-47. Not repairable state
-48. Compare repair paths
-49. Select repair path
-50. Repair path details
-51. Installation difficulty
-52. Material recommendation
-53. Cost/time estimate
-54. Safety warnings
-55. Checkout start
-56. Order confirmation
-57. Repair tracking
-58. Delivery/collection choice
-59. Installation guide
-60. Repair validation
-61. Feedback success
-62. Failed repair report
-63. Refund/dispute start
-64. Repair history
-65. Repair Passport
+---
 
-## Maker Flow
+## Repair case flow
 
-66. Maker onboarding
-67. Maker profile
-68. Upload model
-69. Model metadata
-70. Compatibility mapping
-71. Material settings
-72. License/rights declaration
-73. Preview model
-74. Submit for review
-75. Model dashboard
-76. Royalty dashboard
-77. Bounty list
-78. Bounty detail
-79. Submit bounty solution
-80. Maker ranking
-81. Model analytics
+024. Start repair
+025. Upload photos
+026. Photo quality guidance
+027. Describe issue
+028. Add brand/model
+029. Add dimensions
+030. Add material clues
+031. Confirm object category
+032. Confirm product candidate
+033. Confirm component candidate
+034. Missing data request
+035. Repair diagnosis summary
+036. Repair path comparison
+037. Existing model path
+038. Provider print path
+039. Maker bounty path
+040. Spare part path
+041. AI generation path
+042. Manual expert review path
+043. Safety warning screen
+044. Not repairable explanation
+045. Case timeline
+046. Case messages
+047. Upload additional photo
+048. Outcome confirmation
+049. Repair success form
+050. Repair failure form
+051. Repair impact summary
 
-## Provider Flow
+---
 
-82. Provider onboarding
-83. Provider verification
-84. Provider profile
-85. Printer setup
-86. Material capabilities
-87. Service area
-88. Availability settings
-89. Incoming quote requests
-90. Quote detail
-91. Create quote
-92. Accepted order
-93. Production workflow
-94. Quality checklist
-95. Shipping/collection
-96. Provider earnings
-97. Provider rating
-98. Provider disputes
+## CAD model marketplace
 
-## Company / Enterprise Flow
+052. Model search results
+053. Model detail
+054. Model compatibility
+055. Model versions
+056. Model reviews
+057. Download model
+058. Paid model checkout
+059. License information
+060. Report model
+061. Model repair outcomes
 
-99. Company onboarding
-100. Brand portal dashboard
-101. Product catalog upload
-102. Official part upload
-103. Repair analytics
-104. ESG dashboard
-105. API keys
-106. White label settings
-107. Enterprise user management
-108. Enterprise support tickets
+---
 
-## Marketplace / Knowledge
+## Maker area
 
-109. Part search
-110. Product search
-111. Component page
-112. Part detail
-113. Model detail
-114. Repair Score detail
-115. Compatibility matrix
-116. Tutorial page
-117. Knowledge Graph explorer
-118. Trending repairs
-119. Missing parts board
+062. Maker dashboard
+063. Maker profile
+064. Upload model
+065. Model metadata
+066. Component mapping
+067. File validation
+068. Version upload
+069. Pricing / royalty settings
+070. Bounty list
+071. Bounty detail
+072. Submit bounty solution
+073. Maker earnings
+074. Maker analytics
+075. Maker trust score
 
-## Wallet / Economy
+---
 
-120. Wallet overview
-121. Repair Credits purchase
-122. Transaction history
-123. Royalty payout
-124. Provider payout
-125. Bounty funding
-126. Invoice/receipt
+## Provider area
 
-## Admin / Trust / Operations
+076. Provider dashboard
+077. Provider onboarding
+078. Capability setup
+079. Materials setup
+080. Machine setup
+081. Service area
+082. Incoming requests
+083. Request detail
+084. Quote creation
+085. Quote sent
+086. Accepted orders
+087. Order production status
+088. Delivery / pickup settings
+089. Provider earnings
+090. Provider ratings
+091. Provider trust score
 
-127. Admin dashboard
-128. User moderation
-129. Model moderation
-130. Provider moderation
-131. Company moderation
-132. AI job monitor
-133. Abuse reports
-134. Dispute management
-135. Refund management
-136. Audit log
-137. Feature flags
-138. System health
+---
 
-## Required state variants
+## Wallet and credits
 
-Ogni schermata rilevante deve prevedere:
+092. Wallet overview
+093. Buy credits
+094. Credit transaction history
+095. Maker royalties
+096. Provider payouts
+097. Bounty escrow
+098. Refund request
+099. Invoice / receipt
 
-- default;
-- loading;
-- empty;
-- error;
-- partial confidence;
-- permission denied;
-- validation failed;
-- success;
-- mobile;
-- accessibility.
+---
+
+## Enterprise
+
+100. Company dashboard
+101. Company users
+102. Company repair cases
+103. Asset registry
+104. Internal spare part library
+105. Enterprise analytics
+106. Sustainability report
+107. API keys
+108. White-label settings
+
+---
+
+## Admin
+
+109. Admin dashboard
+110. Repair case review
+111. Classification correction
+112. Product taxonomy
+113. Component taxonomy
+114. Model approval
+115. Provider approval
+116. Maker moderation
+117. Dispute management
+118. Trust score audit
+119. Learning signals
+120. System metrics
+121. Content management
+122. Security audit log
+
+---
+
+## System states
+
+123. Empty state
+124. Loading state
+125. Upload failed
+126. AI processing
+127. Low confidence result
+128. No solution found
+129. Provider unavailable
+130. Payment failed
+131. Success confirmation
+132. Maintenance mode

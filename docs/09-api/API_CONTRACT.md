@@ -1,64 +1,105 @@
-# API Contract
+# API Contract — Conceptual v0.1
 
-Base URL:
+Base path:
 
 ```text
 /api/v1
 ```
 
-## Standard response
+---
+
+## Repair cases
+
+### Create repair case
+
+```http
+POST /api/v1/repair-cases
+```
+
+Request:
 
 ```json
 {
-  "success": true,
-  "data": {},
-  "error": null
+  "title": "Broken dishwasher basket wheel",
+  "description": "The wheel broke and the basket does not slide.",
+  "known_brand": "ExampleBrand",
+  "known_model": "ABC123"
 }
 ```
 
-## Endpoints MVP
+Response:
 
-### Auth
+```json
+{
+  "id": "repair_case_id",
+  "status": "intake_started",
+  "next_action": "upload_photos"
+}
+```
 
-- POST /auth/register
-- POST /auth/login
+### Upload repair asset
 
-### Repair
+```http
+POST /api/v1/repair-cases/{id}/assets
+```
 
-- POST /repairs
-- GET /repairs/{id}
-- POST /repairs/{id}/images
+### Get repair diagnosis
 
-### AI
+```http
+GET /api/v1/repair-cases/{id}/diagnosis
+```
 
-- POST /ai/recognition
-- POST /ai/reconstruction
-- GET /ai/jobs/{id}
+### Select repair path
 
-### Knowledge
+```http
+POST /api/v1/repair-cases/{id}/repair-paths/{pathId}/select
+```
 
-- GET /parts/search
-- GET /parts/{id}
-- POST /parts
+### Submit outcome
 
-### Provider
+```http
+POST /api/v1/repair-cases/{id}/outcome
+```
 
-- POST /providers
-- GET /providers/nearby
-- POST /providers/{id}/materials
+---
 
-### Marketplace
+## Models
 
-- POST /quotes
-- POST /orders
+```http
+GET /api/v1/models
+POST /api/v1/models
+GET /api/v1/models/{id}
+POST /api/v1/models/{id}/versions
+```
 
-### Wallet
+---
 
-- GET /wallet
-- GET /wallet/transactions
-- POST /bounties
+## Providers
 
-### Company
+```http
+GET /api/v1/providers
+POST /api/v1/providers
+POST /api/v1/provider-requests
+POST /api/v1/provider-requests/{id}/quote
+POST /api/v1/provider-requests/{id}/accept
+```
 
-- POST /companies
-- POST /companies/{id}/official-parts
+---
+
+## Bounties
+
+```http
+GET /api/v1/bounties
+POST /api/v1/bounties
+POST /api/v1/bounties/{id}/submissions
+```
+
+---
+
+## Wallet
+
+```http
+GET /api/v1/wallet
+GET /api/v1/wallet/transactions
+POST /api/v1/credits/purchase
+```

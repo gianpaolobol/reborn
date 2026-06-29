@@ -1,43 +1,80 @@
 # Roadmap
 
-## Release 0 — Repository Foundation
+## Phase 0 — Re-born OS
 
-- Struttura repository.
-- Product Book iniziale.
-- PRD MVP.
-- DDD.
-- Database e API contract.
+Goal: define the product, UX and architecture foundations.
 
-## Release 1 — MVP
+Deliverables:
 
-- Repair case.
-- Upload immagini.
-- Library ricambi.
-- Provider marketplace.
-- Ordini.
-- Royalty base.
-- Wallet base.
+- Product Book;
+- PRD;
+- UX Bible;
+- Design System;
+- Architecture;
+- Database schema;
+- API contract;
+- roadmap;
+- investor one-pager.
 
-## Release 2 — Community & Economy
+---
 
-- Maker dashboard.
-- Provider dashboard.
-- Repair Credits.
-- Bounty.
-- Repair Score.
+## Phase 1 — MVP Prototype
 
-## Release 3 — Enterprise
+Goal: prove the repair case loop.
 
-- Brand portal.
-- Cataloghi ufficiali.
-- API.
-- White label.
-- Dashboard ESG.
+Deliverables:
 
-## Release 4 — Advanced Repair Intelligence
+- start repair flow;
+- photo upload;
+- repair case database;
+- classification admin;
+- repair path selector;
+- provider request;
+- maker model upload;
+- outcome feedback.
 
-- Recognition Engine avanzato.
-- Learning Engine.
-- Trust Engine.
-- Repair Genome.
-- Repair Coverage.
+---
+
+## Phase 2 — Marketplace Liquidity
+
+Goal: activate makers and providers.
+
+Deliverables:
+
+- maker profiles;
+- provider profiles;
+- model verification;
+- quote workflow;
+- basic wallet/credits;
+- bounty flow;
+- trust signals.
+
+---
+
+## Phase 3 — AI and Knowledge Graph
+
+Goal: improve intelligence and automation.
+
+Deliverables:
+
+- recognition engine integration;
+- knowledge graph edges;
+- learning events;
+- trust scoring;
+- AI generation workflow;
+- compatibility intelligence.
+
+---
+
+## Phase 4 — Enterprise and API
+
+Goal: scale beyond consumer repairs.
+
+Deliverables:
+
+- enterprise portal;
+- API keys;
+- asset registry;
+- private repair knowledge;
+- sustainability reporting;
+- white-label pilots.

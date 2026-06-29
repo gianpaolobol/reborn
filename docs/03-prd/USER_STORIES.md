@@ -1,36 +1,79 @@
-# PRD — User Stories
+# User Stories
 
-## Repair User
+## Repair user
 
-- Come utente, voglio caricare foto dell'oggetto rotto per capire se può essere riparato.
-- Come utente, voglio ricevere un percorso di riparazione chiaro senza dover conoscere CAD o stampa 3D.
-- Come utente, voglio vedere il livello di confidenza dell'identificazione AI.
-- Come utente, voglio scegliere tra ricambio esistente, modello community, AI generation, bounty o provider.
-- Come utente, voglio sapere costo, tempo, materiale e probabilità di successo.
-- Come utente, voglio validare se il ricambio ha funzionato dopo l'installazione.
+### RU-001 — Start repair case
+
+As a repair user, I want to start from a broken object so that I can understand how to repair it.
+
+### RU-002 — Upload photos
+
+As a repair user, I want to upload multiple photos so that Re-born can identify the object and component.
+
+### RU-003 — Add missing information
+
+As a repair user, I want to answer simple guided questions so that the system can improve confidence.
+
+### RU-004 — Understand confidence
+
+As a repair user, I want to see what Re-born understood and what is uncertain so that I can trust the process.
+
+### RU-005 — Choose repair path
+
+As a repair user, I want to choose among recommended repair paths so that I can select the most convenient option.
+
+### RU-006 — Request local production
+
+As a repair user, I want to request a quote from local providers so that I can obtain the part without owning a printer.
+
+### RU-007 — Confirm outcome
+
+As a repair user, I want to confirm whether the repair worked so that the system can learn.
+
+---
 
 ## Maker
 
-- Come maker, voglio caricare un modello e collegarlo a prodotto, componente e compatibilità.
-- Come maker, voglio guadagnare royalty quando il mio modello viene scaricato o stampato.
-- Come maker, voglio ricevere bounty per componenti richiesti dalla community.
-- Come maker, voglio vedere success rate, recensioni e ranking dei miei modelli.
+### MK-001 — Upload repair model
+
+As a maker, I want to upload a CAD model for a specific repair component so that users can repair objects and I can earn royalties.
+
+### MK-002 — Respond to bounty
+
+As a maker, I want to respond to requests for missing models so that I can earn rewards.
+
+### MK-003 — Track model success
+
+As a maker, I want to see how often my models successfully repair objects so that I can improve them.
+
+---
 
 ## Provider
 
-- Come provider, voglio registrare stampanti, materiali, tecnologie e area servita.
-- Come provider, voglio ricevere richieste compatibili con le mie capacità.
-- Come provider, voglio inviare preventivi e tempi di consegna.
-- Come provider, voglio costruire reputazione attraverso ordini riusciti.
+### PR-001 — Create provider profile
 
-## Company
+As a provider, I want to list my capabilities so that I receive suitable repair production requests.
 
-- Come azienda, voglio pubblicare ricambi ufficiali.
-- Come azienda, voglio vedere analytics su oggetti salvati, componenti richiesti e impatto ESG.
-- Come azienda, voglio offrire un portale repair white label ai miei clienti.
+### PR-002 — Quote repair print
+
+As a provider, I want to quote a repair production request so that I can accept profitable jobs.
+
+### PR-003 — Confirm fulfilment
+
+As a provider, I want to update order status so that the user knows what is happening.
+
+---
 
 ## Admin
 
-- Come admin, voglio moderare modelli, utenti, provider, bounty e contenuti AI.
-- Come admin, voglio vedere audit log e anomalie.
-- Come admin, voglio risolvere dispute e rimborsi.
+### AD-001 — Review repair cases
+
+As an admin, I want to review incoming repair cases so that I can correct classifications and improve system quality.
+
+### AD-002 — Approve models
+
+As an admin, I want to review models before verification so that unsafe or low-quality models do not damage trust.
+
+### AD-003 — Manage taxonomy
+
+As an admin, I want to manage product categories, components and repair paths so that the Knowledge Graph remains coherent.

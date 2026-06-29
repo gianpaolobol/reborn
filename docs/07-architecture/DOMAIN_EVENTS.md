@@ -1,71 +1,85 @@
-# Architecture — Domain Events
+# Domain Events
 
-Gli eventi di dominio permettono a Re-born di apprendere da ogni azione.
+Domain events capture meaningful changes in the Re-born system.
 
-## Repair Domain Events
+They are not just logs. They are business facts.
+
+---
+
+## Repair events
 
 - RepairCaseCreated
-- RepairCaseSubmitted
-- RepairCaseImageUploaded
-- ProductIdentified
-- ComponentIdentified
+- RepairPhotosUploaded
+- RepairCaseClassified
+- RepairComponentIdentified
 - RepairPathRecommended
 - RepairPathSelected
-- RepairValidated
-- RepairFailed
+- RepairOutcomeSubmitted
+- RepairCaseClosed
 
-## AI Domain Events
+---
+
+## AI events
 
 - AIRecognitionRequested
 - AIRecognitionCompleted
-- AIRecognitionLowConfidence
-- AIReconstructionRequested
-- AIReconstructionCompleted
-- AIOutputRejected
+- AIRecognitionCorrected
+- AIModelGenerationRequested
+- AIModelGenerationCompleted
+- AIResultRejected
 
-## Knowledge Domain Events
+---
 
-- ProductCreated
-- ComponentCreated
-- CompatibilityAdded
-- FailureModeMapped
-- RepairDNAUpdated
-- RepairScoreUpdated
+## Knowledge events
 
-## Marketplace Domain Events
+- KnowledgeNodeCreated
+- KnowledgeRelationshipCreated
+- ComponentCompatibilityAdded
+- RepairOutcomeLinkedToModel
+- RepairInstructionUpdated
 
-- QuoteRequested
-- QuoteSubmitted
-- QuoteAccepted
-- PrintOrderCreated
-- PrintOrderCompleted
-- MarketplaceFeeCalculated
-- RoyaltySplitCalculated
+---
 
-## Provider Domain Events
+## Marketplace events
 
-- ProviderRegistered
-- ProviderVerified
-- PrinterAdded
-- MaterialCapabilityAdded
-- ProviderRatingUpdated
+- CADModelUploaded
+- CADModelVersionAdded
+- CADModelApproved
+- CADModelRejected
+- CADModelDownloaded
+- ModelRoyaltyAccrued
 
-## Wallet Domain Events
+---
+
+## Provider events
+
+- ProviderProfileCreated
+- ProviderCapabilityUpdated
+- ProviderQuoteRequested
+- ProviderQuoteSubmitted
+- ProviderOrderAccepted
+- ProviderOrderCompleted
+- ProviderRated
+
+---
+
+## Wallet events
 
 - WalletCreated
-- RepairCreditsPurchased
-- RoyaltyAccrued
-- ProviderPayoutScheduled
-- BountyFunded
+- CreditsPurchased
+- CreditsSpent
+- RoyaltyCredited
+- ProviderPayoutCreated
+- BountyEscrowCreated
 - BountyPaid
 
-## Company Domain Events
+---
 
-- CompanyRegistered
-- OfficialPartPublished
-- ProductCatalogImported
-- ESGMetricUpdated
+## Trust events
 
-## Regola
-
-Gli eventi non sono logging tecnico. Sono memoria del sistema e alimentano Knowledge Graph, Trust Engine e analytics.
+- TrustSignalRecorded
+- ModelTrustUpdated
+- ProviderTrustUpdated
+- MakerTrustUpdated
+- DisputeOpened
+- DisputeResolved

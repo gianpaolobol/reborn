@@ -1,46 +1,43 @@
-# Backend Architecture — Re-born
+# Backend Architecture
 
 ## Stack
 
-- PHP 8.3+
-- Clean Architecture
-- DDD
-- Repository Pattern
-- Service Layer
-- Domain Events
-- SQLite dev
-- MariaDB/MySQL prod
+- PHP 8.3+;
+- SQLite for development;
+- MariaDB/MySQL for production;
+- Clean Architecture;
+- DDD-inspired modular monolith.
 
-## Struttura proposta
+---
 
-```text
-src/
-  Identity/
-    Domain/
-    Application/
-    Infrastructure/
-    Presentation/
-  Repair/
-  AI/
-  Knowledge/
-  Marketplace/
-  Provider/
-  Wallet/
-  Company/
-  Shared/
-    Database/
-    Events/
-    Http/
-    Security/
-    Validation/
-public/
-  index.php
-database/
-  migrations/
-  seeds/
-tests/
-```
+## Initial modules
 
-## Regola
+- Identity;
+- Repair;
+- Knowledge;
+- Marketplace;
+- Provider;
+- Wallet;
+- AI;
+- Admin.
 
-I controller non devono contenere logica di business. La logica vive in Application Services e Domain Services.
+---
+
+## First use cases
+
+- CreateRepairCase;
+- UploadRepairAsset;
+- ClassifyRepairCase;
+- RecommendRepairPath;
+- SelectRepairPath;
+- CreateProviderRequest;
+- UploadCADModel;
+- SubmitRepairOutcome.
+
+---
+
+## Persistence
+
+Use repository interfaces in the application/domain boundary.
+
+Infrastructure implementations can use PDO initially.

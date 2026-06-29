@@ -1,48 +1,54 @@
-# Investor One Pager — Re-born
+# Re-born — Investor One Pager Draft
 
-## One-liner
+## Mission
 
-Re-born is building the intelligence layer for the global repair economy.
+Allow anyone to repair anything.
+
+## Category
+
+Repair Intelligence Platform.
 
 ## Problem
 
-Millions of objects are discarded because small broken components are impossible to identify, source, model or produce locally.
+Repair is fragmented. Users do not know what part is broken, where to find a replacement, whether a CAD model exists, who can produce it, or how reliable a solution is.
 
 ## Solution
 
-A Repair Intelligence Platform that identifies broken objects, recommends repair paths, retrieves or generates spare parts, coordinates local manufacturing and learns from every repair.
+Re-born guides users from a broken object to a repair outcome using AI recognition, a repair Knowledge Graph, CAD/spare-part marketplace, maker incentives and distributed provider production.
 
 ## Why now
 
-- AI vision and 3D generation are becoming accessible.
-- Distributed manufacturing is increasingly mature.
-- Right-to-repair regulation and sustainability pressure are growing.
-- Brands need measurable repair and ESG infrastructure.
-- Consumers want cheaper and more sustainable alternatives to replacement.
-
-## Defensible assets
-
-- Repair Knowledge Graph
-- AI Learning Loop
-- provider network
-- maker marketplace liquidity
-- validation data
-- enterprise repair analytics
-- sustainability metrics
+- rising replacement costs;
+- right-to-repair momentum;
+- affordable 3D printing;
+- AI image recognition and generation;
+- maker economy;
+- enterprise sustainability pressure.
 
 ## Business model
 
-- marketplace take rate;
-- maker royalty split;
-- AI Premium;
-- Maker PRO;
-- Provider PRO;
-- Enterprise Portal;
-- White Label;
-- API Economy;
-- material/component marketplace;
-- bounty system.
+- provider marketplace commission;
+- CAD marketplace commission;
+- maker royalties;
+- AI credits;
+- subscriptions for makers/providers;
+- enterprise portal;
+- API and white-label;
+- materials and component marketplace.
+
+## Moat
+
+- repair-specific Knowledge Graph;
+- verified outcomes;
+- provider and maker network;
+- trust engine;
+- accumulated compatibility data;
+- enterprise repair intelligence.
 
 ## North Star
 
-Objects Saved™.
+Objects Successfully Repaired.
+
+## Initial wedge
+
+Repair of broken or missing plastic components where CAD, 3D printing and distributed providers can deliver real value.

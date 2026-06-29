@@ -1,41 +1,40 @@
-# Frontend Architecture — Re-born
+# Frontend Architecture
 
 ## Stack
 
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- no framework frontend nella fase iniziale
+- HTML5;
+- CSS3;
+- Vanilla JavaScript;
+- no frontend framework in the first phase.
 
-## Principi
+---
 
-- componenti modulari;
-- design tokens CSS;
+## Principles
+
 - progressive enhancement;
-- accessibilità;
-- stati UX espliciti;
-- nessuna dipendenza pesante non necessaria;
-- UI proprietaria, no Bootstrap.
+- semantic HTML;
+- accessible forms;
+- modular CSS;
+- small JavaScript modules;
+- no business-critical logic only in browser;
+- no heavy UI libraries.
 
-## Struttura proposta
+---
+
+## Suggested structure
 
 ```text
 public/
   index.php
   assets/
     css/
-      tokens.css
       base.css
+      tokens.css
       components.css
       pages.css
     js/
       app.js
-      api-client.js
-      components/
-      pages/
-    img/
+      repair-intake.js
+      upload.js
+      provider-request.js
 ```
-
-## Regola
-
-Il frontend deve seguire il Repair Journey, non la struttura database.

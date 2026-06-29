@@ -1,47 +1,83 @@
 # Domain Driven Design
 
-## Bounded Context
+## Bounded contexts
 
-1. Identity Domain
-2. Repair Domain
-3. AI Domain
-4. Knowledge Domain
-5. Marketplace Domain
-6. Provider Domain
-7. Wallet Domain
-8. Company Domain
+### Identity Domain
 
-## Repair Domain
-Aggregate root: RepairCase.
+Users, roles, authentication, permissions, profiles.
 
-Entità: RepairCase, RepairRequest, RepairStep, RepairFeedback, InstallationResult.
+### Repair Domain
 
-## AI Domain
-Aggregate root: AIJob.
+Repair cases, repair status, components, diagnosis, repair paths, outcomes.
 
-Entità: RecognitionTask, ReconstructionTask, OptimizationTask, AIResult.
+### AI Domain
 
-## Knowledge Domain
-Aggregate root principali: Product, Part, RepairDNA.
+Recognition requests, AI results, model generation requests, confidence, corrections.
 
-Entità: Brand, Product, Component, Part, PartVersion, Compatibility, FailureMode, RepairMethod, RepairScore.
+### Knowledge Domain
 
-## Marketplace Domain
-Aggregate root: PrintOrder.
+Product taxonomy, components, relationships, compatibility, repair knowledge.
 
-Entità: PrintQuote, PrintOrder, OrderItem, MarketplaceFee, RoyaltySplit.
+### Marketplace Domain
 
-## Provider Domain
-Aggregate root: Provider.
+CAD models, downloads, licenses, pricing, royalties.
 
-Entità: ProviderProfile, Printer, MaterialCapability, ServiceArea, AvailabilitySlot.
+### Provider Domain
 
-## Wallet Domain
-Aggregate root: Wallet e Bounty.
+Provider profiles, capabilities, quote requests, orders, fulfilment, ratings.
 
-Entità: WalletTransaction, RepairCredit, RoyaltyAccount, Payout.
+### Wallet Domain
 
-## Company Domain
-Aggregate root: Company.
+Credits, balances, transactions, royalties, bounties, payouts.
 
-Entità: BrandPortal, ProductCatalog, OfficialPart, ESGReport, WhiteLabelInstance.
+### Company Domain
+
+Enterprise accounts, assets, teams, private repair cases, reporting.
+
+---
+
+## Aggregate examples
+
+### RepairCase
+
+Owns:
+
+- status;
+- target object/component;
+- uploaded evidence;
+- selected path;
+- outcome.
+
+### CADModel
+
+Owns:
+
+- metadata;
+- versions;
+- verification status;
+- license;
+- trust score.
+
+### Provider
+
+Owns:
+
+- capabilities;
+- materials;
+- service area;
+- quote rules;
+- trust score.
+
+### Wallet
+
+Owns:
+
+- balance;
+- ledger entries;
+- credit transactions.
+
+---
+
+## Ubiquitous language
+
+Use terms from `docs/01-foundation/GLOSSARY.md` consistently in code, database and UI.

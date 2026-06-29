@@ -1,49 +1,63 @@
-# Security Baseline — Re-born
+# Security Baseline
 
-## Rischi principali
+## Principles
 
-Re-born gestirà:
+- Do not trust user uploads.
+- Do not expose uploaded files directly without validation.
+- Do not store secrets in repository.
+- Do not mix admin and public actions.
+- Log security-relevant events.
+- Validate file type, size and content.
+- Use CSRF protection for web forms.
+- Use prepared statements for database queries.
+- Hash passwords with modern password hashing.
+- Rate-limit sensitive actions.
 
-- foto caricate dagli utenti;
-- possibili immagini di ambienti domestici;
-- file CAD/STL/OBJ/STEP;
-- modelli potenzialmente coperti da diritti;
-- wallet, crediti, royalty e payout;
-- provider e indirizzi;
-- dati enterprise e cataloghi ufficiali.
+---
 
-## Requisiti MVP
+## Upload security
 
-- password hashing sicuro;
-- sessioni sicure;
-- CSRF protection;
-- rate limiting;
-- validazione upload;
-- controllo MIME e dimensione file;
-- scansione/isolamento file sospetti;
-- RBAC;
-- audit log;
-- separazione ruoli user/maker/provider/company/admin;
-- nessun segreto nel repository;
-- `.env` escluso da Git;
-- log senza dati sensibili.
+Repair photos and CAD files are core to Re-born but also high-risk.
 
-## File upload
+Required controls:
 
-Ogni file deve avere:
+- allowed extensions;
+- MIME validation;
+- max file size;
+- randomized storage names;
+- no executable uploads;
+- separate public/private paths;
+- virus/malware scanning in production;
+- image processing safety;
+- CAD/STL validation.
 
-- validazione estensione;
-- validazione MIME;
-- limite dimensione;
-- nome normalizzato;
-- storage fuori dalla public root quando possibile;
-- record database;
-- stato moderation/scanned.
+---
 
-## AI input safety
+## AI safety
 
-Le immagini e descrizioni possono contenere contenuti non ammessi o dati personali. Il sistema deve prevedere moderazione e cancellazione.
+AI suggestions must be treated as unverified unless confirmed.
 
-## Trust is product
+Safety-critical parts should require warnings or exclusion rules.
 
-La sicurezza non è solo tecnica. In Re-born diventa fiducia di maker, provider, utenti e aziende.
+Examples:
+
+- automotive load-bearing parts;
+- medical devices;
+- electrical safety components;
+- child safety equipment;
+- pressure vessels;
+- structural components.
+
+---
+
+## Privacy
+
+Re-born may receive images of private objects, homes, labels or serial numbers.
+
+The UX must explain:
+
+- what is uploaded;
+- why it is needed;
+- how it is used;
+- whether it contributes to learning;
+- how users can delete data.

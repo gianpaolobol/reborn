@@ -1,67 +1,69 @@
-# PRD — Acceptance Criteria
+# Acceptance Criteria
 
-## Repair Case Creation
+## Repair case intake
 
-Un Repair Case è accettato quando:
+A repair case is accepted when:
 
-- l'utente può descrivere l'oggetto;
-- l'utente può caricare almeno una immagine;
-- il sistema genera un ID caso;
-- il caso ha stato iniziale `draft` o `submitted`;
-- il caso è collegato all'utente;
-- eventuali errori upload sono chiari e recuperabili.
+- the user can create it without technical terms;
+- at least one image or description is provided;
+- the system stores status, timestamps and user reference;
+- the case can be resumed later;
+- missing data can be requested.
 
-## AI Recognition
+---
 
-Il riconoscimento è accettato quando:
+## Classification
 
-- produce almeno un'ipotesi prodotto/componente o uno stato `unknown`;
-- mostra un confidence score;
-- permette correzione manuale;
-- registra input, output e versione del motore;
-- non blocca il flusso se la confidenza è bassa.
+Classification is accepted when:
 
-## Repair Path Recommendation
+- product category can be assigned;
+- component can be assigned or marked unknown;
+- confidence can be stored;
+- admin can correct classification;
+- corrections are logged as learning signals.
 
-Un repair path è accettato quando mostra:
+---
 
-- opzione consigliata;
-- alternative;
-- costo stimato;
-- tempo stimato;
-- probabilità di successo;
-- motivazione della raccomandazione;
-- prossima azione chiara.
+## Repair path recommendation
 
-## Maker Model Upload
+A recommendation is accepted when:
 
-Un modello maker è accettato quando:
+- it has a path type;
+- it explains why it is suggested;
+- it shows uncertainty or missing data;
+- it offers at least one next action;
+- it can be rejected or changed.
 
-- ha file valido;
-- ha licenza/diritti dichiarati;
-- ha compatibilità dichiarata;
-- ha materiale consigliato;
-- ha versioning;
-- può generare royalty.
+---
 
-## Provider Quote
+## Provider request
 
-Un preventivo provider è accettato quando include:
+A provider request is accepted when:
 
-- prezzo;
-- materiale;
-- tecnologia;
-- tempo produzione;
-- opzioni consegna/ritiro;
-- fee piattaforma;
-- eventuale royalty maker.
+- user can request production from a repair case;
+- provider receives relevant data;
+- provider can send quote;
+- user can accept or reject quote;
+- status is tracked.
 
-## Repair Validation
+---
 
-Una riparazione è validata quando:
+## Maker model
 
-- l'utente conferma esito;
-- indica se il pezzo è installabile;
-- può caricare foto finale;
-- lascia feedback;
-- il sistema aggiorna Repair Score e Knowledge Graph.
+A model is accepted when:
+
+- it has title, category, component, file reference and license/monetization metadata;
+- it can be linked to repair cases;
+- it can collect outcome feedback;
+- it has verification state.
+
+---
+
+## Outcome feedback
+
+Outcome feedback is accepted when:
+
+- user can mark success or failure;
+- feedback can be tied to repair case, model and provider;
+- feedback changes trust signals;
+- notes and photos can be attached.
