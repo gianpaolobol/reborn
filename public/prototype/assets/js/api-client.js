@@ -828,6 +828,81 @@
       return this.request(`/api/v1/platform/partner-readiness-reviews?limit=${encodeURIComponent(limit)}`);
     }
 
+
+    async getMarketplaceRevenue() {
+      return this.request('/api/v1/platform/marketplace-revenue');
+    }
+
+    async getMarketplaceFeePolicies(status = 'all') {
+      return this.request(`/api/v1/platform/marketplace-fee-policies?status=${encodeURIComponent(status)}`);
+    }
+
+    async getCreditAccounts(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/credit-accounts?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createCreditAccount(payload = {}) {
+      return this.request('/api/v1/platform/credit-accounts', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getCreditTransactions(limit = 50) {
+      return this.request(`/api/v1/platform/credit-transactions?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async recordCreditTransaction(payload = {}) {
+      return this.request('/api/v1/platform/credit-transactions', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getPayoutAccounts(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/payout-accounts?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createPayoutAccount(payload = {}) {
+      return this.request('/api/v1/platform/payout-accounts', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async getPayoutRuns(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/payout-runs?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async evaluatePayoutRun(payload = {}) {
+      return this.request('/api/v1/platform/payout-runs/evaluate', {
+        method: 'POST',
+        body: payload
+      });
+    }
+
+    async approvePayoutRun(id, notes = 'Approved from Step 28 prototype console.') {
+      return this.request(`/api/v1/platform/payout-runs/${encodeURIComponent(id)}/approve`, {
+        method: 'POST',
+        body: { notes }
+      });
+    }
+
+    async markPayoutRunPaid(id, notes = 'Marked paid from Step 28 prototype console. No real money moved.') {
+      return this.request(`/api/v1/platform/payout-runs/${encodeURIComponent(id)}/paid`, {
+        method: 'POST',
+        body: { notes }
+      });
+    }
+
+    async getPayoutItems(limit = 50) {
+      return this.request(`/api/v1/platform/payout-items?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getRevenueAuditLog(limit = 50) {
+      return this.request(`/api/v1/platform/revenue-audit-log?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -978,7 +1053,15 @@
           partner_tasks: [],
           partner_agreements: [],
           partner_integrations: [],
-          partner_readiness_reviews: []
+          partner_readiness_reviews: [],
+          marketplace_revenue: null,
+          fee_policies: [],
+          credit_accounts: [],
+          credit_transactions: [],
+          payout_accounts: [],
+          payout_runs: [],
+          payout_items: [],
+          revenue_audit_log: []
         };
       }
 
@@ -1039,6 +1122,14 @@
       let partnerAgreements = { partner_agreements: [] };
       let partnerIntegrations = { partner_integrations: [] };
       let partnerReadinessReviews = { partner_readiness_reviews: [] };
+      let marketplaceRevenue = { marketplace_revenue: null };
+      let feePolicies = { fee_policies: [] };
+      let creditAccounts = { credit_accounts: [] };
+      let creditTransactions = { credit_transactions: [] };
+      let payoutAccounts = { payout_accounts: [] };
+      let payoutRuns = { payout_runs: [] };
+      let payoutItems = { payout_items: [] };
+      let revenueAuditLog = { revenue_audit_log: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -1362,6 +1453,46 @@
         } catch (_error) {
           partnerReadinessReviews = { partner_readiness_reviews: [] };
         }
+        try {
+          marketplaceRevenue = await this.getMarketplaceRevenue();
+        } catch (_error) {
+          marketplaceRevenue = { marketplace_revenue: null };
+        }
+        try {
+          feePolicies = await this.getMarketplaceFeePolicies('all');
+        } catch (_error) {
+          feePolicies = { fee_policies: [] };
+        }
+        try {
+          creditAccounts = await this.getCreditAccounts('all', 30);
+        } catch (_error) {
+          creditAccounts = { credit_accounts: [] };
+        }
+        try {
+          creditTransactions = await this.getCreditTransactions(30);
+        } catch (_error) {
+          creditTransactions = { credit_transactions: [] };
+        }
+        try {
+          payoutAccounts = await this.getPayoutAccounts('all', 30);
+        } catch (_error) {
+          payoutAccounts = { payout_accounts: [] };
+        }
+        try {
+          payoutRuns = await this.getPayoutRuns('active', 30);
+        } catch (_error) {
+          payoutRuns = { payout_runs: [] };
+        }
+        try {
+          payoutItems = await this.getPayoutItems(30);
+        } catch (_error) {
+          payoutItems = { payout_items: [] };
+        }
+        try {
+          revenueAuditLog = await this.getRevenueAuditLog(30);
+        } catch (_error) {
+          revenueAuditLog = { revenue_audit_log: [] };
+        }
 
       }
 
@@ -1529,7 +1660,15 @@
         partner_tasks: partnerTasks.partner_tasks || [],
         partner_agreements: partnerAgreements.partner_agreements || [],
         partner_integrations: partnerIntegrations.partner_integrations || [],
-        partner_readiness_reviews: partnerReadinessReviews.partner_readiness_reviews || []
+        partner_readiness_reviews: partnerReadinessReviews.partner_readiness_reviews || [],
+        marketplace_revenue: marketplaceRevenue.marketplace_revenue || null,
+        fee_policies: feePolicies.fee_policies || [],
+        credit_accounts: creditAccounts.credit_accounts || [],
+        credit_transactions: creditTransactions.credit_transactions || [],
+        payout_accounts: payoutAccounts.payout_accounts || [],
+        payout_runs: payoutRuns.payout_runs || [],
+        payout_items: payoutItems.payout_items || [],
+        revenue_audit_log: revenueAuditLog.revenue_audit_log || []
       };
     }
   }

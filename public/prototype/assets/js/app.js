@@ -102,7 +102,8 @@ function stepper(active) {
     ['service-governance', '15', 'SLA'],
     ['privacy-governance', '16', 'Privacy'],
     ['release-management', '17', 'Release'],
-    ['partner-onboarding', '18', 'Partners']
+    ['partner-onboarding', '18', 'Partners'],
+    ['marketplace-revenue', '19', 'Revenue']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -2193,6 +2194,158 @@ async function testPartnerIntegration(id) {
   }
 }
 
+
+function marketplaceRevenueDashboard() {
+  setActiveNav('marketplace-revenue');
+  if (!S.auth.user) {
+    return layout('Marketplace Revenue', authRequiredPanel('the Step 28 marketplace revenue governance console'), { currentStep: 'marketplace-revenue' });
+  }
+
+  const dashboard = S.api.marketplaceRevenue || {};
+  const summary = dashboard.summary || {};
+  const feePolicies = S.api.feePolicies || dashboard.fee_policies || [];
+  const creditAccounts = S.api.creditAccounts || dashboard.credit_accounts || [];
+  const creditTransactions = S.api.creditTransactions || dashboard.recent_credit_transactions || [];
+  const payoutAccounts = S.api.payoutAccounts || dashboard.payout_accounts || [];
+  const payoutRuns = S.api.payoutRuns || dashboard.payout_runs || [];
+  const payoutItems = S.api.payoutItems || dashboard.recent_payout_items || [];
+  const auditLog = S.api.revenueAuditLog || [];
+  const actionRows = (dashboard.operator_actions || []).map(item => `<li>${safe(item)}</li>`).join('') || '<li>No immediate revenue action.</li>';
+  const money = cents => `€${((Number(cents || 0)) / 100).toFixed(2)}`;
+  const feeRows = feePolicies.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.name)}</td><td>${safe(item.applies_to)}</td><td>${safe(item.percentage)}%</td><td>${money(item.min_fee_cents)}</td></tr>`).join('') || '<tr><td colspan="5">No fee policies configured.</td></tr>';
+  const creditRows = creditAccounts.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.display_name)}</td><td>${safe(item.owner_type)}</td><td>${safe(item.balance_credits)}</td><td><button class="mini-button" onclick="grantCredits('${safe(item.id)}')">Grant</button></td></tr>`).join('') || '<tr><td colspan="5">No credit accounts configured.</td></tr>';
+  const transactionRows = creditTransactions.slice(0, 10).map(item => `<tr><td>${safe(item.transaction_type)}</td><td>${safe(item.display_name)}</td><td>${safe(item.amount_credits)}</td><td>${safe(item.balance_after_credits)}</td><td>${safe(item.created_at)}</td></tr>`).join('') || '<tr><td colspan="5">No credit transactions yet.</td></tr>';
+  const payoutAccountRows = payoutAccounts.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : item.status === 'pending' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.display_name)}</td><td>${safe(item.beneficiary_type)}</td><td>${money(item.minimum_payout_cents)}</td><td>${safe(item.hold_days)}d</td></tr>`).join('') || '<tr><td colspan="5">No payout accounts configured.</td></tr>';
+  const payoutRunRows = payoutRuns.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'paid' ? 'green' : item.status === 'approved' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.run_code)}</td><td>${safe(item.item_count)}</td><td>${money(item.payout_amount_cents)}</td><td><button class="mini-button" onclick="approvePayoutRun('${safe(item.id)}')" ${item.status !== 'evaluated' ? 'disabled' : ''}>Approve</button> <button class="mini-button" onclick="markPayoutRunPaid('${safe(item.id)}')" ${item.status !== 'approved' ? 'disabled' : ''}>Paid</button></td></tr>`).join('') || '<tr><td colspan="5">No active payout runs.</td></tr>';
+  const payoutItemRows = payoutItems.slice(0, 10).map(item => `<tr><td>${safe(item.beneficiary_type)}</td><td>${safe(item.display_name)}</td><td>${safe(item.source_type)}</td><td>${money(item.payout_amount_cents)}</td><td>${safe(item.credits_earned)}</td></tr>`).join('') || '<tr><td colspan="5">No payout items yet.</td></tr>';
+  const auditRows = auditLog.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No revenue audit records yet.</li>';
+
+  return layout('Marketplace Revenue', `
+    <section class="section-head"><div><p class="eyebrow">Step 28 · Marketplace Revenue, Credits & Payout Governance</p><h2>Govern monetization before real money moves.</h2></div><p class="muted">Step 28 adds fee policies, repair credit accounts, credit ledger transactions, payout accounts and mock payout runs for provider/maker economy review. It remains intentionally local and non-settling.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.active_fee_policies ?? 0)}</strong><span>Active fee policies</span></div><div class="metric"><strong>${safe(summary.credits_balance_total ?? 0)}</strong><span>Credit balance</span></div><div class="metric"><strong>${safe(summary.payout_accounts_active ?? 0)}</strong><span>Active payout accounts</span></div><div class="metric"><strong>${money(summary.evaluated_payout_cents ?? 0)}</strong><span>Evaluated payouts</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="evaluateMarketplacePayoutRun()" ${S.busy ? 'disabled' : ''}>Evaluate payout run</button><button class="btn secondary" onclick="createDemoCreditAccount()" ${S.busy ? 'disabled' : ''}>Create credit account</button><button class="btn secondary" onclick="createDemoPayoutAccount()" ${S.busy ? 'disabled' : ''}>Create payout account</button><a class="btn secondary" href="#/partner-onboarding">Open partner onboarding</a></div><ul class="muted small">${actionRows}</ul></section>
+    <section class="section grid two"><div class="panel stack"><h3>Fee policies</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Applies to</th><th>%</th><th>Min</th></tr>${feeRows}</table></div><div class="panel stack"><h3>Credit accounts</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Owner</th><th>Credits</th><th>Action</th></tr>${creditRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Credit ledger</h3><table class="table"><tr><th>Type</th><th>Account</th><th>Amount</th><th>Balance</th><th>Created</th></tr>${transactionRows}</table></div><div class="panel stack"><h3>Payout accounts</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Type</th><th>Minimum</th><th>Hold</th></tr>${payoutAccountRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Payout runs</h3><table class="table"><tr><th>Status</th><th>Run</th><th>Items</th><th>Payout</th><th>Action</th></tr>${payoutRunRows}</table></div><div class="panel stack"><h3>Payout items</h3><table class="table"><tr><th>Type</th><th>Beneficiary</th><th>Source</th><th>Payout</th><th>Credits</th></tr>${payoutItemRows}</table></div></section>
+    <section class="section panel stack"><h3>Revenue audit</h3><ul class="muted small">${auditRows}</ul></section>
+  `, { currentStep: 'marketplace-revenue' });
+}
+
+async function createDemoCreditAccount() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create credit accounts.');
+  setBusy(true);
+  try {
+    const suffix = `${new Date().getMinutes()}${new Date().getSeconds()}`;
+    await window.REBORN_API.createCreditAccount({
+      owner_type: 'maker',
+      owner_ref: `maker-smoke-${suffix}`,
+      display_name: `Maker Smoke ${suffix}`,
+      opening_balance_credits: 25,
+      notes: 'Created from Step 28 prototype console.'
+    });
+    toast('Credit account created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Credit account creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function grantCredits(accountId) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to grant credits.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.recordCreditTransaction({
+      account_id: accountId,
+      transaction_type: 'grant',
+      amount_credits: 10,
+      source_type: 'prototype_console',
+      description: 'Manual pilot credit grant from Step 28 prototype console.'
+    });
+    toast('Credits granted.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Credit grant failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function createDemoPayoutAccount() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create payout accounts.');
+  setBusy(true);
+  try {
+    const suffix = `${new Date().getMinutes()}${new Date().getSeconds()}`;
+    await window.REBORN_API.createPayoutAccount({
+      beneficiary_type: 'provider',
+      beneficiary_ref: `provider-smoke-${suffix}`,
+      display_name: `Provider Smoke ${suffix}`,
+      status: 'pending',
+      currency: 'EUR',
+      hold_days: 7,
+      notes: 'Created from Step 28 prototype console. Mock only.'
+    });
+    toast('Payout account created.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Payout account creation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function evaluateMarketplacePayoutRun() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate payout runs.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.evaluatePayoutRun({
+      currency: 'EUR',
+      notes: 'Evaluated from Step 28 prototype console. No real money moved.'
+    });
+    toast('Mock payout run evaluated.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Payout evaluation failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function approvePayoutRun(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to approve payout runs.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.approvePayoutRun(id);
+    toast('Payout run approved.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Payout approval failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function markPayoutRunPaid(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to mark payout runs paid.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.markPayoutRunPaid(id);
+    toast('Payout run marked paid in mock mode.');
+    await refreshApiData({ silent: true });
+  } catch (error) {
+    toast(`Payout paid mark failed: ${error.message}`);
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
 const routes = {
   '/': home,
   '/start': start,
@@ -2215,6 +2368,7 @@ const routes = {
   '/privacy-governance': privacyGovernanceDashboard,
   '/release-management': releaseManagementDashboard,
   '/partner-onboarding': partnerOnboardingDashboard,
+  '/marketplace-revenue': marketplaceRevenueDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -2352,6 +2506,14 @@ async function refreshApiData(options = {}) {
       partnerAgreements: bootstrap.partner_agreements || S.api.partnerAgreements || [],
       partnerIntegrations: bootstrap.partner_integrations || S.api.partnerIntegrations || [],
       partnerReadinessReviews: bootstrap.partner_readiness_reviews || S.api.partnerReadinessReviews || [],
+      marketplaceRevenue: bootstrap.marketplace_revenue || S.api.marketplaceRevenue || null,
+      feePolicies: bootstrap.fee_policies || S.api.feePolicies || [],
+      creditAccounts: bootstrap.credit_accounts || S.api.creditAccounts || [],
+      creditTransactions: bootstrap.credit_transactions || S.api.creditTransactions || [],
+      payoutAccounts: bootstrap.payout_accounts || S.api.payoutAccounts || [],
+      payoutRuns: bootstrap.payout_runs || S.api.payoutRuns || [],
+      payoutItems: bootstrap.payout_items || S.api.payoutItems || [],
+      revenueAuditLog: bootstrap.revenue_audit_log || S.api.revenueAuditLog || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {

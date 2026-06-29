@@ -192,6 +192,7 @@ final class OperationalTelemetryService
             'smoke-privacy-data-governance.ps1' => 'Step 25 privacy data governance',
             'smoke-beta-release-management.ps1' => 'Step 26 beta release management',
             'smoke-partner-onboarding-governance.ps1' => 'Step 27 partner onboarding governance',
+            'smoke-marketplace-revenue-governance.ps1' => 'Step 28 marketplace revenue governance',
         ];
 
         $rows = [];

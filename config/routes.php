@@ -105,6 +105,11 @@ return static function (Router $router, RepairController $repairController, Auth
                 'partner_readiness',
                 'partner_agreements',
                 'partner_integrations',
+                'marketplace_revenue_governance',
+                'repair_credits',
+                'credit_ledger',
+                'payout_governance',
+                'fee_policies',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -205,6 +210,21 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->post('/api/v1/platform/partners/{id}/integrations', [$platformController, 'createPartnerIntegration']);
     $router->post('/api/v1/platform/partner-integrations/{id}/status', [$platformController, 'updatePartnerIntegrationStatus']);
     $router->get('/api/v1/platform/partner-readiness-reviews', [$platformController, 'partnerReadinessReviews']);
+
+    $router->get('/api/v1/platform/marketplace-revenue', [$platformController, 'marketplaceRevenue']);
+    $router->get('/api/v1/platform/marketplace-fee-policies', [$platformController, 'marketplaceFeePolicies']);
+    $router->get('/api/v1/platform/credit-accounts', [$platformController, 'creditAccounts']);
+    $router->post('/api/v1/platform/credit-accounts', [$platformController, 'createCreditAccount']);
+    $router->get('/api/v1/platform/credit-transactions', [$platformController, 'creditTransactions']);
+    $router->post('/api/v1/platform/credit-transactions', [$platformController, 'recordCreditTransaction']);
+    $router->get('/api/v1/platform/payout-accounts', [$platformController, 'payoutAccounts']);
+    $router->post('/api/v1/platform/payout-accounts', [$platformController, 'createPayoutAccount']);
+    $router->get('/api/v1/platform/payout-runs', [$platformController, 'payoutRuns']);
+    $router->post('/api/v1/platform/payout-runs/evaluate', [$platformController, 'evaluatePayoutRun']);
+    $router->post('/api/v1/platform/payout-runs/{id}/approve', [$platformController, 'approvePayoutRun']);
+    $router->post('/api/v1/platform/payout-runs/{id}/paid', [$platformController, 'markPayoutRunPaid']);
+    $router->get('/api/v1/platform/payout-items', [$platformController, 'payoutItems']);
+    $router->get('/api/v1/platform/revenue-audit-log', [$platformController, 'revenueAuditLog']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

@@ -497,3 +497,14 @@ Run after setup and server start:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\smoke-partner-onboarding-governance.ps1
 ```
+
+
+## Step 28 — Marketplace Revenue, Credits & Payout Governance v1
+
+Adds fee policies, repair credit accounts, credit ledger transactions, payout accounts, mock payout runs, payout items, revenue audit log and the prototype admin console `#/marketplace-revenue`. Real payment settlement, tax documents, KYC/KYB and production payouts remain intentionally out of scope.
+
+Smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-marketplace-revenue-governance.ps1
+```

@@ -14,6 +14,7 @@ use Reborn\Platform\Application\OperationalGovernanceService;
 use Reborn\Platform\Application\PrivacyGovernanceService;
 use Reborn\Platform\Application\ReleaseManagementService;
 use Reborn\Platform\Application\PartnerOnboardingService;
+use Reborn\Platform\Application\MarketplaceRevenueService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -30,6 +31,7 @@ final class PlatformController
         private readonly PrivacyGovernanceService $privacy,
         private readonly ReleaseManagementService $releases,
         private readonly PartnerOnboardingService $partners,
+        private readonly MarketplaceRevenueService $revenue,
         private readonly AuthContext $auth,
     ) {
     }
@@ -633,6 +635,103 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['partner_readiness_reviews' => $this->partners->readinessReviews($limit)], $request->requestId());
+    }
+
+
+    public function marketplaceRevenue(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['marketplace_revenue' => $this->revenue->dashboard()], $request->requestId());
+    }
+
+    public function marketplaceFeePolicies(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        return JsonResponse::ok(['fee_policies' => $this->revenue->feePolicies($status)], $request->requestId());
+    }
+
+    public function creditAccounts(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['credit_accounts' => $this->revenue->creditAccounts($status, $limit)], $request->requestId());
+    }
+
+    public function createCreditAccount(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['credit_account' => $this->revenue->createCreditAccount($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function creditTransactions(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        $accountId = trim((string) $request->query('account_id', '')) ?: null;
+        return JsonResponse::ok(['credit_transactions' => $this->revenue->creditTransactions($limit, $accountId)], $request->requestId());
+    }
+
+    public function recordCreditTransaction(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['credit_transaction' => $this->revenue->recordCreditTransaction($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function payoutAccounts(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['payout_accounts' => $this->revenue->payoutAccounts($status, $limit)], $request->requestId());
+    }
+
+    public function createPayoutAccount(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['payout_account' => $this->revenue->createPayoutAccount($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function payoutRuns(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['payout_runs' => $this->revenue->payoutRuns($status, $limit)], $request->requestId());
+    }
+
+    public function evaluatePayoutRun(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['payout_run_evaluation' => $this->revenue->evaluatePayoutRun($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function approvePayoutRun(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['payout_run' => $this->revenue->approvePayoutRun((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function markPayoutRunPaid(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['payout_run' => $this->revenue->markPayoutRunPaid((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function payoutItems(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        $runId = trim((string) $request->query('payout_run_id', '')) ?: null;
+        return JsonResponse::ok(['payout_items' => $this->revenue->payoutItems($runId, $limit)], $request->requestId());
+    }
+
+    public function revenueAuditLog(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['revenue_audit_log' => $this->revenue->auditLog($limit)], $request->requestId());
     }
 
 }

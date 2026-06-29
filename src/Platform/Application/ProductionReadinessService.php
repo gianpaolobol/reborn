@@ -38,6 +38,7 @@ final class ProductionReadinessService
             'privacy_governance' => $this->privacyGovernanceCheck(),
             'release_management' => $this->releaseManagementCheck(),
             'partner_onboarding' => $this->partnerOnboardingCheck(),
+            'marketplace_revenue' => $this->marketplaceRevenueCheck(),
         ];
 
         $status = 'ready';
@@ -89,7 +90,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v7_step26',
+            'checklist_version' => 'production_readiness_v9_step28',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -102,6 +103,7 @@ final class ProductionReadinessService
                 'privacy/legal liability terms for repair outcomes are approved',
                 'feature flags, release gates and pilot cohort rules are reviewed',
                 'partner onboarding tasks, agreements, integrations and readiness reviews are approved',
+                'marketplace fee policies, credit ledger and payout governance are reviewed before monetization',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
@@ -110,6 +112,7 @@ final class ProductionReadinessService
             'step_25_status' => 'Privacy notices, consent ledger, processing records, retention dry-run and data subject request workflow v1 implemented.',
             'step_26_status' => 'Beta release management, feature flags, release gates and pilot cohort readiness v1 implemented.',
             'step_27_status' => 'Enterprise and partner onboarding governance, agreements, integrations and readiness reviews v1 implemented.',
+            'step_28_status' => 'Marketplace revenue governance, repair credits ledger and mock payout workflow v1 implemented.',
         ];
     }
 
@@ -180,10 +183,10 @@ final class ProductionReadinessService
             $count = (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn();
             $latest = $this->pdo->query('SELECT filename FROM migrations ORDER BY executed_at DESC, id DESC LIMIT 1')->fetchColumn();
             return [
-                'status' => $count >= 21 ? 'ok' : 'warn',
+                'status' => $count >= 22 ? 'ok' : 'warn',
                 'executed_count' => $count,
                 'latest' => $latest ?: null,
-                'message' => $count >= 21 ? 'All MVP hardening, observability, incident-response, notification, service-governance, privacy-governance, release-management and partner-onboarding migrations are present.' : 'Some migrations may still need to run.',
+                'message' => $count >= 22 ? 'All MVP hardening, observability, incident-response, notification, service-governance, privacy-governance, release-management, partner-onboarding and marketplace-revenue migrations are present.' : 'Some migrations may still need to run.',
             ];
         } catch (Throwable $exception) {
             return ['status' => 'fail', 'message' => 'Migration metadata is unavailable.', 'error' => $exception->getMessage()];
@@ -509,6 +512,43 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Partner onboarding checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function marketplaceRevenueCheck(): array
+    {
+        try {
+            $tables = ['platform_marketplace_fee_policies', 'platform_credit_accounts', 'platform_credit_transactions', 'platform_payout_accounts', 'platform_payout_runs', 'platform_payout_items', 'platform_revenue_audit_log'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $feePolicies = 0;
+            $creditAccounts = 0;
+            $payoutAccounts = 0;
+            if ($missing === []) {
+                $feePolicies = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_marketplace_fee_policies WHERE status IN ('active', 'draft')")->fetchColumn();
+                $creditAccounts = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_credit_accounts WHERE status IN ('active', 'pending')")->fetchColumn();
+                $payoutAccounts = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_payout_accounts WHERE status IN ('active', 'pending')")->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? (($feePolicies > 0 && $creditAccounts > 0 && $payoutAccounts > 0) ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Marketplace revenue, credits and payout governance tables are available.' : 'Marketplace revenue governance tables are not fully migrated yet.',
+                'fee_policies' => $feePolicies,
+                'credit_accounts' => $creditAccounts,
+                'payout_accounts' => $payoutAccounts,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Marketplace revenue governance checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 
