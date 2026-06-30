@@ -194,3 +194,31 @@ The CI smoke suite performs a demo credential reset and verification immediately
 ### Runtime verification V4
 
 The CI runtime check now uses `scripts/ci-verify-runtime.php` instead of inline `php -r` commands. The workflow log must show `STEP38_RUNTIME_SCRIPT_VERIFY_V5`. If a run still fails with a PHP command-line parse error, the run is using an older workflow commit.
+
+
+## Step 39 release evidence
+
+After the smoke suite, CI runs:
+
+```text
+scripts/ci-release-evidence.ps1
+```
+
+This generates:
+
+```text
+storage/logs/ci-regression-test-matrix.json
+storage/logs/ci-release-evidence.json
+storage/logs/ci-quality-gate.json
+storage/logs/ci-release-evidence.md
+```
+
+The generated files are uploaded as the `reborn-ci-release-evidence` artifact. They are the canonical evidence that the commit passed the regression matrix and release quality gate.
+
+Future steps that add new smoke tests must update:
+
+```text
+scripts/ci-smoke-tests.ps1
+scripts/ci-release-evidence.ps1
+docs/13-testing/REGRESSION_TEST_MATRIX.md
+```

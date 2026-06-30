@@ -20,3 +20,5 @@
 - [ ] Nessun segreto/API key è stato committato.
 - [ ] La GitHub Actions smoke suite passa o il motivo del fallimento è documentato.
 - [ ] Se sono stati aggiunti nuovi smoke test, `scripts/ci-smoke-tests.ps1` è stato aggiornato.
+- [ ] La regression test matrix è aggiornata in `scripts/ci-release-evidence.ps1` e `docs/13-testing/REGRESSION_TEST_MATRIX.md`.
+- [ ] L’artifact CI `reborn-ci-release-evidence` è disponibile o il motivo dell’assenza è documentato.

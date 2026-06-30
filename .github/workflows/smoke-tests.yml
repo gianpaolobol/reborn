@@ -42,7 +42,7 @@ jobs:
 
       - name: Verify PHP runtime
         run: |
-          echo "Workflow runtime marker: STEP38_RUNTIME_SCRIPT_VERIFY_V5"
+          echo "Workflow runtime marker: STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V1"
           php -v
           php -m | grep -Ei 'PDO|pdo_sqlite|sqlite3|fileinfo|json'
           php scripts/ci-verify-runtime.php
@@ -97,16 +97,13 @@ jobs:
           exit 1
 
 
-      - name: Verify Step 38 CI patch markers
+      - name: Verify CI smoke guard markers
         shell: bash
         run: |
-          echo "Workflow marker: STEP38_WORKFLOW_AUTH_GUARD_V3"
+          echo "Workflow marker: STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V1"
           grep -n "STEP38_CI_AUTH_GUARD_V3" scripts/ci-smoke-tests.ps1
           grep -n "STEP38_IDENTITY_SMOKE_GUARD_V3" scripts/smoke-identity-access.ps1
-          echo "Identity smoke script head:"
-          nl -ba scripts/smoke-identity-access.ps1 | sed -n '1,90p'
-          echo "CI smoke script guard lines:"
-          grep -n 'Outdated scripts/smoke-identity-access.ps1\|Invoke-CiPhpScript "scripts/reset-demo-credentials.php"\|CI smoke script version' scripts/ci-smoke-tests.ps1
+          grep -n "STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V1" scripts/ci-release-evidence.ps1
 
       - name: Verify API auth preflight
         shell: pwsh
@@ -120,6 +117,24 @@ jobs:
       - name: Run full smoke test suite
         shell: pwsh
         run: ./scripts/ci-smoke-tests.ps1 -BaseUrl http://127.0.0.1:8080
+
+      - name: Generate release evidence and quality gate
+        if: always()
+        shell: pwsh
+        run: ./scripts/ci-release-evidence.ps1 -BaseUrl http://127.0.0.1:8080
+
+      - name: Upload release evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: reborn-ci-release-evidence
+          path: |
+            storage/logs/ci-smoke-results.json
+            storage/logs/ci-regression-test-matrix.json
+            storage/logs/ci-release-evidence.json
+            storage/logs/ci-quality-gate.json
+            storage/logs/ci-release-evidence.md
+          if-no-files-found: ignore
 
       - name: Upload runtime logs on failure
         if: failure()

@@ -1,5 +1,7 @@
 # Re-born
 
+[![Re-born Smoke Tests](https://github.com/gianpaolobol/reborn/actions/workflows/smoke-tests.yml/badge.svg)](https://github.com/gianpaolobol/reborn/actions/workflows/smoke-tests.yml)
+
 **Re-born** is a Repair Intelligence Platform designed to allow anyone to repair anything.
 
 Repository ufficiale: https://github.com/gianpaolobol/reborn
@@ -33,6 +35,27 @@ powershell -ExecutionPolicy Bypass -File .\scripts\ci-smoke-tests.ps1 -BaseUrl h
 ```
 
 Future steps that add smoke tests must update `scripts/ci-smoke-tests.ps1`.
+
+### Release evidence and quality gate
+
+Step 39 adds release evidence on top of the smoke suite. After the smoke tests run, CI generates:
+
+```text
+storage/logs/ci-regression-test-matrix.json
+storage/logs/ci-release-evidence.json
+storage/logs/ci-quality-gate.json
+storage/logs/ci-release-evidence.md
+```
+
+GitHub Actions uploads them as the `reborn-ci-release-evidence` artifact. The matrix maps the 30 smoke tests to steps, bounded contexts, strategic assets and release gates.
+
+Local command after the server and smoke suite are running:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\ci-release-evidence.ps1 -BaseUrl http://127.0.0.1:8080
+```
+
+Future steps that add smoke coverage must update both `scripts/ci-smoke-tests.ps1` and `scripts/ci-release-evidence.ps1`.
 
 ---
 
