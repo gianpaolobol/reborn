@@ -1,7 +1,7 @@
 ﻿{
     "version":  "STEP47_AI_VISION_QUALITY_PROFILE_GATE_V1",
     "status":  "passed",
-    "generated_at":  "2026-06-30T21:44:38.2834774Z",
+    "generated_at":  "2026-06-30T22:00:09.9851998Z",
     "total_checks":  9,
     "passed_checks":  9,
     "failed_checks":  0,
@@ -211,7 +211,7 @@
                                                            "domain_events"
                                                        ],
                                       "meta":  {
-                                                   "request_id":  "045ee2a54942078b"
+                                                   "request_id":  "1c582dd25d155e76"
                                                }
                                   }
                    },
@@ -223,7 +223,7 @@
                                       "readiness":  {
                                                         "status":  "degraded",
                                                         "environment":  "development",
-                                                        "generated_at":  "2026-06-30T21:44:37+00:00",
+                                                        "generated_at":  "2026-06-30T22:00:09+00:00",
                                                         "checks":  {
                                                                        "database":  {
                                                                                         "status":  "ok",
@@ -294,14 +294,14 @@
                                                                        "observability":  {
                                                                                              "status":  "ok",
                                                                                              "message":  "HTTP metrics recorder is available.",
-                                                                                             "recorded_requests":  14039,
-                                                                                             "last_request_at":  "2026-06-30T21:43:55+00:00"
+                                                                                             "recorded_requests":  14896,
+                                                                                             "last_request_at":  "2026-06-30T21:57:50+00:00"
                                                                                          },
                                                                        "backup":  {
                                                                                       "status":  "ok",
                                                                                       "message":  "At least one completed backup exists.",
                                                                                       "backup_dir":  "C:\\REBORN\\reborn/storage/backups",
-                                                                                      "latest_completed_backup_at":  "2026-06-30T21:43:03+00:00"
+                                                                                      "latest_completed_backup_at":  "2026-06-30T21:56:54+00:00"
                                                                                   },
                                                                        "incident_response":  {
                                                                                                  "status":  "ok",
@@ -314,7 +314,7 @@
                                                                        "notification_center":  {
                                                                                                    "status":  "ok",
                                                                                                    "message":  "Notification and escalation tables are available.",
-                                                                                                   "active_channels":  23,
+                                                                                                   "active_channels":  24,
                                                                                                    "enabled_notification_rules":  4,
                                                                                                    "enabled_escalation_policies":  4,
                                                                                                    "missing_tables":  [
@@ -353,9 +353,9 @@
                                                                        "partner_onboarding":  {
                                                                                                   "status":  "ok",
                                                                                                   "message":  "Partner onboarding governance tables are available.",
-                                                                                                  "partners":  19,
-                                                                                                  "onboarding_tasks":  72,
-                                                                                                  "agreements":  19,
+                                                                                                  "partners":  20,
+                                                                                                  "onboarding_tasks":  76,
+                                                                                                  "agreements":  20,
                                                                                                   "missing_tables":  [
 
                                                                                                                      ]
@@ -364,8 +364,8 @@
                                                                                                    "status":  "ok",
                                                                                                    "message":  "Marketplace revenue, credits and payout governance tables are available.",
                                                                                                    "fee_policies":  3,
-                                                                                                   "credit_accounts":  32,
-                                                                                                   "payout_accounts":  18,
+                                                                                                   "credit_accounts":  34,
+                                                                                                   "payout_accounts":  19,
                                                                                                    "missing_tables":  [
 
                                                                                                                       ]
@@ -373,8 +373,8 @@
                                                                        "maker_economy":  {
                                                                                              "status":  "ok",
                                                                                              "message":  "Maker economy, model licensing and repair bounty governance tables are available.",
-                                                                                             "maker_profiles":  16,
-                                                                                             "model_assets":  16,
+                                                                                             "maker_profiles":  17,
+                                                                                             "model_assets":  17,
                                                                                              "model_licenses":  3,
                                                                                              "repair_bounties":  2,
                                                                                              "missing_tables":  [
@@ -385,9 +385,9 @@
                                                                                                       "status":  "ok",
                                                                                                       "message":  "AI pipeline governance, human review, dataset and safety rule tables are available.",
                                                                                                       "ai_model_providers":  3,
-                                                                                                      "ai_pipeline_runs":  16,
+                                                                                                      "ai_pipeline_runs":  17,
                                                                                                       "ai_safety_rules":  3,
-                                                                                                      "ai_dataset_items":  16,
+                                                                                                      "ai_dataset_items":  17,
                                                                                                       "missing_tables":  [
 
                                                                                                                          ]
@@ -396,7 +396,7 @@
                                                                                                    "status":  "ok",
                                                                                                    "message":  "AI provider adapter sandbox and job orchestration tables are available. Missing provider secrets remain warnings while adapters are mock/sandbox only.",
                                                                                                    "sandbox_adapters":  4,
-                                                                                                   "orchestration_jobs":  15,
+                                                                                                   "orchestration_jobs":  16,
                                                                                                    "missing_provider_secrets":  2,
                                                                                                    "missing_tables":  [
 
@@ -407,8 +407,8 @@
                                                                                                      "message":  "CAD/geometry validation and printability governance tables are available. Real mesh/CAD kernel analysis remains out of scope for the local pilot.",
                                                                                                      "validation_profiles":  2,
                                                                                                      "printability_rules":  4,
-                                                                                                     "geometry_assets":  15,
-                                                                                                     "validation_runs":  14,
+                                                                                                     "geometry_assets":  16,
+                                                                                                     "validation_runs":  15,
                                                                                                      "missing_tables":  [
 
                                                                                                                         ]
@@ -419,7 +419,7 @@
                                                                                                 "provider_capabilities":  3,
                                                                                                 "machine_profiles":  4,
                                                                                                 "routing_policies":  3,
-                                                                                                "routing_requests":  15,
+                                                                                                "routing_requests":  16,
                                                                                                 "missing_tables":  [
 
                                                                                                                    ]
@@ -428,9 +428,9 @@
                                                                                                    "status":  "ok",
                                                                                                    "message":  "Dispatch, shipment tracking and proof-of-repair governance tables are available. Real courier booking and return logistics remain out of scope for the local pilot.",
                                                                                                    "dispatch_policies":  3,
-                                                                                                   "dispatches":  14,
-                                                                                                   "tracking_events":  42,
-                                                                                                   "proof_of_repair_records":  14,
+                                                                                                   "dispatches":  15,
+                                                                                                   "tracking_events":  45,
+                                                                                                   "proof_of_repair_records":  15,
                                                                                                    "missing_tables":  [
 
                                                                                                                       ]
@@ -440,8 +440,8 @@
                                                                                                         "message":  "Customer acceptance, warranty placeholder and post-repair support governance tables are available. Legal warranty terms, refunds and CRM integrations remain out of scope for the local pilot.",
                                                                                                         "acceptance_policies":  3,
                                                                                                         "warranty_policies":  2,
-                                                                                                        "acceptance_records":  14,
-                                                                                                        "support_tickets":  14,
+                                                                                                        "acceptance_records":  15,
+                                                                                                        "support_tickets":  15,
                                                                                                         "missing_tables":  [
 
                                                                                                                            ]
@@ -450,9 +450,9 @@
                                                                                                      "status":  "ok",
                                                                                                      "message":  "Sustainability impact, circularity metrics and repair outcome intelligence tables are available. Public environmental claims remain out of scope until methodology is validated.",
                                                                                                      "sustainability_factors":  6,
-                                                                                                     "repair_impact_records":  14,
-                                                                                                     "circularity_snapshots":  14,
-                                                                                                     "open_insights":  15,
+                                                                                                     "repair_impact_records":  15,
+                                                                                                     "circularity_snapshots":  15,
+                                                                                                     "open_insights":  16,
                                                                                                      "missing_tables":  [
 
                                                                                                                         ]
@@ -462,7 +462,7 @@
                                                                                                   "message":  "Investor demo KPI, narrative and board reporting governance tables are available. Metrics remain pilot/local evidence until externally validated.",
                                                                                                   "kpi_definitions":  6,
                                                                                                   "narrative_sections":  5,
-                                                                                                  "readiness_reviews":  14,
+                                                                                                  "readiness_reviews":  15,
                                                                                                   "missing_tables":  [
 
                                                                                                                      ]
@@ -472,7 +472,7 @@
                                                                                                 "message":  "Demo mode, guided repair journey and investor walkthrough tables are available. Demo output remains local/pilot evidence with explicit caveats.",
                                                                                                 "active_modes":  2,
                                                                                                 "active_steps":  8,
-                                                                                                "readiness_reviews":  13,
+                                                                                                "readiness_reviews":  14,
                                                                                                 "missing_tables":  [
 
                                                                                                                    ]
@@ -480,10 +480,10 @@
                                                                        "pilot_launch":  {
                                                                                             "status":  "ok",
                                                                                             "message":  "Demo data room, pilot launch checklist and stakeholder feedback loop tables are available. Pilot launch remains conditional until legal, provider, fulfilment and production readiness are validated.",
-                                                                                            "ready_data_room_assets":  17,
+                                                                                            "ready_data_room_assets":  18,
                                                                                             "checklist_items":  6,
-                                                                                            "feedback_loops":  14,
-                                                                                            "go_no_go_decisions":  14,
+                                                                                            "feedback_loops":  15,
+                                                                                            "go_no_go_decisions":  15,
                                                                                             "missing_tables":  [
 
                                                                                                                ]
@@ -492,9 +492,9 @@
                                                                                             "status":  "ok",
                                                                                             "message":  "Public pilot demo, external stakeholder intake, lead scoring and real-world validation case tables are available. Public pilot remains controlled and caveated until legal, provider, payments, fulfilment and production readiness are validated.",
                                                                                             "active_public_pages":  3,
-                                                                                            "intake_submissions":  14,
-                                                                                            "validation_cases":  25,
-                                                                                            "lead_scores":  14,
+                                                                                            "intake_submissions":  15,
+                                                                                            "validation_cases":  27,
+                                                                                            "lead_scores":  15,
                                                                                             "missing_tables":  [
 
                                                                                                                ]
@@ -502,7 +502,7 @@
                                                                    }
                                                     },
                                       "meta":  {
-                                                   "request_id":  "a9d01bc3e35aa21f"
+                                                   "request_id":  "648cfd67b7cd1213"
                                                }
                                   }
                    },
@@ -514,7 +514,7 @@
                                       "status_page":  {
                                                           "status_page_version":  "status_page_v1_step22",
                                                           "status":  "degraded",
-                                                          "generated_at":  "2026-06-30T21:44:38+00:00",
+                                                          "generated_at":  "2026-06-30T22:00:09+00:00",
                                                           "readiness_status":  "degraded",
                                                           "components":  [
                                                                              {
@@ -549,100 +549,100 @@
                                                                                   ],
                                                           "recent_updates":  [
                                                                                  {
-                                                                                     "id":  "777b670e-be21-4e22-bd6e-b63f02dca703",
-                                                                                     "incident_id":  "afe340b5-5849-41aa-a354-4e51fa9fcee5",
+                                                                                     "id":  "e7a29128-3d81-42ad-8f9e-171176bdaaa5",
+                                                                                     "incident_id":  "cecf74ac-b878-4cdf-a273-b37f385fbe25",
                                                                                      "component":  "platform",
                                                                                      "status":  "resolved",
                                                                                      "message":  "Step 24 smoke test resolved the incident after SLA validation.",
                                                                                      "created_by":  "user-demo-admin",
-                                                                                     "created_at":  "2026-06-30T21:43:01+00:00"
+                                                                                     "created_at":  "2026-06-30T21:56:52+00:00"
                                                                                  },
                                                                                  {
-                                                                                     "id":  "497759d0-c799-46b8-b243-8f822be4957b",
-                                                                                     "incident_id":  "afe340b5-5849-41aa-a354-4e51fa9fcee5",
+                                                                                     "id":  "b72c7ae5-aac0-4dce-ac33-f412f25c25a2",
+                                                                                     "incident_id":  "cecf74ac-b878-4cdf-a273-b37f385fbe25",
                                                                                      "component":  "platform",
                                                                                      "status":  "investigating",
                                                                                      "message":  "Smoke test creates an incident so SLA evaluation can be validated.",
                                                                                      "created_by":  "user-demo-admin",
-                                                                                     "created_at":  "2026-06-30T21:43:00+00:00"
+                                                                                     "created_at":  "2026-06-30T21:56:51+00:00"
                                                                                  },
                                                                                  {
-                                                                                     "id":  "6cc2b16c-f318-4ef5-ba27-f73a40e5b65a",
-                                                                                     "incident_id":  "ddec7ed3-d48a-4355-84dd-1c89ecfb5464",
+                                                                                     "id":  "dc6b0967-ae6b-4fec-a12f-e3838ca59821",
+                                                                                     "incident_id":  "461e4aef-5095-49f5-8693-6b7b080400f3",
                                                                                      "component":  "platform",
                                                                                      "status":  "resolved",
                                                                                      "message":  "Step 23 smoke test resolved the incident after escalation validation.",
                                                                                      "created_by":  "user-demo-admin",
-                                                                                     "created_at":  "2026-06-30T21:42:59+00:00"
+                                                                                     "created_at":  "2026-06-30T21:56:50+00:00"
                                                                                  },
                                                                                  {
-                                                                                     "id":  "ea342c20-fa24-41db-8a22-f772e93ef1dc",
-                                                                                     "incident_id":  "ddec7ed3-d48a-4355-84dd-1c89ecfb5464",
+                                                                                     "id":  "997dc2ab-07cd-445c-b906-057117502d04",
+                                                                                     "incident_id":  "461e4aef-5095-49f5-8693-6b7b080400f3",
                                                                                      "component":  "platform",
                                                                                      "status":  "investigating",
                                                                                      "message":  "Smoke test creates an incident so notification dispatch and escalation can be validated.",
                                                                                      "created_by":  "user-demo-admin",
-                                                                                     "created_at":  "2026-06-30T21:42:58+00:00"
+                                                                                     "created_at":  "2026-06-30T21:56:49+00:00"
                                                                                  },
                                                                                  {
-                                                                                     "id":  "1ddc2d5d-4d04-40f5-8d5b-3d72d37e7e7b",
+                                                                                     "id":  "432a7a3c-c268-4364-ab56-5559a8c77bc4",
                                                                                      "incident_id":  null,
                                                                                      "component":  "platform",
                                                                                      "status":  "maintenance_completed",
                                                                                      "message":  "Maintenance completed: Smoke test maintenance",
                                                                                      "created_by":  "user-demo-admin",
-                                                                                     "created_at":  "2026-06-30T21:42:57+00:00"
+                                                                                     "created_at":  "2026-06-30T21:56:48+00:00"
                                                                                  },
                                                                                  {
-                                                                                     "id":  "b3ef274e-9767-496e-b8d7-c773de60ec00",
+                                                                                     "id":  "df0ceb6d-542d-4360-a9f4-d2a35aa7720d",
                                                                                      "incident_id":  null,
                                                                                      "component":  "platform",
                                                                                      "status":  "maintenance_scheduled",
                                                                                      "message":  "Maintenance scheduled: Smoke test maintenance",
                                                                                      "created_by":  "user-demo-admin",
-                                                                                     "created_at":  "2026-06-30T21:42:57+00:00"
+                                                                                     "created_at":  "2026-06-30T21:56:48+00:00"
                                                                                  },
                                                                                  {
-                                                                                     "id":  "c01ae3c3-8087-499e-ad05-6d17e80633ea",
+                                                                                     "id":  "3d540564-09d6-4332-a028-19756ae2042e",
                                                                                      "incident_id":  null,
                                                                                      "component":  "platform",
                                                                                      "status":  "operational",
                                                                                      "message":  "Smoke test status update posted.",
                                                                                      "created_by":  "user-demo-admin",
-                                                                                     "created_at":  "2026-06-30T21:42:57+00:00"
+                                                                                     "created_at":  "2026-06-30T21:56:48+00:00"
                                                                                  },
                                                                                  {
-                                                                                     "id":  "d2592da7-6f6a-4d61-af74-a275a3e20ae5",
-                                                                                     "incident_id":  "7fca8f46-4b2c-4c59-b279-175ea1f617bc",
+                                                                                     "id":  "353af1a4-b4fc-4814-ba7a-8b6dd1acbd99",
+                                                                                     "incident_id":  "fc2b8546-48ae-4d9a-8be8-63173db1dbbc",
                                                                                      "component":  "platform",
                                                                                      "status":  "resolved",
                                                                                      "message":  "Smoke test resolved the incident.",
                                                                                      "created_by":  "user-demo-admin",
-                                                                                     "created_at":  "2026-06-30T21:42:57+00:00"
+                                                                                     "created_at":  "2026-06-30T21:56:48+00:00"
                                                                                  },
                                                                                  {
-                                                                                     "id":  "6e916b0d-b202-4d0c-8874-b8f77953c501",
-                                                                                     "incident_id":  "7fca8f46-4b2c-4c59-b279-175ea1f617bc",
+                                                                                     "id":  "0109a6f4-8756-4886-ab30-c8f668d2268a",
+                                                                                     "incident_id":  "fc2b8546-48ae-4d9a-8be8-63173db1dbbc",
                                                                                      "component":  "platform",
                                                                                      "status":  "monitoring",
                                                                                      "message":  "Smoke test moved the incident to monitoring.",
                                                                                      "created_by":  "user-demo-admin",
-                                                                                     "created_at":  "2026-06-30T21:42:57+00:00"
+                                                                                     "created_at":  "2026-06-30T21:56:48+00:00"
                                                                                  },
                                                                                  {
-                                                                                     "id":  "a941a79d-2891-4ecc-afa6-1d8846aec241",
-                                                                                     "incident_id":  "7fca8f46-4b2c-4c59-b279-175ea1f617bc",
+                                                                                     "id":  "15e8eb2a-8273-430d-85b7-6ad08b93e0da",
+                                                                                     "incident_id":  "fc2b8546-48ae-4d9a-8be8-63173db1dbbc",
                                                                                      "component":  "platform",
                                                                                      "status":  "investigating",
                                                                                      "message":  "Step 22 smoke test validates incident workflow.",
                                                                                      "created_by":  "user-demo-admin",
-                                                                                     "created_at":  "2026-06-30T21:42:56+00:00"
+                                                                                     "created_at":  "2026-06-30T21:56:48+00:00"
                                                                                  }
                                                                              ],
                                                           "public_note":  "This MVP status payload is local/pilot oriented and does not replace external uptime monitoring."
                                                       },
                                       "meta":  {
-                                                   "request_id":  "d6966ba37f70f0f3"
+                                                   "request_id":  "74e1653ee8af200f"
                                                }
                                   }
                    }
