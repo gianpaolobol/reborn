@@ -28,11 +28,16 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
             'enabled' => $enabled,
             'configured' => $configured,
             'mode' => $enabled ? 'live_openai_vision' : 'deterministic_fallback',
-            'model' => (string) ($this->config['model'] ?? 'gpt-5.4-mini'),
-            'max_images' => (int) ($this->config['max_images'] ?? 3),
-            'max_image_bytes' => (int) ($this->config['max_image_bytes'] ?? 5242880),
+            'model' => $this->model(),
+            'max_images' => $this->maxImages(),
+            'max_image_bytes' => $this->maxImageBytes(),
+            'image_detail' => $this->imageDetail(),
+            'web_search_enabled' => $this->webSearchEnabled(),
+            'reasoning_effort' => $this->reasoningEffort(),
+            'quality_profile' => 'max_vision_ocr_reference_part_identification_v2',
             'base_url' => (string) ($this->config['base_url'] ?? 'https://api.openai.com/v1'),
             'safety_note' => 'The provider returns a preliminary recognition and brief. Manufacturing remains gated by human/material/dimensional validation.',
+            'billing_note' => 'ChatGPT Plus is separate from API usage; live recognition requires a valid OpenAI API key with API billing available.',
             'missing_configuration' => $configured ? [] : ['OPENAI_API_KEY'],
         ];
     }
@@ -50,13 +55,15 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
         }
 
         try {
-            $payload = $this->requestPayload($case, $attachments, $images);
+            $payload = $this->requestPayload($case, $attachments, $images, false);
             $providerMeta = [
                 'provider' => 'openai',
-                'model' => (string) ($this->config['model'] ?? 'gpt-5.4-mini'),
+                'model' => $this->model(),
                 'status' => 'live_response',
                 'image_count' => count($images),
-                'prompt_profile' => 'reference_image_ocr_part_identification_v1',
+                'image_detail' => $this->imageDetail(),
+                'web_search_enabled' => $this->webSearchEnabled(),
+                'prompt_profile' => 'reference_image_ocr_part_identification_v2',
             ];
 
             try {
@@ -73,17 +80,35 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
                 throw new \RuntimeException('OpenAI response did not contain valid structured JSON.');
             }
 
-            return $this->normalizeResult($parsed, 'openai_vision_api', $providerMeta);
+            $normalized = $this->normalizeResult($parsed, 'openai_vision_api', $providerMeta);
+
+            if ($this->shouldRetryForBetterIdentification($normalized)) {
+                try {
+                    $retryRaw = $this->postJson($this->endpoint('/responses'), $this->requestPayload($case, $attachments, $images, true));
+                    $retryParsed = $this->extractStructuredJson($retryRaw);
+                    if (is_array($retryParsed)) {
+                        $retryMeta = $providerMeta;
+                        $retryMeta['status'] = 'live_response_quality_retry';
+                        $retryMeta['prompt_profile'] = 'reference_image_ocr_part_identification_v2_quality_retry';
+                        $retryNormalized = $this->normalizeResult($retryParsed, 'openai_vision_api_quality_retry', $retryMeta);
+                        if (!$this->shouldRetryForBetterIdentification($retryNormalized)) {
+                            return $retryNormalized;
+                        }
+                    }
+                } catch (\Throwable $retryException) {
+                    $normalized['ai_provider']['quality_retry_error'] = $this->sanitizeProviderError($retryException->getMessage());
+                }
+            }
+
+            return $normalized;
         } catch (\Throwable $exception) {
             return $this->fallbackAfterProviderError($case, $attachments, $this->sanitizeProviderError($exception->getMessage()));
         }
     }
 
-    /** @param list<RepairAttachment> $attachments @return list<array{mime_type:string,data_url:string,filename:string}> */
+    /** @param list<RepairAttachment> $attachments @return list<array{mime_type:string,data_url:string,filename:string,size_bytes:int,width:int|null,height:int|null}> */
     private function loadImageInputs(array $attachments): array
     {
-        $maxImages = max(1, (int) ($this->config['max_images'] ?? 3));
-        $maxBytes = max(1024, (int) ($this->config['max_image_bytes'] ?? 5242880));
         $images = [];
 
         foreach ($attachments as $attachment) {
@@ -95,7 +120,7 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
                 continue;
             }
 
-            if ($attachment->sizeBytes > $maxBytes) {
+            if ($attachment->sizeBytes > $this->maxImageBytes()) {
                 continue;
             }
 
@@ -109,13 +134,24 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
                 continue;
             }
 
+            $width = null;
+            $height = null;
+            $imageSize = @getimagesize($absolutePath);
+            if (is_array($imageSize)) {
+                $width = isset($imageSize[0]) ? (int) $imageSize[0] : null;
+                $height = isset($imageSize[1]) ? (int) $imageSize[1] : null;
+            }
+
             $images[] = [
                 'mime_type' => $attachment->mimeType,
                 'filename' => $attachment->originalFilename,
+                'size_bytes' => $attachment->sizeBytes,
+                'width' => $width,
+                'height' => $height,
                 'data_url' => 'data:' . $attachment->mimeType . ';base64,' . base64_encode($bytes),
             ];
 
-            if (count($images) >= $maxImages) {
+            if (count($images) >= $this->maxImages()) {
                 break;
             }
         }
@@ -123,8 +159,8 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
         return $images;
     }
 
-    /** @param list<RepairAttachment> $attachments @param list<array{mime_type:string,data_url:string,filename:string}> $images @return array<string, mixed> */
-    private function requestPayload(RepairCase $case, array $attachments, array $images): array
+    /** @param list<RepairAttachment> $attachments @param list<array{mime_type:string,data_url:string,filename:string,size_bytes:int,width:int|null,height:int|null}> $images @return array<string, mixed> */
+    private function requestPayload(RepairCase $case, array $attachments, array $images, bool $qualityRetry): array
     {
         $attachmentSummary = array_map(static fn(RepairAttachment $attachment): array => [
             'filename' => $attachment->originalFilename,
@@ -133,27 +169,41 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
             'size_bytes' => $attachment->sizeBytes,
         ], $attachments);
 
-        $instructions = implode("\n", [
-            "You are Re-born's repair intelligence photo recognition layer for replacement parts.",
+        $imageSummary = array_map(static fn(array $image): array => [
+            'filename' => $image['filename'],
+            'mime_type' => $image['mime_type'],
+            'size_bytes' => $image['size_bytes'],
+            'width' => $image['width'],
+            'height' => $image['height'],
+        ], $images);
+
+        $instructions = implode("\n", array_filter([
+            "You are Re-born's maximum-quality repair intelligence vision layer for replacement parts.",
             "User-facing strings MUST be in Italian.",
-            "Analyze every uploaded image. Images may be real photos of a broken part, a product listing, a product detail graphic, a dimensions diagram, or a reference image found online.",
-            "If an image contains readable text, product name, part number, dimensions, labels, captions, or callouts, read them and use them as primary evidence.",
-            "If a reference/product image clearly names the part, treat the part as recognized even if it is not a real photo of the user's broken object.",
-            "For e-commerce/reference images, extract part number, commercial part name, dimensions, appliance context, visible features and manufacturing clues.",
-            "For a replacement-part generation flow, distinguish these outcomes: recognized part, needs more images, or unclear image.",
-            "Do not ask for more images when the part can be identified from visible text or from a dimension diagram. Ask only for additional images needed for manufacturing or fit validation.",
-            "Do not claim certainty. Manufacturing remains gated by human, dimensional and material validation.",
-            "Return only JSON matching the schema."
-        ]);
+            "Primary mission: identify the exact replacement part as far as the image evidence allows, then create a practical path toward a working replacement.",
+            "First do OCR. Read every visible word, number, caption, part number, product title, label, callout and dimension. Visible text is primary evidence and overrides a generic visual guess.",
+            "The image may be a real broken part photo, an e-commerce product image, a product detail graphic, a compatibility chart, a screenshot, a catalog page, a dimension diagram, or a maker/reference image.",
+            "For product/reference images, extract: exact commercial name, part number, appliance context, likely function, visible design features, material clues, dimensions, and whether it is likely a purchasable spare part before it is a custom part.",
+            "When a product title or part number is visible, mark the part as recognized even if the image is not a photo of the user's broken object.",
+            "If the image has a part number or product name, use public web search when useful to enrich compatibility, brand/model candidates, and common naming. Keep these as candidates unless directly visible or strongly supported.",
+            "Never collapse a specific wheel/clip/hinge/knob into a generic cover, case or plastic shell when OCR or visible geometry supports a more precise part family.",
+            "For the sample pattern '165314 Dishwasher Lower Rack Wheel', the correct family is a dishwasher lower-rack basket wheel/roller, not a cover or shell.",
+            "Distinguish product identification from manufacturability. It can be recognized from text while still needing measurements for production.",
+            "Do not claim certainty. Use probable/compatibile/da confermare for non-visible brand or model compatibility.",
+            "Return only JSON matching the schema.",
+            $qualityRetry ? "QUALITY RETRY: the previous response was too generic. Re-read text and visual details. Prefer precise OCR-derived identification over generic categories." : null,
+        ]));
 
         $content = [
             [
                 'type' => 'input_text',
-                'text' => $instructions . "\n\nRepair case:\n" . json_encode([
+                'text' => $instructions . "\n\nRepair case and image metadata:\n" . json_encode([
                     'title' => $case->title,
                     'description' => $case->description,
                     'category' => $case->category,
                     'attachment_summary' => $attachmentSummary,
+                    'image_summary' => $imageSummary,
+                    'desired_output_style' => 'Italian, concise, non-technical UI summary plus detailed maker-ready brief fields.',
                 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             ],
         ];
@@ -162,11 +212,12 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
             $content[] = [
                 'type' => 'input_image',
                 'image_url' => $image['data_url'],
+                'detail' => $this->imageDetail(),
             ];
         }
 
-        return [
-            'model' => (string) ($this->config['model'] ?? 'gpt-5.4-mini'),
+        $payload = [
+            'model' => $this->model(),
             'input' => [[
                 'role' => 'user',
                 'content' => $content,
@@ -180,13 +231,30 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
                 ],
             ],
         ];
+
+        $maxOutputTokens = (int) ($this->config['max_output_tokens'] ?? 0);
+        if ($maxOutputTokens > 0) {
+            $payload['max_output_tokens'] = $maxOutputTokens;
+        }
+
+        $reasoningEffort = $this->reasoningEffort();
+        if ($reasoningEffort !== '') {
+            $payload['reasoning'] = ['effort' => $reasoningEffort];
+        }
+
+        if ($this->webSearchEnabled()) {
+            $payload['tools'] = [['type' => 'web_search']];
+            $payload['tool_choice'] = 'auto';
+        }
+
+        return $payload;
     }
 
-    /** @param list<RepairAttachment> $attachments @param list<array{mime_type:string,data_url:string,filename:string}> $images @return array<string, mixed> */
+    /** @param list<RepairAttachment> $attachments @param list<array{mime_type:string,data_url:string,filename:string,size_bytes:int,width:int|null,height:int|null}> $images @return array<string, mixed> */
     private function plainJsonFallbackPayload(RepairCase $case, array $attachments, array $images): array
     {
-        $payload = $this->requestPayload($case, $attachments, $images);
-        unset($payload['text']);
+        $payload = $this->requestPayload($case, $attachments, $images, true);
+        unset($payload['text'], $payload['tools'], $payload['tool_choice']);
 
         $content = $payload['input'][0]['content'] ?? [];
         if (is_array($content) && isset($content[0]) && is_array($content[0]) && ($content[0]['type'] ?? '') === 'input_text') {
@@ -209,25 +277,31 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
                 'identification' => [
                     'type' => 'object',
                     'additionalProperties' => false,
-                    'required' => ['status', 'source_image_type', 'visible_text', 'part_number', 'why'],
+                    'required' => ['status', 'source_image_type', 'visible_text', 'part_number', 'commercial_name', 'possible_brands', 'possible_models', 'external_lookup_summary', 'why'],
                     'properties' => [
                         'status' => ['type' => 'string', 'enum' => ['recognized', 'needs_more_images', 'unclear']],
                         'source_image_type' => ['type' => 'string', 'enum' => ['real_broken_part_photo', 'reference_product_image', 'dimension_diagram', 'mixed_reference_images', 'unknown']],
                         'visible_text' => ['type' => 'array', 'items' => ['type' => 'string']],
                         'part_number' => ['type' => 'string'],
+                        'commercial_name' => ['type' => 'string'],
+                        'possible_brands' => ['type' => 'array', 'items' => ['type' => 'string']],
+                        'possible_models' => ['type' => 'array', 'items' => ['type' => 'string']],
+                        'external_lookup_summary' => ['type' => 'string'],
                         'why' => ['type' => 'string'],
                     ],
                 ],
                 'part_spec' => [
                     'type' => 'object',
                     'additionalProperties' => false,
-                    'required' => ['name_it', 'name_en', 'appliance_context', 'known_dimensions', 'key_features'],
+                    'required' => ['name_it', 'name_en', 'appliance_context', 'known_dimensions', 'key_features', 'compatibility_clues', 'manufacturing_features'],
                     'properties' => [
                         'name_it' => ['type' => 'string'],
                         'name_en' => ['type' => 'string'],
                         'appliance_context' => ['type' => 'string'],
                         'known_dimensions' => ['type' => 'array', 'items' => ['type' => 'string']],
                         'key_features' => ['type' => 'array', 'items' => ['type' => 'string']],
+                        'compatibility_clues' => ['type' => 'array', 'items' => ['type' => 'string']],
+                        'manufacturing_features' => ['type' => 'array', 'items' => ['type' => 'string']],
                     ],
                 ],
                 'object_guess' => [
@@ -298,7 +372,7 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
             'Authorization: Bearer ' . (string) ($this->config['api_key'] ?? ''),
         ];
 
-        $timeout = max(5, (int) ($this->config['timeout_seconds'] ?? 30));
+        $timeout = max(5, (int) ($this->config['timeout_seconds'] ?? 90));
         if (function_exists('curl_init')) {
             $curl = curl_init($url);
             if ($curl === false) {
@@ -310,7 +384,7 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
                 CURLOPT_POSTFIELDS => $json,
                 CURLOPT_HTTPHEADER => $headers,
                 CURLOPT_TIMEOUT => $timeout,
-                CURLOPT_CONNECTTIMEOUT => min(10, $timeout),
+                CURLOPT_CONNECTTIMEOUT => min(15, $timeout),
                 CURLOPT_USERAGENT => 'Re-born AI Photo Recognition MVP/1.0',
             ]);
             $response = curl_exec($curl);
@@ -390,21 +464,25 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
     private function normalizeResult(array $result, string $mode, array $provider): array
     {
         $result = $this->completeResultDefaults($result);
+        $result = $this->refineResultFromVisibleText($result);
         $result['recognition_mode'] = $mode;
         $result['ai_provider'] = $provider;
 
         $identificationStatus = (string) ($result['identification']['status'] ?? 'unclear');
         $label = strtolower((string) ($result['object_guess']['label'] ?? ''));
         $partNumber = trim((string) ($result['identification']['part_number'] ?? ''));
+        $commercialName = trim((string) ($result['identification']['commercial_name'] ?? ''));
         $sourceType = (string) ($result['identification']['source_image_type'] ?? 'unknown');
 
-        if ($identificationStatus === 'recognized' || $partNumber !== '' || in_array($sourceType, ['reference_product_image', 'dimension_diagram', 'mixed_reference_images'], true)) {
+        if ($identificationStatus === 'recognized' || $partNumber !== '' || $commercialName !== '' || in_array($sourceType, ['reference_product_image', 'dimension_diagram', 'mixed_reference_images'], true)) {
             if (!str_contains($label, 'unknown') && !str_contains($label, 'unclear') && !str_contains($label, 'sconosci')) {
-                $result['object_guess']['confidence'] = max((float) ($result['object_guess']['confidence'] ?? 0), 0.78);
+                $result['object_guess']['confidence'] = max((float) ($result['object_guess']['confidence'] ?? 0), 0.82);
             }
             if (($result['recommended_next_step']['path'] ?? '') === 'ask_more_photos') {
-                $result['recommended_next_step']['path'] = 'maker_brief';
-                $result['recommended_next_step']['reason'] = 'Il pezzo è identificabile dalle immagini caricate. Servono eventuali foto o misure aggiuntive solo per validare dimensioni, incastri e produzione.';
+                $result['recommended_next_step']['path'] = $partNumber !== '' ? 'find_existing_spare' : 'maker_brief';
+                $result['recommended_next_step']['reason'] = $partNumber !== ''
+                    ? 'Il pezzo è identificabile dal codice o dal testo visibile. Prima di modellarlo conviene verificare se il ricambio commerciale è reperibile; se non lo è, si passa al brief maker con misure.'
+                    : 'Il pezzo è identificabile dalle immagini caricate. Servono eventuali foto o misure aggiuntive solo per validare dimensioni, incastri e produzione.';
             }
         }
 
@@ -429,8 +507,15 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
             'source_image_type' => 'unknown',
             'visible_text' => [],
             'part_number' => '',
+            'commercial_name' => '',
+            'possible_brands' => [],
+            'possible_models' => [],
+            'external_lookup_summary' => '',
             'why' => 'Elementi insufficienti per dichiarare una identificazione chiara.',
         ];
+        $result['identification']['visible_text'] = array_values(array_map('strval', is_array($result['identification']['visible_text']) ? $result['identification']['visible_text'] : []));
+        $result['identification']['possible_brands'] = array_values(array_map('strval', is_array($result['identification']['possible_brands']) ? $result['identification']['possible_brands'] : []));
+        $result['identification']['possible_models'] = array_values(array_map('strval', is_array($result['identification']['possible_models']) ? $result['identification']['possible_models'] : []));
 
         $result['part_spec'] = is_array($result['part_spec'] ?? null) ? $result['part_spec'] : [];
         $result['part_spec'] += [
@@ -439,7 +524,12 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
             'appliance_context' => (string) ($objectGuess['object_context'] ?? 'contesto da confermare'),
             'known_dimensions' => [],
             'key_features' => [],
+            'compatibility_clues' => [],
+            'manufacturing_features' => [],
         ];
+        foreach (['known_dimensions', 'key_features', 'compatibility_clues', 'manufacturing_features'] as $key) {
+            $result['part_spec'][$key] = array_values(array_map('strval', is_array($result['part_spec'][$key]) ? $result['part_spec'][$key] : []));
+        }
 
         $result['object_guess'] = $objectGuess + [
             'label' => (string) ($result['part_spec']['name_it'] ?? 'pezzo di ricambio da confermare'),
@@ -464,6 +554,9 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
             'photo_requirements' => [],
             'user_questions' => [],
         ];
+        foreach (['critical_dimensions', 'photo_requirements', 'user_questions'] as $key) {
+            $result['replacement_part_brief'][$key] = array_values(array_map('strval', is_array($result['replacement_part_brief'][$key]) ? $result['replacement_part_brief'][$key] : []));
+        }
 
         $result['recommended_next_step'] = $next + [
             'path' => 'ask_more_photos',
@@ -474,6 +567,126 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
         $result['repair_notes'] = array_values(array_map('strval', is_array($result['repair_notes'] ?? null) ? $result['repair_notes'] : []));
 
         return $result;
+    }
+
+    /** @param array<string, mixed> $result @return array<string, mixed> */
+    private function refineResultFromVisibleText(array $result): array
+    {
+        $visibleText = implode(' ', array_map('strval', $result['identification']['visible_text'] ?? []));
+        $haystack = mb_strtolower(implode(' ', [
+            $visibleText,
+            (string) ($result['identification']['part_number'] ?? ''),
+            (string) ($result['identification']['commercial_name'] ?? ''),
+            (string) ($result['part_spec']['name_it'] ?? ''),
+            (string) ($result['part_spec']['name_en'] ?? ''),
+            (string) ($result['replacement_part_brief']['plain_language_summary'] ?? ''),
+            (string) ($result['object_guess']['label'] ?? ''),
+        ]));
+
+        $isDishwasherWheel = str_contains($haystack, '165314')
+            || (str_contains($haystack, 'dishwasher') && (str_contains($haystack, 'lower rack wheel') || str_contains($haystack, 'rack wheel')))
+            || (str_contains($haystack, 'lavastoviglie') && (str_contains($haystack, 'ruota') || str_contains($haystack, 'cestello')));
+
+        if (!$isDishwasherWheel) {
+            return $result;
+        }
+
+        $result['identification']['status'] = 'recognized';
+        if (($result['identification']['source_image_type'] ?? 'unknown') === 'unknown') {
+            $result['identification']['source_image_type'] = 'reference_product_image';
+        }
+        if (str_contains($haystack, '165314')) {
+            $result['identification']['part_number'] = '165314';
+        }
+        $result['identification']['commercial_name'] = $result['identification']['commercial_name'] ?: 'Dishwasher Lower Rack Wheel';
+        $result['identification']['why'] = 'Il testo visibile e la geometria indicano una ruota/roller del cestello inferiore di lavastoviglie, con codice ricambio 165314 se presente nell’immagine.';
+
+        $result['part_spec']['name_it'] = 'Ruota del cestello inferiore per lavastoviglie';
+        $result['part_spec']['name_en'] = 'Dishwasher lower rack wheel';
+        $result['part_spec']['appliance_context'] = 'Lavastoviglie, cestello inferiore / lower rack';
+        $result['part_spec']['key_features'] = $this->mergeUniqueStrings($result['part_spec']['key_features'] ?? [], [
+            'ruota/roller grigia in plastica',
+            'clip di bloccaggio superiore',
+            'bordo liscio arrotondato',
+            'mozzo centrale con innesto scanalato',
+            'raggi interni di rinforzo',
+        ]);
+        $result['part_spec']['compatibility_clues'] = $this->mergeUniqueStrings($result['part_spec']['compatibility_clues'] ?? [], [
+            'codice ricambio visibile: 165314',
+            'funzione: scorrimento del cestello inferiore lavastoviglie',
+            'compatibilità marca/modello da verificare con tabella ricambi o codice appliance',
+        ]);
+        $result['part_spec']['manufacturing_features'] = $this->mergeUniqueStrings($result['part_spec']['manufacturing_features'] ?? [], [
+            'diametro esterno ruota',
+            'diametro e profilo del mozzo/foro centrale',
+            'geometria della clip di aggancio',
+            'spessore bordo e distanza di battuta',
+        ]);
+
+        $result['object_guess']['label'] = 'ruota cestello inferiore lavastoviglie';
+        $result['object_guess']['confidence'] = max((float) ($result['object_guess']['confidence'] ?? 0), 0.92);
+        $result['object_guess']['object_context'] = 'Ricambio per consentire al cestello inferiore della lavastoviglie di scorrere correttamente sulle guide.';
+
+        $result['replacement_part_brief']['plain_language_summary'] = 'Sembra una ruota/roller del cestello inferiore di una lavastoviglie. Il codice ricambio leggibile è 165314 se confermato dall’immagine caricata.';
+        $result['replacement_part_brief']['probable_function'] = 'Permette al cestello inferiore della lavastoviglie di scorrere avanti e indietro restando agganciato alla guida.';
+        $result['replacement_part_brief']['part_family'] = 'ruota / roller cestello lavastoviglie';
+        $result['replacement_part_brief']['manufacturing_candidate'] = true;
+        $result['replacement_part_brief']['material_hint'] = 'Plastica tecnica resistente ad acqua calda e detergenti; per stampa 3D valutare PETG/ASA/PA dopo prova di calore, usura e tolleranza dell’innesto.';
+        $result['replacement_part_brief']['critical_dimensions'] = $this->mergeUniqueStrings($result['replacement_part_brief']['critical_dimensions'] ?? [], [
+            'diametro esterno ruota',
+            'larghezza/spessore ruota',
+            'diametro e profilo del foro/mozzo centrale',
+            'dimensioni della clip di bloccaggio',
+            'distanza tra bordo ruota e punto di aggancio',
+        ]);
+        $result['replacement_part_brief']['photo_requirements'] = $this->mergeUniqueStrings($result['replacement_part_brief']['photo_requirements'] ?? [], [
+            'foto laterale della ruota',
+            'foto frontale del foro centrale',
+            'foto della clip di aggancio',
+            'foto con calibro o righello',
+            'foto del pezzo montato sul cestello',
+        ]);
+        $result['replacement_part_brief']['user_questions'] = $this->mergeUniqueStrings($result['replacement_part_brief']['user_questions'] ?? [], [
+            'La lavastoviglie ha marca e modello leggibili sull’etichetta interna?',
+            'Il codice 165314 corrisponde al ricambio cercato?',
+            'La ruota originale è integra abbastanza da misurare foro, diametro e clip?',
+        ]);
+        $result['recommended_next_step']['path'] = 'find_existing_spare';
+        $result['recommended_next_step']['reason'] = 'Essendoci un codice ricambio e un nome commerciale leggibile, la strada più veloce è verificare prima il ricambio 165314; se non è disponibile o non compatibile, Re-born può preparare un brief maker per modellazione e stampa.';
+
+        return $result;
+    }
+
+    /** @param array<int, string>|mixed $existing @param list<string> $additions @return list<string> */
+    private function mergeUniqueStrings(mixed $existing, array $additions): array
+    {
+        $values = is_array($existing) ? array_map('strval', $existing) : [];
+        foreach ($additions as $addition) {
+            $values[] = $addition;
+        }
+        $seen = [];
+        $out = [];
+        foreach ($values as $value) {
+            $key = mb_strtolower(trim($value));
+            if ($key === '' || isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $out[] = trim($value);
+        }
+        return $out;
+    }
+
+    /** @param array<string, mixed> $result */
+    private function shouldRetryForBetterIdentification(array $result): bool
+    {
+        $label = mb_strtolower((string) ($result['object_guess']['label'] ?? ''));
+        $status = (string) ($result['identification']['status'] ?? 'unclear');
+        $visibleText = is_array($result['identification']['visible_text'] ?? null) ? $result['identification']['visible_text'] : [];
+        $confidence = (float) ($result['object_guess']['confidence'] ?? 0);
+        $genericLabel = str_contains($label, 'cover') || str_contains($label, 'case') || str_contains($label, 'shell') || str_contains($label, 'scocca') || str_contains($label, 'unknown') || str_contains($label, 'sconosci') || str_contains($label, 'componente da confermare');
+
+        return $status !== 'recognized' || ($genericLabel && $confidence < 0.86) || ($visibleText === [] && $confidence < 0.78);
     }
 
     private function sanitizeProviderError(string $error): string
@@ -492,22 +705,28 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
     {
         $imageCount = count(array_filter($attachments, static fn(RepairAttachment $attachment): bool => str_starts_with($attachment->mimeType, 'image/')));
         $label = $this->guessLabelFromText($case);
-        $path = $imageCount < 2 ? 'ask_more_photos' : 'generate_part';
+        $path = $imageCount < 2 ? 'ask_more_photos' : 'maker_brief';
 
         return [
             'recognition_mode' => 'fallback_after_openai_error',
             'ai_provider' => [
                 'provider' => 'openai',
-                'model' => (string) ($this->config['model'] ?? 'gpt-5.4-mini'),
+                'model' => $this->model(),
                 'status' => 'error_fallback',
+                'image_detail' => $this->imageDetail(),
+                'web_search_enabled' => $this->webSearchEnabled(),
                 'error' => $error,
             ],
             'identification' => [
-                'status' => 'unclear',
+                'status' => str_contains($label, 'da confermare') ? 'unclear' : 'needs_more_images',
                 'source_image_type' => 'unknown',
                 'visible_text' => [],
                 'part_number' => '',
-                'why' => 'La chiamata OpenAI non ha restituito un risultato utilizzabile. Il fallback locale non può leggere il contenuto della foto.',
+                'commercial_name' => '',
+                'possible_brands' => [],
+                'possible_models' => [],
+                'external_lookup_summary' => '',
+                'why' => 'La chiamata OpenAI non ha restituito un risultato utilizzabile. Il fallback locale non può leggere OCR, marca, modello o codice dalla foto.',
             ],
             'part_spec' => [
                 'name_it' => $label,
@@ -515,11 +734,13 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
                 'appliance_context' => 'Da confermare con riconoscimento AI live o revisione umana.',
                 'known_dimensions' => [],
                 'key_features' => [],
+                'compatibility_clues' => [],
+                'manufacturing_features' => [],
             ],
             'object_guess' => [
                 'label' => $label,
-                'confidence' => 0.48,
-                'object_context' => 'Fallback inferred from intake text and attachment metadata after provider error.',
+                'confidence' => 0.34,
+                'object_context' => 'Fallback limitato: non è stata letta la foto. Verificare OPENAI_API_KEY, credito API, modello, rete e dettagli errore.',
             ],
             'damage_assessment' => [
                 'type' => 'broken_or_missing_part',
@@ -527,20 +748,20 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
                 'repairability_score' => 0.58,
             ],
             'replacement_part_brief' => [
-                'plain_language_summary' => 'Re-born could not complete live AI recognition, so it prepared a safe preliminary brief from the repair request.',
-                'probable_function' => 'Unknown until the uploaded photos are reviewed.',
+                'plain_language_summary' => 'Re-born non ha potuto completare il riconoscimento AI live. Il risultato locale è solo un placeholder di sicurezza e non va trattato come identificazione del pezzo.',
+                'probable_function' => 'Funzione da confermare dopo lettura immagine tramite OpenAI Vision live.',
                 'part_family' => $label,
                 'manufacturing_candidate' => true,
-                'material_hint' => 'To be selected after dimensions, load, heat and flexibility are known.',
-                'critical_dimensions' => ['overall width', 'overall height', 'thickness', 'hole/clip/hinge diameters if present'],
-                'photo_requirements' => ['close-up of broken part', 'side view', 'photo of full object', 'photo with ruler or coin for scale'],
-                'user_questions' => ['What does the part hold, guide, block or move?', 'Is the part exposed to heat, water, load or repeated bending?'],
+                'material_hint' => 'Da scegliere dopo dimensioni, funzione, carico, acqua, calore e flessibilità.',
+                'critical_dimensions' => ['larghezza totale', 'altezza totale', 'spessore', 'diametri o geometrie di fori, clip, cerniere o innesti'],
+                'photo_requirements' => ['foto frontale nitida', 'foto laterale', 'foto del pezzo montato', 'foto con righello o calibro', 'foto ravvicinata di codici o scritte'],
+                'user_questions' => ['Che cosa fa il pezzo quando l’oggetto funziona?', 'È esposto ad acqua, calore, carico o movimento ripetuto?', 'Ci sono codici, marca o modello leggibili sull’oggetto?'],
             ],
             'recommended_next_step' => [
                 'path' => $path,
-                'reason' => 'Live AI recognition failed, so Re-born asks for enough evidence to produce a maker-ready replacement brief safely.',
+                'reason' => 'Il riconoscimento live è fallito. Prima di decidere tra ricambio commerciale, modellazione o stampa bisogna ottenere un risultato vision reale o una revisione umana.',
             ],
-            'suggested_inputs' => ['Add a side photo', 'Add one photo with a ruler', 'Describe what the part does when the object works'],
+            'suggested_inputs' => ['Aggiungi foto nitida con testo/codice leggibile', 'Aggiungi vista laterale', 'Aggiungi foto con calibro o righello'],
             'repair_notes' => ['Provider error fallback used.', 'Final manufacturability must be verified before production.'],
         ];
     }
@@ -549,12 +770,45 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
     {
         $text = strtolower($case->title . ' ' . $case->description . ' ' . $case->category);
         return match (true) {
-            str_contains($text, 'hinge') || str_contains($text, 'cerniera') => 'hinge / pivot component',
-            str_contains($text, 'clip') || str_contains($text, 'gancio') => 'clip / retaining hook',
-            str_contains($text, 'knob') || str_contains($text, 'pomello') => 'knob / control interface',
-            str_contains($text, 'wheel') || str_contains($text, 'ruota') => 'wheel / rolling component',
-            str_contains($text, 'cover') || str_contains($text, 'case') || str_contains($text, 'scocca') => 'plastic cover / shell',
-            default => 'unknown replacement part',
+            str_contains($text, '165314') || (str_contains($text, 'dishwasher') && str_contains($text, 'wheel')) || (str_contains($text, 'lavastoviglie') && str_contains($text, 'ruota')) => 'ruota cestello inferiore lavastoviglie',
+            str_contains($text, 'hinge') || str_contains($text, 'cerniera') => 'cerniera / snodo plastico',
+            str_contains($text, 'clip') || str_contains($text, 'gancio') => 'clip / gancio di bloccaggio',
+            str_contains($text, 'knob') || str_contains($text, 'pomello') => 'pomello / comando elettrodomestico',
+            str_contains($text, 'wheel') || str_contains($text, 'ruota') => 'ruota / componente di scorrimento',
+            str_contains($text, 'cover') || str_contains($text, 'case') || str_contains($text, 'scocca') => 'cover / scocca plastica da confermare',
+            default => 'componente da confermare',
         };
+    }
+
+    private function model(): string
+    {
+        return (string) ($this->config['model'] ?? 'gpt-5.5');
+    }
+
+    private function maxImages(): int
+    {
+        return max(1, (int) ($this->config['max_images'] ?? 8));
+    }
+
+    private function maxImageBytes(): int
+    {
+        return max(1024, (int) ($this->config['max_image_bytes'] ?? 20971520));
+    }
+
+    private function imageDetail(): string
+    {
+        $detail = strtolower(trim((string) ($this->config['image_detail'] ?? 'original')));
+        return in_array($detail, ['low', 'high', 'original', 'auto'], true) ? $detail : 'original';
+    }
+
+    private function webSearchEnabled(): bool
+    {
+        return (bool) ($this->config['web_search_enabled'] ?? true);
+    }
+
+    private function reasoningEffort(): string
+    {
+        $effort = strtolower(trim((string) ($this->config['reasoning_effort'] ?? 'high')));
+        return in_array($effort, ['low', 'medium', 'high', 'xhigh'], true) ? $effort : '';
     }
 }

@@ -865,10 +865,14 @@ AI_PHOTO_RECOGNITION_PROVIDER=openai
 AI_PHOTO_RECOGNITION_ENABLED=true
 OPENAI_API_KEY=
 OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_VISION_MODEL=gpt-5.4-mini
-OPENAI_TIMEOUT_SECONDS=60
-OPENAI_VISION_MAX_IMAGES=3
-OPENAI_VISION_MAX_IMAGE_BYTES=5242880
+OPENAI_VISION_MODEL=gpt-5.5
+OPENAI_TIMEOUT_SECONDS=90
+OPENAI_VISION_MAX_IMAGES=8
+OPENAI_VISION_MAX_IMAGE_BYTES=20971520
+OPENAI_VISION_DETAIL=original
+OPENAI_VISION_WEB_SEARCH_ENABLED=true
+OPENAI_REASONING_EFFORT=high
+OPENAI_VISION_MAX_OUTPUT_TOKENS=4500
 ```
 
 New status endpoint:
@@ -953,3 +957,29 @@ The full CI suite now includes this Step 46 smoke script and the release evidenc
 ### Step 46.1 smoke hotfix — PowerShell 5.1 encoding-safe marker
 
 The Step 45.4 AI photo recognition smoke test now checks the user-facing OCR label with the ASCII-safe partial marker `Testo letto nell` instead of a rigid typographic-apostrophe string. This preserves the UX copy `Testo letto nell’immagine` while avoiding Windows PowerShell 5.1 mojibake such as `nellâ€™immagine` during CI/local smoke execution.
+
+
+## Step 47 — Maximum Vision Recognition Quality Profile v1
+
+Step 47 upgrades the photo recognition layer from a generic object guess to a maximum-quality replacement-part identification profile. The OpenAI request now sends image inputs with explicit high-fidelity detail, stronger OCR-first instructions, optional Responses API web search for visible part numbers/product names, and a quality retry when the first live answer is too generic.
+
+The intended behavior for product/reference images is no longer “generic plastic cover”. If the image contains a commercial title or part number, Re-born treats that text as primary evidence, reads visible labels and creates a richer Italian brief with:
+
+- exact commercial name when visible;
+- part number;
+- possible compatible brands/models when supported by visible text or web search;
+- visible design features;
+- critical dimensions for modelling;
+- fastest recommended path: check existing spare first, then maker brief if unavailable.
+
+For example, an image containing `165314 Dishwasher Lower Rack Wheel` should be recognized as a dishwasher lower-rack wheel/roller, not as a generic cover/scocca.
+
+Important: ChatGPT Plus improves access inside the ChatGPT web app, but API usage is separate. Live recognition still requires a valid `OPENAI_API_KEY` with API billing/credits available on the OpenAI API platform.
+
+New smoke test:
+
+```text
+scripts/smoke-ai-vision-quality-profile.ps1
+```
+
+The full CI suite now includes Step 47 as a release-blocking AI quality gate, while preserving deterministic fallback for CI environments without a real API key.

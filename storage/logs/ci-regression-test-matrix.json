@@ -1,18 +1,18 @@
 ﻿{
-    "version":  "STEP46_USER_REPAIR_WIZARD_QUALITY_GATE_V1",
-    "generated_at":  "2026-06-30T18:35:00.3431595Z",
-    "total_rows":  37,
-    "release_blocking_rows":  15,
+    "version":  "STEP44_RELEASE_EVIDENCE_WITH_REPAIR_FIRST_OFFER_ARCHITECTURE_V1",
+    "generated_at":  "2026-06-30T15:53:01.4709872Z",
+    "total_rows":  35,
+    "release_blocking_rows":  13,
     "domains":  [
                     {
                         "domain":  "",
-                        "count":  37
+                        "count":  35
                     }
                 ],
     "strategic_assets":  [
                              {
                                  "asset":  "",
-                                 "count":  37
+                                 "count":  35
                              }
                          ],
     "rows":  [
@@ -469,32 +469,6 @@
                      "script_exists":  true,
                      "status":  "passed",
                      "duration_seconds":  0.54,
-                     "error":  null
-                 },
-                 {
-                     "order":  36,
-                     "step":  45,
-                     "domain":  "AI / UX",
-                     "capability":  "AI Photo Recognition \u0026 Replacement-Part Brief",
-                     "strategic_asset":  "AI Learning",
-                     "smoke_script":  "smoke-ai-photo-recognition-replacement-brief.ps1",
-                     "gate":  "release-blocking",
-                     "script_exists":  true,
-                     "status":  "missing_result",
-                     "duration_seconds":  null,
-                     "error":  null
-                 },
-                 {
-                     "order":  37,
-                     "step":  46,
-                     "domain":  "UX",
-                     "capability":  "User Repair Wizard Simplification",
-                     "strategic_asset":  "User Activation",
-                     "smoke_script":  "smoke-user-repair-wizard-simplification.ps1",
-                     "gate":  "release-blocking",
-                     "script_exists":  true,
-                     "status":  "missing_result",
-                     "duration_seconds":  null,
                      "error":  null
                  }
              ]

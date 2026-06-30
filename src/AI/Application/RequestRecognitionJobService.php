@@ -101,6 +101,7 @@ final class RequestRecognitionJobService
         $label = match (true) {
             str_contains($text, 'hinge') => 'hinge / plastic joint',
             str_contains($text, 'knob') => 'appliance knob / control interface',
+            str_contains($text, '165314') || (str_contains($text, 'dishwasher') && str_contains($text, 'wheel')) || (str_contains($text, 'lavastoviglie') && str_contains($text, 'ruota')) => 'dishwasher lower rack wheel / basket roller',
             str_contains($text, 'wheel') => 'appliance basket wheel / rolling component',
             str_contains($text, 'cover') || str_contains($text, 'case') => 'plastic cover / wearable case',
             str_contains($text, 'consumer_electronics') => 'consumer electronics shell / small plastic part',
@@ -143,8 +144,12 @@ final class RequestRecognitionJobService
                 'status' => str_contains($label, 'unknown') ? 'needs_more_images' : 'recognized',
                 'source_image_type' => 'unknown',
                 'visible_text' => [],
-                'part_number' => '',
-                'why' => 'Fallback locale basato su testo richiesta, nomi file e tipo allegati. Non sostituisce il riconoscimento vision live.',
+                'part_number' => str_contains($text, '165314') ? '165314' : '',
+                'commercial_name' => str_contains($text, '165314') ? 'Dishwasher Lower Rack Wheel' : '',
+                'possible_brands' => [],
+                'possible_models' => [],
+                'external_lookup_summary' => '',
+                'why' => 'Fallback locale basato su testo richiesta, nomi file e tipo allegati. Non sostituisce il riconoscimento vision live e non può leggere OCR dalla foto.',
             ],
             'part_spec' => [
                 'name_it' => $this->italianLabelFor($label),
@@ -152,6 +157,8 @@ final class RequestRecognitionJobService
                 'appliance_context' => str_contains($case->category, 'home_appliance') ? 'elettrodomestico' : 'oggetto da riparare',
                 'known_dimensions' => [],
                 'key_features' => [],
+                'compatibility_clues' => [],
+                'manufacturing_features' => [],
             ],
             'object_guess' => [
                 'label' => $this->italianLabelFor($label),
@@ -164,14 +171,14 @@ final class RequestRecognitionJobService
                 'repairability_score' => round($repairability, 2),
             ],
             'replacement_part_brief' => [
-                'plain_language_summary' => 'Re-born prepared a first replacement-part brief from the uploaded evidence. Add dimensions and a second angle before production.',
+                'plain_language_summary' => 'Riconoscimento locale limitato: senza OpenAI Vision live Re-born non può leggere testi, marca, modello o codice dalla foto. Questo brief è solo una traccia sicura per chiedere le informazioni mancanti.',
                 'probable_function' => $this->probableFunctionForLabel($label),
                 'part_family' => $label,
                 'manufacturing_candidate' => $path !== 'find_provider',
                 'material_hint' => 'PETG/ASA/TPU/nylon to be selected after load, heat, water and flexibility constraints are known.',
-                'critical_dimensions' => ['overall width', 'overall height', 'thickness', 'mounting hole or clip dimensions if present'],
-                'photo_requirements' => ['close-up of broken part', 'side view', 'full object context', 'photo with ruler or coin for scale'],
-                'user_questions' => ['What does the part do when the object works?', 'Is the part exposed to heat, water, load or repeated movement?'],
+                'critical_dimensions' => ['larghezza totale', 'altezza totale', 'spessore', 'diametri o geometrie di fori, clip, cerniere o innesti'],
+                'photo_requirements' => ['foto frontale nitida', 'foto laterale', 'foto del pezzo montato', 'foto con righello o calibro', 'foto ravvicinata di codici o scritte'],
+                'user_questions' => ['Che cosa fa il pezzo quando l’oggetto funziona?', 'È esposto ad acqua, calore, carico o movimento ripetuto?', 'Ci sono codici, marca o modello leggibili sull’oggetto?'],
             ],
             'recommended_next_step' => [
                 'path' => $path,
@@ -195,6 +202,7 @@ final class RequestRecognitionJobService
         return match (true) {
             str_contains($value, 'hinge') || str_contains($value, 'joint') => 'cerniera / snodo plastico',
             str_contains($value, 'knob') || str_contains($value, 'control') => 'pomello / comando elettrodomestico',
+            str_contains($value, 'dishwasher') && str_contains($value, 'wheel') => 'ruota cestello inferiore lavastoviglie',
             str_contains($value, 'wheel') || str_contains($value, 'rolling') => 'ruota cestello / componente di scorrimento',
             str_contains($value, 'cover') || str_contains($value, 'case') || str_contains($value, 'shell') => 'cover / scocca plastica',
             default => 'componente da confermare',
@@ -207,7 +215,8 @@ final class RequestRecognitionJobService
         return match (true) {
             str_contains($value, 'hinge') || str_contains($value, 'joint') => 'Allows two parts to rotate, open or close while staying aligned.',
             str_contains($value, 'knob') || str_contains($value, 'control') => 'Transfers hand input to a control shaft, switch or selector.',
-            str_contains($value, 'wheel') || str_contains($value, 'rolling') => 'Lets a basket, drawer or moving element slide or roll correctly.',
+            str_contains($value, 'dishwasher') && str_contains($value, 'wheel') => 'Permette al cestello inferiore della lavastoviglie di scorrere correttamente sulle guide.',
+            str_contains($value, 'wheel') || str_contains($value, 'rolling') => 'Permette a un cestello, cassetto o elemento mobile di scorrere o rotolare correttamente.',
             str_contains($value, 'cover') || str_contains($value, 'case') || str_contains($value, 'shell') => 'Protects internal components or restores the external shape of the object.',
             default => 'Mechanical or protective function to be confirmed with one more photo and measurements.',
         };

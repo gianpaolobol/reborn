@@ -31,6 +31,8 @@ OPENAI_VISION_MAX_IMAGES=3
 OPENAI_VISION_MAX_IMAGE_BYTES=5242880
 ```
 
+> Note: Step 47 supersedes these default values for maximum vision quality. See `docs/09-operations/STEP_47_AI_VISION_QUALITY_PROFILE.md`.
+
 ## New backend pieces
 
 - `config/ai.php`

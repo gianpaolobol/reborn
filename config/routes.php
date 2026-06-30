@@ -43,6 +43,8 @@ return static function (Router $router, RepairController $repairController, Auth
                 'ai_recognition_jobs',
                 'openai_photo_recognition_api',
                 'ai_replacement_part_brief',
+                'ai_vision_quality_profile',
+                'max_vision_ocr_reference_identification',
                 'guided_missing_inputs',
                 'repair_path_decision_engine',
                 'provider_match_engine',
