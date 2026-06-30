@@ -7,7 +7,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-$Step39Version = "STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V2_NO_MARKDOWN_BACKTICKS"
+$Step39Version = "STEP40_RELEASE_EVIDENCE_WITH_DEMO_WALKTHROUGH_V1"
 Write-Host "Release evidence script version: $Step39Version" -ForegroundColor Magenta
 
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
@@ -95,7 +95,8 @@ $RegressionMatrix = @(
     [ordered]@{ order = 27; step = 34; domain = "Fulfilment"; capability = "Dispatch & Proof-of-Repair"; script = "smoke-dispatch-proof-governance.ps1"; gate = "critical"; asset = "Objects Saved" },
     [ordered]@{ order = 28; step = 35; domain = "Customer Care"; capability = "Acceptance, Warranty & Support"; script = "smoke-customer-care-warranty-support.ps1"; gate = "critical"; asset = "Operational Trust" },
     [ordered]@{ order = 29; step = 36; domain = "Sustainability"; capability = "Impact & Circularity Metrics"; script = "smoke-sustainability-impact-circularity.ps1"; gate = "critical"; asset = "Sustainability Impact" },
-    [ordered]@{ order = 30; step = 37; domain = "Investor"; capability = "KPI & Board Reporting"; script = "smoke-investor-reporting-board-readiness.ps1"; gate = "critical"; asset = "Enterprise Value" }
+    [ordered]@{ order = 30; step = 37; domain = "Investor"; capability = "KPI & Board Reporting"; script = "smoke-investor-reporting-board-readiness.ps1"; gate = "critical"; asset = "Enterprise Value" },
+    [ordered]@{ order = 31; step = 40; domain = "Demo"; capability = "Guided Repair Journey & Investor Walkthrough"; script = "smoke-demo-walkthrough-investor-journey.ps1"; gate = "release-blocking"; asset = "Enterprise Value" }
 )
 
 $SmokeSummary = $null
@@ -250,7 +251,7 @@ $markdown -join "`n" | Out-File -Encoding UTF8 $MarkdownSummaryPath
 
 if ($env:GITHUB_STEP_SUMMARY) {
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
-    Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Step 39 release quality gate"
+    Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Step 40 release quality gate"
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Quality gate: **$GateStatus**"
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
@@ -260,13 +261,13 @@ if ($env:GITHUB_STEP_SUMMARY) {
 }
 
 if ($GateStatus -eq "passed") {
-    Write-CiNotice "Release quality gate passed" "Step 39 release evidence generated and quality gate passed."
-    Write-Host "Step 39 release evidence generated. Quality gate passed." -ForegroundColor Green
+    Write-CiNotice "Release quality gate passed" "Step 40 release evidence generated and quality gate passed."
+    Write-Host "Step 40 release evidence generated. Quality gate passed." -ForegroundColor Green
     exit 0
 }
 
 Write-CiError "Release quality gate failed" "Step 39 quality gate failed. See storage/logs/ci-quality-gate.json."
-Write-Host "Step 39 release evidence generated. Quality gate failed." -ForegroundColor Red
+Write-Host "Step 40 release evidence generated. Quality gate failed." -ForegroundColor Red
 if ($AllowFailedSuite) {
     exit 0
 }

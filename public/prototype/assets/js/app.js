@@ -112,7 +112,8 @@ function stepper(active) {
     ['dispatch-governance', '25', 'Dispatch'],
     ['customer-care', '26', 'Care'],
     ['sustainability-impact', '27', 'Impact'],
-    ['investor-reporting', '28', 'Investor']
+    ['investor-reporting', '28', 'Investor'],
+    ['demo-walkthrough', '29', 'Demo']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -3260,6 +3261,80 @@ async function resolveImpactReview(id) {
 
 
 
+function demoWalkthroughDashboard() {
+  setActiveNav('demo-walkthrough');
+  if (!S.auth.user) {
+    return layout('Demo Walkthrough', authRequiredPanel('the Step 40 guided demo walkthrough console'), { currentStep: 'demo-walkthrough' });
+  }
+
+  const dashboard = S.api.demoWalkthrough || {};
+  const summary = dashboard.summary || {};
+  const steps = S.api.demoWalkthroughSteps || dashboard.walkthrough_steps || [];
+  const sessions = S.api.demoSessions || [];
+  const reviews = S.api.demoReadinessReviews || dashboard.readiness_reviews || [];
+  const feedback = S.api.demoFeedback || [];
+  const audit = S.api.demoWalkthroughAuditLog || [];
+  const stepRows = steps.slice(0, 10).map(item => `<tr><td>${safe(item.sort_order)}</td><td>${safe(item.title)}</td><td>${safe(item.route_hint)}</td><td>${safe(item.primary_asset)}</td></tr>`).join('') || '<tr><td colspan="4">No active walkthrough steps.</td></tr>';
+  const sessionRows = sessions.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'completed' ? 'green' : item.status === 'running' ? 'blue' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.session_code)}</td><td>${safe(item.audience)}</td><td>${safe(item.current_step_key || 'done')}</td><td><button class="mini-button" onclick="advanceDemoSession('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Advance</button></td></tr>`).join('') || '<tr><td colspan="5">No demo sessions yet.</td></tr>';
+  const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.score >= 80 ? 'green' : item.score >= 60 ? 'blue' : 'orange'}">${safe(item.score)}</span></td><td>${safe(item.readiness_level)}</td><td>${safe((item.blockers || []).slice(0, 2).join('; '))}</td><td><button class="mini-button" onclick="reviewDemoReadiness('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Review</button></td></tr>`).join('') || '<tr><td colspan="4">No active demo readiness reviews.</td></tr>';
+  const feedbackRows = feedback.slice(0, 6).map(item => `<li><strong>${safe(item.signal)}</strong> · ${safe(item.rating)}/10 — ${safe(item.notes)}</li>`).join('') || '<li>No feedback yet.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No demo audit entries yet.</li>';
+
+  return layout('Demo Walkthrough', `
+    <section class="section-head"><div><p class="eyebrow">Step 40 · Demo Mode, Guided Repair Journey & Investor Walkthrough</p><h2>Present the complete repair journey with a controlled narrative, explicit caveats and traceable feedback.</h2></div><p class="muted">Step 40 is a guided local/pilot demo layer. It does not turn mock AI, payment, logistics, warranty or sustainability flows into production claims.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.active_modes || 0)}</strong><span>Demo modes</span></div><div class="metric"><strong>${safe(summary.active_steps || 0)}</strong><span>Guided steps</span></div><div class="metric"><strong>${safe(summary.demo_sessions || 0)}</strong><span>Sessions</span></div><div class="metric"><strong>${safe(summary.open_readiness_reviews || 0)}</strong><span>Open reviews</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoSession()" ${S.busy ? 'disabled' : ''}>Start guided demo</button><button class="btn secondary" onclick="evaluateDemoReadiness()" ${S.busy ? 'disabled' : ''}>Evaluate demo readiness</button><a class="btn secondary" href="#/investor-reporting">Investor evidence</a><a class="btn secondary" href="#/sustainability-impact">Impact metrics</a></div><p class="muted small">Recommended path: intake → AI governance → repair path → geometry → routing → dispatch proof → customer care → impact/KPIs.</p></section>
+    <section class="section grid two"><div class="panel stack"><h3>Guided walkthrough steps</h3><table class="table"><tr><th>#</th><th>Step</th><th>Route</th><th>Asset</th></tr>${stepRows}</table></div><div class="panel stack"><h3>Demo sessions</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Audience</th><th>Current step</th><th>Action</th></tr>${sessionRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Demo readiness reviews</h3><table class="table"><tr><th>Score</th><th>Level</th><th>Blockers</th><th>Action</th></tr>${reviewRows}</table></div><div class="panel stack"><h3>Feedback</h3><ul class="muted small">${feedbackRows}</ul><h3>Audit</h3><ul class="muted small">${auditRows}</ul></div></section>
+  `, { currentStep: 'demo-walkthrough' });
+}
+
+async function createDemoSession() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to start a guided demo.');
+  setBusy(true);
+  try {
+    const modes = S.api.demoModes || [];
+    await window.REBORN_API.createDemoSession({ mode_id: modes[0]?.id, audience: 'investor', presenter_name: 'Re-born operator', status: 'running', notes: 'Started from Step 40 prototype console.' });
+    toast('Guided demo session started.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Demo session failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function advanceDemoSession(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to advance demo sessions.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.advanceDemoSession(id, { outcome: 'step_completed', notes: 'Advanced from Step 40 prototype console.' });
+    toast('Demo session advanced.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Demo advance failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function evaluateDemoReadiness() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate demo readiness.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.evaluateDemoReadiness({ notes: 'Evaluated from Step 40 prototype console.' });
+    toast('Demo readiness evaluated.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Demo readiness evaluation failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function reviewDemoReadiness(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to review demo readiness.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.reviewDemoReadiness(id, { decision: 'reviewed_with_caveats', notes: 'Reviewed from Step 40 prototype console. Local/pilot demo only.' });
+    toast('Demo readiness reviewed.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Demo readiness review failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+
 function investorReportingDashboard() {
   setActiveNav('investor-reporting');
   if (!S.auth.user) {
@@ -3401,6 +3476,7 @@ const routes = {
   '/customer-care': customerCareDashboard,
   '/sustainability-impact': sustainabilityImpactDashboard,
   '/investor-reporting': investorReportingDashboard,
+  '/demo-walkthrough': demoWalkthroughDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -3617,6 +3693,14 @@ async function refreshApiData(options = {}) {
       boardReportEvidence: bootstrap.board_report_evidence || S.api.boardReportEvidence || [],
       investorDemoReadinessReviews: bootstrap.investor_demo_readiness_reviews || S.api.investorDemoReadinessReviews || [],
       investorReportingAuditLog: bootstrap.investor_reporting_audit_log || S.api.investorReportingAuditLog || [],
+      demoWalkthrough: bootstrap.demo_walkthrough || S.api.demoWalkthrough || null,
+      demoModes: bootstrap.demo_modes || S.api.demoModes || [],
+      demoWalkthroughSteps: bootstrap.demo_walkthrough_steps || S.api.demoWalkthroughSteps || [],
+      demoSessions: bootstrap.demo_sessions || S.api.demoSessions || [],
+      demoSessionEvents: bootstrap.demo_session_events || S.api.demoSessionEvents || [],
+      demoFeedback: bootstrap.demo_feedback || S.api.demoFeedback || [],
+      demoReadinessReviews: bootstrap.demo_readiness_reviews || S.api.demoReadinessReviews || [],
+      demoWalkthroughAuditLog: bootstrap.demo_walkthrough_audit_log || S.api.demoWalkthroughAuditLog || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {

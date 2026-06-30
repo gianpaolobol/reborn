@@ -767,3 +767,13 @@ The GitHub Actions smoke pipeline now resets and verifies the deterministic demo
 ### Runtime verification V4
 
 The CI runtime check now uses `scripts/ci-verify-runtime.php` instead of inline `php -r` commands. The workflow log must show `STEP38_RUNTIME_SCRIPT_VERIFY_V5`. If a run still fails with a PHP command-line parse error, the run is using an older workflow commit.
+
+## Step 40 — Demo Mode, Guided Repair Journey & Investor Walkthrough v1
+
+Step 40 adds a guided demo layer for investor and beta/operator walkthroughs. It includes demo modes, guided repair journey steps, demo sessions, session events, feedback, readiness reviews, audit log, a prototype console at `#/demo-walkthrough`, and a CI smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-demo-walkthrough-investor-journey.ps1
+```
+
+The full CI suite now runs 31 smoke tests and the release evidence matrix includes Step 40 as a release-blocking demo governance gate.

@@ -6,7 +6,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-$CiSmokeSuiteVersion = "STEP38_CI_AUTH_GUARD_V3"
+$CiSmokeSuiteVersion = "STEP40_CI_SMOKE_SUITE_WITH_DEMO_WALKTHROUGH_V1"
 Write-Host "CI smoke script version: $CiSmokeSuiteVersion" -ForegroundColor Magenta
 
 $env:REBORN_BASE_URL = $BaseUrl
@@ -49,7 +49,8 @@ $SmokeTests = @(
     "smoke-dispatch-proof-governance.ps1",
     "smoke-customer-care-warranty-support.ps1",
     "smoke-sustainability-impact-circularity.ps1",
-    "smoke-investor-reporting-board-readiness.ps1"
+    "smoke-investor-reporting-board-readiness.ps1",
+    "smoke-demo-walkthrough-investor-journey.ps1"
 )
 
 function Escape-GitHubCommandValue([string]$Value) {

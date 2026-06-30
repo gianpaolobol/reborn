@@ -86,3 +86,6 @@ docs/13-testing/REGRESSION_TEST_MATRIX.md
 ```
 
 The Pull Request checklist requires this update.
+
+
+| 31 | 40 | Demo | Guided Repair Journey & Investor Walkthrough | `smoke-demo-walkthrough-investor-journey.ps1` | release-blocking | Enterprise Value |

@@ -24,6 +24,7 @@ use Reborn\Platform\Application\FulfilmentDispatchGovernanceService;
 use Reborn\Platform\Application\CustomerCareGovernanceService;
 use Reborn\Platform\Application\SustainabilityImpactService;
 use Reborn\Platform\Application\InvestorReportingService;
+use Reborn\Platform\Application\DemoWalkthroughService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -50,6 +51,7 @@ final class PlatformController
         private readonly CustomerCareGovernanceService $customerCare,
         private readonly SustainabilityImpactService $sustainability,
         private readonly InvestorReportingService $investorReporting,
+        private readonly DemoWalkthroughService $demoWalkthrough,
         private readonly AuthContext $auth,
     ) {
     }
@@ -1570,6 +1572,97 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['investor_reporting_audit_log' => $this->investorReporting->auditLog($limit)], $request->requestId());
+    }
+
+
+    public function demoWalkthrough(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['demo_walkthrough' => $this->demoWalkthrough->dashboard()], $request->requestId());
+    }
+
+    public function demoModes(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        return JsonResponse::ok(['demo_modes' => $this->demoWalkthrough->demoModes($status)], $request->requestId());
+    }
+
+    public function demoWalkthroughSteps(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $modeId = trim((string) $request->query('mode_id', '')) ?: null;
+        $status = (string) $request->query('status', 'active');
+        return JsonResponse::ok(['demo_walkthrough_steps' => $this->demoWalkthrough->walkthroughSteps($modeId, $status)], $request->requestId());
+    }
+
+    public function demoSessions(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['demo_sessions' => $this->demoWalkthrough->sessions($status, $limit)], $request->requestId());
+    }
+
+    public function createDemoSession(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['demo_session' => $this->demoWalkthrough->createSession($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function advanceDemoSession(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['demo_session' => $this->demoWalkthrough->advanceSession((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function demoSessionEvents(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $sessionId = trim((string) $request->query('session_id', '')) ?: null;
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['demo_session_events' => $this->demoWalkthrough->sessionEvents($sessionId, $limit)], $request->requestId());
+    }
+
+    public function demoFeedback(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $sessionId = trim((string) $request->query('session_id', '')) ?: null;
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['demo_feedback' => $this->demoWalkthrough->feedback($sessionId, $limit)], $request->requestId());
+    }
+
+    public function recordDemoFeedback(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['demo_feedback_record' => $this->demoWalkthrough->recordFeedback($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function demoReadinessReviews(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'active');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['demo_readiness_reviews' => $this->demoWalkthrough->readinessReviews($status, $limit)], $request->requestId());
+    }
+
+    public function evaluateDemoReadiness(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['demo_readiness_review' => $this->demoWalkthrough->evaluateReadiness($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function reviewDemoReadiness(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['demo_readiness_review' => $this->demoWalkthrough->reviewReadiness((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function demoWalkthroughAuditLog(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['demo_walkthrough_audit_log' => $this->demoWalkthrough->auditLog($limit)], $request->requestId());
     }
 
 }

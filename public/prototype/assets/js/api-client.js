@@ -1439,6 +1439,63 @@
       return this.request(`/api/v1/platform/investor-reporting-audit-log?limit=${encodeURIComponent(limit)}`);
     }
 
+
+
+    async getDemoWalkthrough() {
+      return this.request('/api/v1/platform/demo-walkthrough');
+    }
+
+    async getDemoModes(status = 'active') {
+      return this.request(`/api/v1/platform/demo-modes?status=${encodeURIComponent(status)}`);
+    }
+
+    async getDemoWalkthroughSteps(modeId = '', status = 'active') {
+      const query = modeId ? `mode_id=${encodeURIComponent(modeId)}&status=${encodeURIComponent(status)}` : `status=${encodeURIComponent(status)}`;
+      return this.request(`/api/v1/platform/demo-walkthrough-steps?${query}`);
+    }
+
+    async getDemoSessions(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/demo-sessions?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createDemoSession(payload = {}) {
+      return this.request('/api/v1/platform/demo-sessions', { method: 'POST', body: payload });
+    }
+
+    async advanceDemoSession(id, payload = {}) {
+      return this.request(`/api/v1/platform/demo-sessions/${encodeURIComponent(id)}/advance`, { method: 'POST', body: payload });
+    }
+
+    async getDemoSessionEvents(sessionId = '', limit = 50) {
+      const query = sessionId ? `session_id=${encodeURIComponent(sessionId)}&limit=${encodeURIComponent(limit)}` : `limit=${encodeURIComponent(limit)}`;
+      return this.request(`/api/v1/platform/demo-session-events?${query}`);
+    }
+
+    async getDemoFeedback(sessionId = '', limit = 50) {
+      const query = sessionId ? `session_id=${encodeURIComponent(sessionId)}&limit=${encodeURIComponent(limit)}` : `limit=${encodeURIComponent(limit)}`;
+      return this.request(`/api/v1/platform/demo-feedback?${query}`);
+    }
+
+    async recordDemoFeedback(payload = {}) {
+      return this.request('/api/v1/platform/demo-feedback', { method: 'POST', body: payload });
+    }
+
+    async getDemoReadinessReviews(status = 'active', limit = 50) {
+      return this.request(`/api/v1/platform/demo-readiness-reviews?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async evaluateDemoReadiness(payload = {}) {
+      return this.request('/api/v1/platform/demo-readiness/evaluate', { method: 'POST', body: payload });
+    }
+
+    async reviewDemoReadiness(id, payload = {}) {
+      return this.request(`/api/v1/platform/demo-readiness-reviews/${encodeURIComponent(id)}/review`, { method: 'POST', body: payload });
+    }
+
+    async getDemoWalkthroughAuditLog(limit = 50) {
+      return this.request(`/api/v1/platform/demo-walkthrough-audit-log?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -1768,6 +1825,14 @@
       let boardReportEvidence = { board_report_evidence: [] };
       let investorDemoReadinessReviews = { investor_demo_readiness_reviews: [] };
       let investorReportingAuditLog = { investor_reporting_audit_log: [] };
+      let demoWalkthrough = { demo_walkthrough: null };
+      let demoModes = { demo_modes: [] };
+      let demoWalkthroughSteps = { demo_walkthrough_steps: [] };
+      let demoSessions = { demo_sessions: [] };
+      let demoSessionEvents = { demo_session_events: [] };
+      let demoFeedback = { demo_feedback: [] };
+      let demoReadinessReviews = { demo_readiness_reviews: [] };
+      let demoWalkthroughAuditLog = { demo_walkthrough_audit_log: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -2492,6 +2557,46 @@
         } catch (_error) {
           investorReportingAuditLog = { investor_reporting_audit_log: [] };
         }
+        try {
+          demoWalkthrough = await this.getDemoWalkthrough();
+        } catch (_error) {
+          demoWalkthrough = { demo_walkthrough: null };
+        }
+        try {
+          demoModes = await this.getDemoModes('active');
+        } catch (_error) {
+          demoModes = { demo_modes: [] };
+        }
+        try {
+          demoWalkthroughSteps = await this.getDemoWalkthroughSteps('', 'active');
+        } catch (_error) {
+          demoWalkthroughSteps = { demo_walkthrough_steps: [] };
+        }
+        try {
+          demoSessions = await this.getDemoSessions('all', 30);
+        } catch (_error) {
+          demoSessions = { demo_sessions: [] };
+        }
+        try {
+          demoSessionEvents = await this.getDemoSessionEvents('', 30);
+        } catch (_error) {
+          demoSessionEvents = { demo_session_events: [] };
+        }
+        try {
+          demoFeedback = await this.getDemoFeedback('', 30);
+        } catch (_error) {
+          demoFeedback = { demo_feedback: [] };
+        }
+        try {
+          demoReadinessReviews = await this.getDemoReadinessReviews('active', 30);
+        } catch (_error) {
+          demoReadinessReviews = { demo_readiness_reviews: [] };
+        }
+        try {
+          demoWalkthroughAuditLog = await this.getDemoWalkthroughAuditLog(30);
+        } catch (_error) {
+          demoWalkthroughAuditLog = { demo_walkthrough_audit_log: [] };
+        }
 
       }
 
@@ -2738,7 +2843,15 @@
         board_reports: boardReports.board_reports || [],
         board_report_evidence: boardReportEvidence.board_report_evidence || [],
         investor_demo_readiness_reviews: investorDemoReadinessReviews.investor_demo_readiness_reviews || [],
-        investor_reporting_audit_log: investorReportingAuditLog.investor_reporting_audit_log || []
+        investor_reporting_audit_log: investorReportingAuditLog.investor_reporting_audit_log || [],
+        demo_walkthrough: demoWalkthrough.demo_walkthrough || null,
+        demo_modes: demoModes.demo_modes || [],
+        demo_walkthrough_steps: demoWalkthroughSteps.demo_walkthrough_steps || [],
+        demo_sessions: demoSessions.demo_sessions || [],
+        demo_session_events: demoSessionEvents.demo_session_events || [],
+        demo_feedback: demoFeedback.demo_feedback || [],
+        demo_readiness_reviews: demoReadinessReviews.demo_readiness_reviews || [],
+        demo_walkthrough_audit_log: demoWalkthroughAuditLog.demo_walkthrough_audit_log || []
       };
     }
   }

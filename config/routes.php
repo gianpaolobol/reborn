@@ -152,6 +152,12 @@ return static function (Router $router, RepairController $repairController, Auth
                 'board_reports',
                 'board_report_evidence',
                 'investor_demo_readiness',
+                'demo_mode',
+                'guided_repair_journey',
+                'investor_walkthrough',
+                'demo_sessions',
+                'demo_feedback',
+                'demo_readiness_reviews',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -398,6 +404,22 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->post('/api/v1/platform/investor-demo-readiness/evaluate', [$platformController, 'evaluateInvestorDemoReadiness']);
     $router->post('/api/v1/platform/investor-demo-readiness-reviews/{id}/review', [$platformController, 'reviewInvestorDemoReadiness']);
     $router->get('/api/v1/platform/investor-reporting-audit-log', [$platformController, 'investorReportingAuditLog']);
+
+
+
+    $router->get('/api/v1/platform/demo-walkthrough', [$platformController, 'demoWalkthrough']);
+    $router->get('/api/v1/platform/demo-modes', [$platformController, 'demoModes']);
+    $router->get('/api/v1/platform/demo-walkthrough-steps', [$platformController, 'demoWalkthroughSteps']);
+    $router->get('/api/v1/platform/demo-sessions', [$platformController, 'demoSessions']);
+    $router->post('/api/v1/platform/demo-sessions', [$platformController, 'createDemoSession']);
+    $router->post('/api/v1/platform/demo-sessions/{id}/advance', [$platformController, 'advanceDemoSession']);
+    $router->get('/api/v1/platform/demo-session-events', [$platformController, 'demoSessionEvents']);
+    $router->get('/api/v1/platform/demo-feedback', [$platformController, 'demoFeedback']);
+    $router->post('/api/v1/platform/demo-feedback', [$platformController, 'recordDemoFeedback']);
+    $router->get('/api/v1/platform/demo-readiness-reviews', [$platformController, 'demoReadinessReviews']);
+    $router->post('/api/v1/platform/demo-readiness/evaluate', [$platformController, 'evaluateDemoReadiness']);
+    $router->post('/api/v1/platform/demo-readiness-reviews/{id}/review', [$platformController, 'reviewDemoReadiness']);
+    $router->get('/api/v1/platform/demo-walkthrough-audit-log', [$platformController, 'demoWalkthroughAuditLog']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

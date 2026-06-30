@@ -48,6 +48,7 @@ final class ProductionReadinessService
             'customer_care_governance' => $this->customerCareGovernanceCheck(),
             'sustainability_impact' => $this->sustainabilityImpactCheck(),
             'investor_reporting' => $this->investorReportingCheck(),
+            'demo_walkthrough' => $this->demoWalkthroughCheck(),
         ];
 
         $status = 'ready';
@@ -121,6 +122,7 @@ final class ProductionReadinessService
                 'customer acceptance, warranty placeholders and post-repair support workflows are reviewed before beta customer commitments',
                 'sustainability impact, circularity factors and repair outcome intelligence are reviewed before external environmental claims',
                 'investor demo KPIs, board report narrative and caveats are reviewed before external fundraising use',
+                'guided demo walkthrough script, feedback capture and readiness caveats are reviewed before partner/investor presentations',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
@@ -139,6 +141,7 @@ final class ProductionReadinessService
             'step_35_status' => 'Customer acceptance, warranty placeholder and post-repair support governance v1 implemented.',
             'step_36_status' => 'Sustainability impact, circularity metrics and repair outcome intelligence v1 implemented.',
             'step_37_status' => 'Investor demo KPI narrative and board reporting governance v1 implemented.',
+            'step_40_status' => 'Demo mode, guided repair journey and investor walkthrough governance v1 implemented.',
         ];
     }
 
@@ -957,6 +960,43 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Investor reporting checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function demoWalkthroughCheck(): array
+    {
+        try {
+            $tables = ['platform_demo_modes', 'platform_guided_walkthrough_steps', 'platform_demo_sessions', 'platform_demo_session_events', 'platform_demo_feedback', 'platform_demo_readiness_reviews', 'platform_demo_walkthrough_audit_log'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $modes = 0;
+            $steps = 0;
+            $reviews = 0;
+            if ($missing === []) {
+                $modes = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_demo_modes WHERE status = 'active'")->fetchColumn();
+                $steps = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_guided_walkthrough_steps WHERE status = 'active'")->fetchColumn();
+                $reviews = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_demo_readiness_reviews')->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? ($modes > 0 && $steps >= 6 ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Demo mode, guided repair journey and investor walkthrough tables are available. Demo output remains local/pilot evidence with explicit caveats.' : 'Demo walkthrough tables are not fully migrated yet.',
+                'active_modes' => $modes,
+                'active_steps' => $steps,
+                'readiness_reviews' => $reviews,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Demo walkthrough checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 
