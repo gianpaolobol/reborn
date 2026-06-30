@@ -1,14 +1,14 @@
 ﻿{
     "base_url":  "http://127.0.0.1:8080",
     "status":  "passed",
-    "scripts_run":  33,
-    "total_duration_seconds":  60.69,
-    "completed_at":  "2026-06-30T15:07:45.7859999Z",
+    "scripts_run":  35,
+    "total_duration_seconds":  56.67,
+    "completed_at":  "2026-06-30T15:52:58.2060104Z",
     "results":  [
                     {
                         "script":  "smoke-identity-access.ps1",
                         "status":  "passed",
-                        "duration_seconds":  0.86
+                        "duration_seconds":  0.87
                     },
                     {
                         "script":  "smoke-ownership-dashboards.ps1",
@@ -18,157 +18,167 @@
                     {
                         "script":  "smoke-prototype-auth-ui.ps1",
                         "status":  "passed",
-                        "duration_seconds":  2.22
+                        "duration_seconds":  2.08
                     },
                     {
                         "script":  "smoke-repair-upload-recognition.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.23
+                        "duration_seconds":  1.25
                     },
                     {
                         "script":  "smoke-repair-path-decision.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.36
+                        "duration_seconds":  1.33
                     },
                     {
                         "script":  "smoke-provider-match-quote.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.92
+                        "duration_seconds":  1.72
                     },
                     {
                         "script":  "smoke-repair-order-payment-intent.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.76
+                        "duration_seconds":  1.58
                     },
                     {
                         "script":  "smoke-repair-fulfilment-workflow.ps1",
                         "status":  "passed",
-                        "duration_seconds":  2.28
+                        "duration_seconds":  1.94
                     },
                     {
                         "script":  "smoke-repair-completion-learning.ps1",
                         "status":  "passed",
-                        "duration_seconds":  3.17
+                        "duration_seconds":  2.4
                     },
                     {
                         "script":  "smoke-provider-trust-quality.ps1",
                         "status":  "passed",
-                        "duration_seconds":  3.45
+                        "duration_seconds":  2.48
                     },
                     {
                         "script":  "smoke-provider-ranking-governance.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.54
+                        "duration_seconds":  1.36
                     },
                     {
                         "script":  "smoke-admin-ops-moderation.ps1",
                         "status":  "passed",
-                        "duration_seconds":  2.22
+                        "duration_seconds":  1.7
                     },
                     {
                         "script":  "smoke-production-readiness.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.16
+                        "duration_seconds":  0.97
                     },
                     {
                         "script":  "smoke-observability-ops.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.42
+                        "duration_seconds":  1.35
                     },
                     {
                         "script":  "smoke-incident-response-status.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.62
+                        "duration_seconds":  1.58
                     },
                     {
                         "script":  "smoke-notification-escalation.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.52
+                        "duration_seconds":  1.48
                     },
                     {
                         "script":  "smoke-service-governance-sla.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.8
+                        "duration_seconds":  1.43
                     },
                     {
                         "script":  "smoke-privacy-data-governance.ps1",
                         "status":  "passed",
-                        "duration_seconds":  2.17
+                        "duration_seconds":  1.72
                     },
                     {
                         "script":  "smoke-beta-release-management.ps1",
                         "status":  "passed",
-                        "duration_seconds":  2.18
+                        "duration_seconds":  2.4
                     },
                     {
                         "script":  "smoke-partner-onboarding-governance.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.8
+                        "duration_seconds":  1.94
                     },
                     {
                         "script":  "smoke-marketplace-revenue-governance.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.75
+                        "duration_seconds":  1.63
                     },
                     {
                         "script":  "smoke-maker-economy-governance.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.9
+                        "duration_seconds":  1.74
                     },
                     {
                         "script":  "smoke-ai-pipeline-governance.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.31
+                        "duration_seconds":  1.28
                     },
                     {
                         "script":  "smoke-ai-provider-sandbox-orchestration.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.39
+                        "duration_seconds":  1.42
                     },
                     {
                         "script":  "smoke-geometry-printability-governance.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.4
+                        "duration_seconds":  1.52
                     },
                     {
                         "script":  "smoke-provider-routing-governance.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.48
+                        "duration_seconds":  1.51
                     },
                     {
                         "script":  "smoke-dispatch-proof-governance.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.72
+                        "duration_seconds":  1.59
                     },
                     {
                         "script":  "smoke-customer-care-warranty-support.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.85
+                        "duration_seconds":  1.77
                     },
                     {
                         "script":  "smoke-sustainability-impact-circularity.ps1",
                         "status":  "passed",
-                        "duration_seconds":  2.03
+                        "duration_seconds":  1.68
                     },
                     {
                         "script":  "smoke-investor-reporting-board-readiness.ps1",
                         "status":  "passed",
-                        "duration_seconds":  2.04
+                        "duration_seconds":  1.83
                     },
                     {
                         "script":  "smoke-demo-walkthrough-investor-journey.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.71
+                        "duration_seconds":  1.64
                     },
                     {
                         "script":  "smoke-demo-data-room-pilot-feedback-loop.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.8
+                        "duration_seconds":  1.74
                     },
                     {
                         "script":  "smoke-public-pilot-real-world-validation.ps1",
                         "status":  "passed",
-                        "duration_seconds":  1.64
+                        "duration_seconds":  1.68
+                    },
+                    {
+                        "script":  "smoke-guided-user-repair-experience.ps1",
+                        "status":  "passed",
+                        "duration_seconds":  0.53
+                    },
+                    {
+                        "script":  "smoke-repair-first-offer-architecture.ps1",
+                        "status":  "passed",
+                        "duration_seconds":  0.54
                     }
                 ]
 }

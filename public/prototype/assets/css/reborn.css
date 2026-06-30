@@ -612,3 +612,40 @@ body.is-busy::after {
   .advanced-mode-note { align-items: flex-start; flex-direction: column; }
   .console-link-list { grid-template-columns: 1fr; }
 }
+
+/* Step 44 — repair-first offer architecture and replacement-part wizard */
+.simple-stepper { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.repair-first-hero h1 { max-width: 12ch; }
+.repair-first-offer { border-left: 5px solid var(--repair-green); }
+.replacement-route-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.replacement-route-card {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+}
+.replacement-route-card > span {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--repair-green);
+  color: var(--graphite-950);
+  font-weight: 850;
+}
+.replacement-route-card p {
+  margin-top: 4px;
+  color: var(--graphite-500);
+  font-size: .92rem;
+}
+@media (max-width: 920px) {
+  .replacement-route-cards { grid-template-columns: 1fr; }
+}

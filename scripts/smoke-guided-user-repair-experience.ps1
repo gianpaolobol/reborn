@@ -37,17 +37,18 @@ $app = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/assets/js/app.js" 
 if ($app.StatusCode -ne 200) { Fail "app.js did not return HTTP 200." }
 $appText = [string]$app.Content
 Assert-Contains $appText "function repairGuide" "guided repair route function"
-Assert-Contains $appText "Make the object work again" "first-time user headline"
-Assert-Contains $appText "Five clear steps" "linear journey copy"
+Assert-Contains $appText "Generate the missing replacement part" "first-time user headline"
+Assert-Contains $appText "Four steps. One main action at a time" "linear journey copy"
 Assert-Contains $appText "advancedConsoleDirectory" "grouped advanced directory"
-Assert-Contains $appText "simple-stepper" "reduced six-step progress indicator"
-Assert-Contains $appText "UX rule after Step 43" "future navigation governance rule"
+Assert-Contains $appText "simple-stepper" "reduced four-step progress indicator"
+Assert-Contains $appText "UX rule after Step 44" "future navigation governance rule"
 
 $css = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/assets/css/reborn.css" -UseBasicParsing -TimeoutSec 15
 if ($css.StatusCode -ne 200) { Fail "reborn.css did not return HTTP 200." }
 $cssText = [string]$css.Content
 Assert-Contains $cssText ".guided-hero" "guided hero layout CSS"
 Assert-Contains $cssText ".guided-step-card" "large readable guided cards"
+Assert-Contains $cssText ".replacement-route-card" "replacement route cards"
 Assert-Contains $cssText ".advanced-mode-note" "advanced mode warning CSS"
 
 $loginBody = @{ email = "repair.user@reborn.local"; password = "password" } | ConvertTo-Json -Compress

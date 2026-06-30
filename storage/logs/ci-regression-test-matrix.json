@@ -1,18 +1,18 @@
 ﻿{
-    "version":  "STEP42_RELEASE_EVIDENCE_WITH_PUBLIC_PILOT_V1",
-    "generated_at":  "2026-06-30T15:07:46.8338569Z",
-    "total_rows":  33,
-    "release_blocking_rows":  11,
+    "version":  "STEP44_RELEASE_EVIDENCE_WITH_REPAIR_FIRST_OFFER_ARCHITECTURE_V1",
+    "generated_at":  "2026-06-30T15:53:01.4709872Z",
+    "total_rows":  35,
+    "release_blocking_rows":  13,
     "domains":  [
                     {
                         "domain":  "",
-                        "count":  33
+                        "count":  35
                     }
                 ],
     "strategic_assets":  [
                              {
                                  "asset":  "",
-                                 "count":  33
+                                 "count":  35
                              }
                          ],
     "rows":  [
@@ -26,7 +26,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  0.86,
+                     "duration_seconds":  0.87,
                      "error":  null
                  },
                  {
@@ -52,7 +52,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  2.22,
+                     "duration_seconds":  2.08,
                      "error":  null
                  },
                  {
@@ -65,7 +65,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.23,
+                     "duration_seconds":  1.25,
                      "error":  null
                  },
                  {
@@ -78,7 +78,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.36,
+                     "duration_seconds":  1.33,
                      "error":  null
                  },
                  {
@@ -91,7 +91,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.92,
+                     "duration_seconds":  1.72,
                      "error":  null
                  },
                  {
@@ -104,7 +104,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.76,
+                     "duration_seconds":  1.58,
                      "error":  null
                  },
                  {
@@ -117,7 +117,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  2.28,
+                     "duration_seconds":  1.94,
                      "error":  null
                  },
                  {
@@ -130,7 +130,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  3.17,
+                     "duration_seconds":  2.4,
                      "error":  null
                  },
                  {
@@ -143,7 +143,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  3.45,
+                     "duration_seconds":  2.48,
                      "error":  null
                  },
                  {
@@ -156,7 +156,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.54,
+                     "duration_seconds":  1.36,
                      "error":  null
                  },
                  {
@@ -169,7 +169,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  2.22,
+                     "duration_seconds":  1.7,
                      "error":  null
                  },
                  {
@@ -182,7 +182,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.16,
+                     "duration_seconds":  0.97,
                      "error":  null
                  },
                  {
@@ -195,7 +195,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.42,
+                     "duration_seconds":  1.35,
                      "error":  null
                  },
                  {
@@ -208,7 +208,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.62,
+                     "duration_seconds":  1.58,
                      "error":  null
                  },
                  {
@@ -221,7 +221,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.52,
+                     "duration_seconds":  1.48,
                      "error":  null
                  },
                  {
@@ -234,7 +234,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.8,
+                     "duration_seconds":  1.43,
                      "error":  null
                  },
                  {
@@ -247,7 +247,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  2.17,
+                     "duration_seconds":  1.72,
                      "error":  null
                  },
                  {
@@ -260,7 +260,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  2.18,
+                     "duration_seconds":  2.4,
                      "error":  null
                  },
                  {
@@ -273,7 +273,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.8,
+                     "duration_seconds":  1.94,
                      "error":  null
                  },
                  {
@@ -286,7 +286,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.75,
+                     "duration_seconds":  1.63,
                      "error":  null
                  },
                  {
@@ -299,7 +299,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.9,
+                     "duration_seconds":  1.74,
                      "error":  null
                  },
                  {
@@ -312,7 +312,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.31,
+                     "duration_seconds":  1.28,
                      "error":  null
                  },
                  {
@@ -325,7 +325,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.39,
+                     "duration_seconds":  1.42,
                      "error":  null
                  },
                  {
@@ -338,7 +338,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.4,
+                     "duration_seconds":  1.52,
                      "error":  null
                  },
                  {
@@ -351,7 +351,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.48,
+                     "duration_seconds":  1.51,
                      "error":  null
                  },
                  {
@@ -364,7 +364,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.72,
+                     "duration_seconds":  1.59,
                      "error":  null
                  },
                  {
@@ -377,7 +377,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.85,
+                     "duration_seconds":  1.77,
                      "error":  null
                  },
                  {
@@ -390,7 +390,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  2.03,
+                     "duration_seconds":  1.68,
                      "error":  null
                  },
                  {
@@ -403,7 +403,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  2.04,
+                     "duration_seconds":  1.83,
                      "error":  null
                  },
                  {
@@ -416,7 +416,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.71,
+                     "duration_seconds":  1.64,
                      "error":  null
                  },
                  {
@@ -429,7 +429,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.8,
+                     "duration_seconds":  1.74,
                      "error":  null
                  },
                  {
@@ -442,7 +442,33 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.64,
+                     "duration_seconds":  1.68,
+                     "error":  null
+                 },
+                 {
+                     "order":  34,
+                     "step":  43,
+                     "domain":  "UX",
+                     "capability":  "Guided User Repair Experience Simplification",
+                     "strategic_asset":  "User Activation",
+                     "smoke_script":  "smoke-guided-user-repair-experience.ps1",
+                     "gate":  "release-blocking",
+                     "script_exists":  true,
+                     "status":  "passed",
+                     "duration_seconds":  0.53,
+                     "error":  null
+                 },
+                 {
+                     "order":  35,
+                     "step":  44,
+                     "domain":  "UX",
+                     "capability":  "Repair-First Offer Architecture \u0026 Replacement-Part Wizard",
+                     "strategic_asset":  "User Activation",
+                     "smoke_script":  "smoke-repair-first-offer-architecture.ps1",
+                     "gate":  "release-blocking",
+                     "script_exists":  true,
+                     "status":  "passed",
+                     "duration_seconds":  0.54,
                      "error":  null
                  }
              ]

@@ -822,3 +822,32 @@ scripts/smoke-guided-user-repair-experience.ps1
 ```
 
 The full CI suite now runs 34 smoke tests and the release evidence matrix includes Step 43 as a release-blocking user activation gate. This step does not remove governance modules; it reorganises them so the product is understandable before it is impressive.
+
+## Step 44 — FixPart Benchmark, Repair-First Offer Architecture & Replacement-Part Wizard v1
+
+Step 44 repositions the first-time user experience around the clearest commercial promise: the user does not need to know the spare-part code, catalogue category, material or CAD format. Re-born starts from the broken component and guides the user toward a replacement part.
+
+The public/user-facing flow is reduced to four visible steps:
+
+```text
+1. Problem
+2. Photos & files
+3. Generate part
+4. Quote
+```
+
+This step translates the FixPart benchmark into product strategy: existing spare-parts catalogues are strong when the user already knows the exact model/code; Re-born differentiates by starting earlier, identifying the part, checking whether it exists, and guiding generation/production when it does not.
+
+Updated prototype route:
+
+```text
+#/repair-guide
+```
+
+New smoke test:
+
+```text
+scripts/smoke-repair-first-offer-architecture.ps1
+```
+
+The full CI suite now runs 35 smoke tests and the release evidence matrix includes Step 44 as a release-blocking user activation and differentiation gate. This step does not add real AI/CAD generation yet; it makes the offer, navigation and demo flow understandable for non-expert users before deeper integrations are activated.

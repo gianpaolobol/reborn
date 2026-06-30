@@ -85,32 +85,31 @@ function layout(_title, body, opts = {}) {
 
 function stepper(active) {
   const userStepAliases = {
-    '/': 'repair-guide',
-    'home': 'repair-guide',
-    'repair-guide': 'repair-guide',
+    '/': 'start',
+    'home': 'start',
+    'repair-guide': 'start',
     'start': 'start',
     'capture': 'capture',
     'diagnosis': 'capture',
     'repair-paths': 'repair-paths',
     'part-detail': 'repair-paths',
+    'ai-generation': 'repair-paths',
     'provider-network': 'provider-network',
-    'checkout': 'checkout',
-    'fulfilment': 'checkout'
+    'checkout': 'provider-network',
+    'fulfilment': 'provider-network'
   };
   const normalized = userStepAliases[active] || active;
   const steps = [
-    ['repair-guide', '01', 'Guide'],
-    ['start', '02', 'Describe'],
-    ['capture', '03', 'Evidence'],
-    ['repair-paths', '04', 'Options'],
-    ['provider-network', '05', 'Quote'],
-    ['checkout', '06', 'Confirm']
+    ['start', '01', 'Problem'],
+    ['capture', '02', 'Photos'],
+    ['repair-paths', '03', 'Generate'],
+    ['provider-network', '04', 'Quote']
   ];
   const activeIndex = steps.findIndex(s => s[0] === normalized);
   if (activeIndex < 0) {
-    return html`<div class="advanced-mode-note"><strong>Advanced console</strong><span>This area is for operators, investors or governance review. The user repair flow stays in six visible steps.</span><a href="#/repair-guide">Back to guided repair</a></div>`;
+    return html`<div class="advanced-mode-note"><strong>Advanced console</strong><span>This area is for operators, investors or governance review. The user repair flow stays in four visible steps.</span><a href="#/repair-guide">Back to guided repair</a></div>`;
   }
-  return html`<div class="stepper simple-stepper" aria-label="Guided repair progress">
+  return html`<div class="stepper simple-stepper" aria-label="Guided replacement-part progress">
     ${steps.map((s, i) => `<div class="step ${i < activeIndex ? 'done' : ''} ${s[0] === normalized ? 'active' : ''}"><strong>${s[1]}</strong>${s[2]}</div>`).join('')}
   </div>`;
 }
@@ -399,37 +398,30 @@ function guidedJourneySteps() {
 
   return [
     {
-      id: 'describe',
-      title: 'Describe the broken object',
-      helper: repairCase ? `${repairCase.title || 'Repair case'} is saved.` : 'Tell Re-born what broke and what you want to recover.',
+      id: 'problem',
+      title: 'Tell us what broke',
+      helper: repairCase ? `${repairCase.title || 'Repair case'} is saved.` : 'One sentence is enough: object, broken part, desired function.',
       done: Boolean(repairCase),
       href: '#/start'
     },
     {
       id: 'evidence',
-      title: 'Add photos or a file',
-      helper: attachments.length ? `${attachments.length} evidence file(s) linked.` : 'Upload photos, dimensions, STL/STEP or a manual if you have one.',
+      title: 'Add one photo or file',
+      helper: attachments.length ? `${attachments.length} evidence file(s) linked.` : 'A phone photo is enough. STL/STEP files are optional.',
       done: attachments.length > 0,
       href: '#/capture'
     },
     {
-      id: 'diagnosis',
-      title: 'Get a first diagnosis',
-      helper: recognition ? 'Recognition completed. Re-born can now rank repair options.' : 'The system identifies object, damage and possible next action.',
-      done: Boolean(recognition),
-      href: '#/capture'
-    },
-    {
-      id: 'options',
-      title: 'Choose the safest repair path',
-      helper: decision ? 'Repair paths are ranked by feasibility, risk, price and time.' : 'Compare spare part, maker/CAD work, AI fallback or local provider.',
+      id: 'replacement',
+      title: 'Generate the replacement route',
+      helper: decision ? 'Re-born has ranked how to obtain the replacement part.' : recognition ? 'Diagnosis is ready. Generate the replacement route.' : 'Diagnosis and option ranking happen behind one simple action.',
       done: Boolean(decision),
       href: '#/repair-paths'
     },
     {
       id: 'quote',
-      title: 'Get a quote and proceed',
-      helper: quote ? 'A preliminary quote is available.' : providerMatch ? 'Providers are matched. Request a quote from the best fit.' : 'Re-born routes the case to suitable providers only after diagnosis.',
+      title: 'Get quote or production help',
+      helper: quote ? 'A preliminary quote is available.' : providerMatch || order ? 'Production routing is ready.' : 'Only after the part route is clear, ask for price and fulfilment.',
       done: Boolean(quote || order),
       href: providerMatch ? '#/provider-network' : '#/repair-paths'
     }
@@ -446,16 +438,25 @@ function nextGuidedAction() {
   const order = activeRepairOrder();
 
   if (S.api.status === 'live' && S.auth.status !== 'authenticated') {
-    return { label: 'Login to start a real repair', href: '#/login', note: 'Use a demo account, then return here.' };
+    return { label: 'Login to start', href: '#/login', note: 'Use a demo account, then return to the guided repair path.' };
   }
-  if (!repairCase) return { label: 'Start guided repair', href: '#/start', note: 'Step 1 of 5: describe the object.' };
-  if (!attachments.length) return { label: 'Add photos or files', href: '#/capture', note: 'Step 2 of 5: upload evidence.' };
-  if (!recognition) return { label: 'Run diagnosis', onclick: 'runAIRecognition()', note: 'Step 3 of 5: identify the object and damage.' };
-  if (!decision) return { label: 'Show repair options', onclick: 'runRepairPathDecision()', note: 'Step 4 of 5: compare repair paths.' };
-  if (!providerMatch) return { label: 'Find suitable providers', onclick: 'runProviderMatch()', note: 'Step 5 of 5: route the repair to a provider.' };
-  if (!quote) return { label: 'Request a quote', href: '#/provider-network', note: 'Choose a matched provider and request an estimate.' };
-  if (!order) return { label: 'Review quote and order', href: '#/checkout', note: 'Mock checkout only; no real payment is charged.' };
-  return { label: 'Track repair status', href: '#/fulfilment', note: 'Follow fulfilment, acceptance and proof-of-repair.' };
+  if (!repairCase) return { label: 'Start with the broken part', href: '#/start', note: 'Step 1 of 4: describe the object and the part to replace.' };
+  if (!attachments.length) return { label: 'Add photo or file', href: '#/capture', note: 'Step 2 of 4: one clear phone photo is enough to continue.' };
+  if (!recognition) return { label: 'Identify the part', onclick: 'runAIRecognition()', note: 'Step 3 of 4: Re-born identifies the part and damage before suggesting how to obtain it.' };
+  if (!decision) return { label: 'Generate replacement options', onclick: 'runRepairPathDecision()', note: 'Step 3 of 4: choose between existing spare, generated model, maker/CAD help or provider production.' };
+  if (!providerMatch) return { label: 'Find production help', onclick: 'runProviderMatch()', note: 'Step 4 of 4: route the replacement part to a suitable provider or maker.' };
+  if (!quote) return { label: 'Get a quote', href: '#/provider-network', note: 'Request a price only after the replacement route is clear.' };
+  if (!order) return { label: 'Confirm repair order', href: '#/checkout', note: 'Mock checkout only; no real payment is charged.' };
+  return { label: 'Track my repair', href: '#/fulfilment', note: 'Follow fulfilment, acceptance and proof-of-repair.' };
+}
+
+function replacementRouteCards() {
+  const cards = [
+    ['1', 'Find existing spare', 'If the correct spare part exists, Re-born should surface it first. This is the FixPart-style path.'],
+    ['2', 'Generate replacement part', 'If the part is unavailable, broken, obsolete or custom, Re-born helps recreate a model from photos, dimensions or uploaded CAD.'],
+    ['3', 'Send to maker/provider', 'If the user cannot produce it alone, Re-born routes the case to a trusted maker, print service or repair provider.']
+  ];
+  return `<div class="replacement-route-cards">${cards.map(([num, title, text]) => `<article class="replacement-route-card"><span>${safe(num)}</span><div><strong>${safe(title)}</strong><p>${safe(text)}</p></div></article>`).join('')}</div>`;
 }
 
 function primaryActionButton(action) {
@@ -486,27 +487,26 @@ function repairGuide() {
   setActiveNav('repair-guide');
   const action = nextGuidedAction();
   const repairCase = S.api.repairCase;
-  const p = getActiveProduct();
-  return layout('Guided repair', html`
-    <section class="guided-hero">
+  return layout('Generate replacement part', html`
+    <section class="guided-hero repair-first-hero">
       <div class="hero-panel stack">
-        <p class="eyebrow">Guided repair</p>
-        <h1>Make the object work again.</h1>
-        <p class="lead">A simple path for people who do not know what an STL, CAD file or provider workflow is. Re-born asks for the minimum information, explains the next step, and hides advanced governance until it is needed.</p>
+        <p class="eyebrow">Repair-first flow</p>
+        <h1>Generate the missing replacement part.</h1>
+        <p class="lead">For users who do not know the name, code, material or CAD format of a broken component. Start with one photo or a simple description: Re-born guides you toward the shortest path to a usable replacement.</p>
         <div class="actions guided-primary-action">
           ${primaryActionButton(action)}
-          <a class="btn secondary" href="#/advanced">Advanced/operator area</a>
+          <a class="btn secondary" href="#/start">I do not know the part name</a>
         </div>
         <p class="muted small">${safe(action.note)}</p>
       </div>
       <aside class="panel stack user-current-state">
         <p class="eyebrow">Current repair</p>
         <h2>${safe(repairCase?.title || 'No active repair yet')}</h2>
-        <p class="muted">${repairCase ? `${repairCase.category || 'repair case'} · ${String(repairCase.id || '').slice(0, 8)}` : 'Start with one broken object or one component. You can add photos, dimensions or a 3D/CAD file later.'}</p>
+        <p class="muted">${repairCase ? `${repairCase.category || 'repair case'} · ${String(repairCase.id || '').slice(0, 8)}` : 'You only need to know what should work again. Re-born will help identify the part, decide if it can be bought, generated or produced, and then quote it.'}</p>
         <div class="grid two">
-          ${metric(activeAttachments().length, 'Files')}
-          ${metric(activeRecognitionJob() ? 'Done' : 'Pending', 'Diagnosis')}
-          ${metric(activeRepairPathDecision() ? 'Ranked' : 'Pending', 'Options')}
+          ${metric(activeAttachments().length, 'Photos/files')}
+          ${metric(activeRecognitionJob() ? 'Identified' : 'Pending', 'Part')}
+          ${metric(activeRepairPathDecision() ? 'Ready' : 'Pending', 'Generation route')}
           ${metric(activeQuoteRequest() ? formatEuro(Number(activeQuoteRequest().quote_json?.total_cents || 0)) : 'Pending', 'Quote')}
         </div>
       </aside>
@@ -514,20 +514,20 @@ function repairGuide() {
 
     <section class="section grid two">
       <div class="panel stack">
-        <div class="section-head"><div><p class="eyebrow">Your path</p><h2>Five clear steps, one action at a time.</h2></div></div>
+        <div class="section-head"><div><p class="eyebrow">Your path</p><h2>Four steps. One main action at a time.</h2></div></div>
         ${guidedRepairProgress()}
       </div>
       <aside class="panel dark-panel stack">
-        <h3>What Re-born decides for you</h3>
-        <p class="muted">You do not need to choose between STL, AI, CAD, provider or maker workflows at the beginning. The system first understands the broken object, then recommends the safest path.</p>
-        ${badges([['repair-first', 'green'], ['no STL marketplace', 'blue'], ['human validation before production', 'orange']])}
+        <h3>What makes Re-born different from a spare-parts catalogue</h3>
+        <p class="muted">A catalogue works when you already know the exact part code. Re-born starts earlier: it helps identify the part, checks whether it exists, and if it does not, guides the generation or production of a replacement.</p>
+        ${badges([['photo-first', 'green'], ['generate if unavailable', 'orange'], ['quote after validation', 'blue']])}
       </aside>
     </section>
 
-    <section class="section panel stack simplified-note">
-      <h3>Plain-language promise</h3>
-      <p class="muted">Upload evidence only when useful. Generate a model only when an existing spare or verified model is not enough. Ask a provider only after the case is clear enough to quote. This keeps the experience linear for users and preserves the full governance layer for operators.</p>
-      <div class="actions"><a class="btn green" href="#/start">Describe my object</a><a class="btn secondary" href="#/public-pilot">Join the public pilot</a><a class="btn secondary" href="#/overview">Platform overview</a></div>
+    <section class="section panel stack repair-first-offer">
+      <div class="section-head"><div><p class="eyebrow">Offer architecture</p><h2>One problem, three possible outcomes.</h2></div><p class="muted">The user does not choose technology first. Re-born chooses the safest route after the evidence is clear.</p></div>
+      ${replacementRouteCards()}
+      <div class="actions"><a class="btn green" href="#/start">Start with one photo or description</a><a class="btn secondary" href="#/advanced">Advanced consoles</a></div>
     </section>
   `, { currentStep: 'repair-guide' });
 }
@@ -545,7 +545,7 @@ function advancedConsoleDirectory() {
     <section class="grid two advanced-directory">
       ${groups.map(([title, links]) => `<article class="panel stack"><h3>${safe(title)}</h3><div class="console-link-list">${links.map(([label, href]) => `<a href="${href}">${safe(label)}</a>`).join('')}</div></article>`).join('')}
     </section>
-    <section class="section panel stack"><h3>UX rule after Step 43</h3><p class="muted">New governance modules may still exist, but they must not add another primary navigation item unless a repair user needs it to complete the basic repair journey.</p><div class="actions"><a class="btn green" href="#/repair-guide">Back to guided repair</a><a class="btn secondary" href="#/overview">Platform overview</a></div></section>
+    <section class="section panel stack"><h3>UX rule after Step 44</h3><p class="muted">Governance modules may exist, but the first-time user must always see the repair-first flow: problem, photo, generate route, quote.</p><div class="actions"><a class="btn green" href="#/repair-guide">Back to guided repair</a><a class="btn secondary" href="#/overview">Platform overview</a></div></section>
   `);
 }
 
@@ -554,22 +554,22 @@ function start() {
   return layout('Start repair', html`
     <section class="hero">
       <form class="panel stack" onsubmit="submitIntakeFromPrototype(event)">
-        <p class="eyebrow">Step 1 of 5 · Describe</p>
-        <h2>Tell Re-born what is broken.</h2>
-        <p class="muted">Keep it simple: object, brand/model if known, what broke, and what should work again. You can add photos or files in the next step.</p>
+        <p class="eyebrow">Step 1 of 4 · Problem</p>
+        <h2>What part do you need to replace?</h2>
+        <p class="muted">Write only what you know. The part name and code are optional: Re-born can work from a plain description and a photo.</p>
         <div class="form-grid">
-          <div class="field"><label for="repairTitle">Object type</label><input id="repairTitle" name="title" value="Dishwasher basket wheel" /></div>
+          <div class="field"><label for="repairTitle">Object or broken part</label><input id="repairTitle" name="title" value="Dishwasher basket wheel" /></div>
           <div class="field"><label for="repairBrand">Brand / model if known</label><input id="repairBrand" name="brand" value="Bosch Series 4" /></div>
           <div class="field"><label for="repairCategory">Category</label><select id="repairCategory" name="category"><option value="home_appliance">Home appliance</option><option value="consumer_electronics">Consumer electronics</option><option value="furniture">Furniture</option><option value="mobility">Mobility</option><option value="sport">Sport</option><option value="tooling">Tooling</option><option value="generic">Generic</option></select></div>
-          <div class="field"><label for="repairUrgency">Repair urgency</label><select id="repairUrgency" name="urgency"><option>Fast, within 48 hours</option><option>Lowest cost</option><option>Best quality</option><option>Lowest environmental impact</option></select></div>
+          <div class="field"><label for="repairUrgency">What matters most</label><select id="repairUrgency" name="urgency"><option>Fast, within 48 hours</option><option>Lowest cost</option><option>Best quality</option><option>Lowest environmental impact</option></select></div>
         </div>
-        <div class="field"><label for="repairDescription">Description</label><textarea id="repairDescription" name="description">The lower basket wheel is broken. The dishwasher still works but the basket no longer slides correctly.</textarea></div>
-        <div class="actions"><button class="btn green" type="submit" ${S.busy ? 'disabled' : ''}>Save and continue</button><a class="btn secondary" href="#/repair-guide">Back to guided path</a></div>
+        <div class="field"><label for="repairDescription">What should work again?</label><textarea id="repairDescription" name="description">The lower basket wheel is broken. The dishwasher still works but the basket no longer slides correctly.</textarea></div>
+        <div class="actions"><button class="btn green" type="submit" ${S.busy ? 'disabled' : ''}>Continue to photos</button><a class="btn secondary" href="#/repair-guide">Back to guided path</a></div>
       </form>
       <aside class="panel dark-panel stack">
         <h3>Next step</h3>
-        <p class="muted">After saving the request, Re-born will ask for photos or files. You do not need to choose AI, maker, provider or STL now.</p>
-        ${badges([['POST /api/v1/repair-cases', 'green'], ['Domain event', 'blue'], ['Repair DNA draft', 'orange']])}
+        <p class="muted">Next, add one photo or file. Re-born will decide whether the replacement should be found, generated or sent to a maker/provider.</p>
+        ${badges([['No part code needed', 'green'], ['Photo-first', 'blue'], ['Generation route later', 'orange']])}
       </aside>
     </section>
   `, { currentStep: 'start' });
@@ -975,13 +975,13 @@ function repairPathDecisionPanel() {
   const decision = activeRepairPathDecision();
   const result = decision?.result_json;
   if (!decision || !result) {
-    return html`<div class="panel stack"><h3>Repair Path Decision Engine</h3><p class="muted">After AI recognition, ask Re-born to rank concrete repair paths by feasibility, cost, risk, ETA and learning value.</p><div class="actions"><button class="btn green" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Generate repair paths</button><a class="btn secondary" href="#/repair-paths">Open repair paths</a></div></div>`;
+    return html`<div class="panel stack"><h3>Repair Path Decision Engine</h3><p class="muted">After AI recognition, ask Re-born to rank concrete repair paths by feasibility, cost, risk, ETA and learning value.</p><div class="actions"><button class="btn green" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Generate replacement options</button><a class="btn secondary" href="#/repair-paths">Open repair paths</a></div></div>`;
   }
 
   const paths = Array.isArray(result.ranked_paths) ? result.ranked_paths : [];
   const top = paths[0] || {};
   return html`<div class="panel stack decision-result">
-    <div class="section-head"><div><p class="eyebrow">Decision Engine v1</p><h3>${safe(top.title || result.recommended_path || 'Recommended repair path')}</h3></div><span class="badge green">Score ${Math.round(Number(top.score || 0) * 100)}</span></div>
+    <div class="section-head"><div><p class="eyebrow">Step 3 of 4 · Replacement route</p><h3>${safe(top.title || result.recommended_path || 'Recommended repair path')}</h3></div><span class="badge green">Score ${Math.round(Number(top.score || 0) * 100)}</span></div>
     <p class="muted">Recommended path: <strong>${safe(result.recommended_path || 'review')}</strong>. Re-born ranked this as a repair action, not as a file purchase.</p>
     <div class="grid three">
       ${metric(result.decision_factors?.damage_type || 'unknown', 'Damage')}
@@ -1017,14 +1017,14 @@ function capture() {
 
   if (S.api.status !== 'live') {
     return layout('Upload repair evidence', html`
-      <section class="section-head"><div><p class="eyebrow">Step 11 · Mock fallback</p><h2>Upload photos for repair diagnosis</h2></div><p class="muted">Add photos, manuals or CAD files so Re-born can understand what needs to be repaired.</p></section>
+      <section class="section-head"><div><p class="eyebrow">Step 2 of 4 · Mock fallback</p><h2>Add evidence for replacement-part generation</h2></div><p class="muted">Add a photo, manual or CAD file so Re-born can identify the broken component and route it toward a replacement.</p></section>
       <section class="grid two">
         <div class="panel stack">
           <h3>Local prototype mode</h3>
-          <p class="muted">The backend is not live, so this screen shows the Step 11 flow with local staged files and a mock recognition result.</p>
+          <p class="muted">The backend is not live, so this screen shows the Step 2 of 4 flow with local staged files and a mock recognition result.</p>
           <input id="repairFileInput" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,.stl,.step,.stp,.obj" onchange="handleRepairFilesSelected(event)" />
           ${selectedFilePreview()}
-          <div class="actions"><button class="btn green" onclick="runMockRecognition()">Run mock AI recognition</button><a class="btn secondary" href="#/start">Back to intake</a></div>
+          <div class="actions"><button class="btn green" onclick="runMockRecognition()">Identify part in mock mode</button><a class="btn secondary" href="#/start">Back to intake</a></div>
         </div>
         <aside class="panel stack"><h3>Diagnosis timeline</h3>${diagnosisTimeline()}</aside>
       </section>
@@ -1041,10 +1041,10 @@ function capture() {
     return layout('Upload repair evidence', html`
       <section class="grid two">
         <div class="panel stack">
-          <p class="eyebrow">Step 11</p>
-          <h2>Upload photos for repair diagnosis</h2>
-          <p class="muted">Add photos, manuals or CAD files so Re-born can understand what needs to be repaired. First create a repair case so every file is linked to a real Repair Journey.</p>
-          <div class="actions"><button class="btn green" onclick="createDemoRepairCase()" ${S.busy ? 'disabled' : ''}>Create repair case</button><a class="btn secondary" href="#/start">Open intake form</a></div>
+          <p class="eyebrow">Step 2 of 4</p>
+          <h2>Add evidence for replacement-part generation</h2>
+          <p class="muted">Add a photo, manual or CAD file so Re-born can identify the broken component and route it toward a replacement. First create a repair request so every file is linked to the object you want to make functional again.</p>
+          <div class="actions"><button class="btn green" onclick="createDemoRepairCase()" ${S.busy ? 'disabled' : ''}>Start repair request</button><a class="btn secondary" href="#/start">Open intake form</a></div>
         </div>
         <aside class="panel dark-panel stack"><h3>Repair-first rule</h3><p class="muted">The upload is not a generic STL library. It is evidence for a real object that must return to function.</p>${badges([['Repair case required', 'green'], ['Attachment evidence', 'blue'], ['AI recognition', 'orange']])}</aside>
       </section>
@@ -1052,15 +1052,15 @@ function capture() {
   }
 
   return layout('Upload repair evidence', html`
-    <section class="section-head"><div><p class="eyebrow">Step 2 of 5 · Evidence</p><h2>Add photos, dimensions or files.</h2></div><p class="muted">Upload only what helps explain the broken part. A phone photo is enough to continue; CAD/STL/STEP files are optional.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 2 of 4 · Photo/file</p><h2>Add one clear photo or file.</h2></div><p class="muted">Do not worry about CAD formats. A phone photo is enough; STL/STEP is useful only if you already have it.</p></section>
     <section class="grid two">
       <div class="panel stack">
         <div class="notice"><strong>Active repair case</strong><span>${safe(repairCase.title)} · ${safe(repairCase.category)} · ${safe(String(repairCase.id).slice(0, 8))}</span></div>
         <div class="dropzone file-dropzone">
-          <div><div class="dropzone-icon">▣</div><h3>Select photos or files</h3><p class="muted">Best: 2–4 photos, one close-up, one full object, one size reference. Optional: PDF, STL, STEP, STP or OBJ.</p><input id="repairFileInput" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,.stl,.step,.stp,.obj" onchange="handleRepairFilesSelected(event)" /></div>
+          <div><div class="dropzone-icon">▣</div><h3>Select photos or files</h3><p class="muted">Best: one close-up, one full object, and a size reference. Optional: PDF, STL, STEP, STP or OBJ.</p><input id="repairFileInput" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,.stl,.step,.stp,.obj" onchange="handleRepairFilesSelected(event)" /></div>
         </div>
         ${selectedFilePreview()}
-        <div class="actions"><button class="btn green" onclick="uploadSelectedRepairFiles()" ${S.busy ? 'disabled' : ''}>Upload selected files</button><button class="btn orange" onclick="runAIRecognition()" ${S.busy || !activeAttachments().length ? 'disabled' : ''}>Run diagnosis</button><a class="btn secondary" href="#/repair-guide">Back to guide</a></div>
+        <div class="actions"><button class="btn green" onclick="uploadSelectedRepairFiles()" ${S.busy ? 'disabled' : ''}>Upload photo/file</button><button class="btn orange" onclick="runAIRecognition()" ${S.busy || !activeAttachments().length ? 'disabled' : ''}>Identify part</button><a class="btn secondary" href="#/repair-guide">Back to guide</a></div>
       </div>
       <aside class="panel stack">
         <h3>Uploaded attachments</h3>
@@ -1104,12 +1104,12 @@ function repairPaths() {
   const decision = activeRepairPathDecision();
   const decisionResult = decision?.result_json;
   return layout('Repair paths', html`
-    <section class="section-head"><div><p class="eyebrow">Decision Engine v1</p><h2>Choose the best way to make it work again.</h2></div><p class="muted">Re-born ranks options by feasibility, price, ETA, trust and learning value. It is ranking a repair journey, not a file catalogue.</p></section>
-    ${decisionResult ? `<section class="panel stack"><div class="section-head"><div><p class="eyebrow">Latest decision</p><h3>Recommended: ${safe(decisionResult.recommended_path)}</h3></div><span class="badge green">${safe(String((decisionResult.ranked_paths || []).length))} paths ranked</span></div><p class="muted">Decision ${safe(String(decision.id || '').slice(0, 8))} was generated from ${safe(decision.recognition_job_id ? 'AI recognition evidence' : 'repair case intake evidence')}.</p></section>` : `<section class="panel stack"><h3>Generate ranked repair paths</h3><p class="muted">Run the Step 12 Decision Engine after AI recognition to create persisted repair paths for the active case.</p><div class="actions"><button class="btn green" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Generate repair paths</button><a class="btn secondary" href="#/capture">Back to evidence</a></div></section>`}
+    <section class="section-head"><div><p class="eyebrow">Step 3 of 4 · Replacement route</p><h2>Choose how to get the replacement part.</h2></div><p class="muted">Re-born ranks the practical routes: buy an existing spare, generate a replacement model, involve a maker/CAD expert, or ask a provider to produce it.</p></section>
+    ${decisionResult ? `<section class="panel stack"><div class="section-head"><div><p class="eyebrow">Latest decision</p><h3>Recommended: ${safe(decisionResult.recommended_path)}</h3></div><span class="badge green">${safe(String((decisionResult.ranked_paths || []).length))} paths ranked</span></div><p class="muted">Decision ${safe(String(decision.id || '').slice(0, 8))} was generated from ${safe(decision.recognition_job_id ? 'AI recognition evidence' : 'repair case intake evidence')}.</p></section>` : `<section class="panel stack"><h3>Generate replacement options</h3><p class="muted">After the part is identified, Re-born creates a short list of practical ways to obtain a usable replacement.</p><div class="actions"><button class="btn green" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Generate replacement options</button><a class="btn secondary" href="#/capture">Back to evidence</a></div></section>`}
     <section class="grid three">
       ${paths.map(path => `<article class="card interactive ${S.selectedPath === path.id ? 'selected' : ''}" onclick="REBORN_STATE.set('selectedPath', '${safe(path.id)}'); toast('${safe(path.title)} selected.'); render();"><div class="section-head"><h3>${safe(path.title)}</h3><span class="badge ${path.id === 'find_provider' || path.id === 'print' || path.id === 'provider_assisted_repair' ? 'green' : path.id === 'generate_part' || path.id === 'ai' || path.id === 'ai_generated_cad' ? 'orange' : 'blue'}">Score ${safe(path.score)}</span></div><p class="muted">${safe(path.recommendation)}</p><table class="table"><tr><th>Cost</th><td>${safe(path.cost)}</td></tr><tr><th>ETA</th><td>${safe(path.eta)}</td></tr><tr><th>Impact</th><td>${safe(path.impact)}</td></tr></table></article>`).join('')}
     </section>
-    <section class="section panel stack"><h3>Recommended plan</h3><p class="muted">The MVP path should move from evidence to validation to fulfilment. Existing parts are preferred when verified; AI generation and maker work remain repair fallbacks with explicit validation.</p><div class="actions"><button class="btn green" onclick="runProviderMatch()" ${S.busy || !S.api.repairCase ? 'disabled' : ''}>Match providers</button><a class="btn secondary" href="#/part-detail">Continue with repair model</a><a class="btn secondary" href="#/ai-generation">Generate with AI instead</a><button class="btn secondary" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Re-run decision</button></div></section>
+    <section class="section panel stack"><h3>Next action</h3><p class="muted">Existing spare parts are checked first. If none is clear or available, Re-born moves toward generated model, maker/CAD help or provider production with validation before manufacturing.</p><div class="actions"><button class="btn green" onclick="runProviderMatch()" ${S.busy || !S.api.repairCase ? 'disabled' : ''}>Find production help</button><a class="btn secondary" href="#/capture">Back to photo/file</a></div></section>
   `, { currentStep: 'repair-paths' });
 }
 
@@ -1128,11 +1128,11 @@ function providerMatchPanel() {
   const context = match?.result_json?.repair_context;
   return html`<section class="grid two">
     <div class="panel stack">
-      <p class="eyebrow">Step 13 · Provider Match Engine</p>
-      <h2>Route the repair to the best fulfilment provider.</h2>
-      <p class="muted">Matching uses the active repair case, Step 12 decision and provider capabilities. It is not a generic print-service search.</p>
+      <p class="eyebrow">Production help</p>
+      <h2>Route the replacement part to the best maker or provider.</h2>
+      <p class="muted">Matching uses the broken part, selected route and provider capabilities. The user only sees a short list of suitable options.</p>
       ${context ? `<div class="notice"><strong>Repair context</strong><span>${safe(context.selected_path_title || context.recommended_path)} · ${formatEuro(Number(context.estimated_price_cents || 0))} · ${safe(String(context.estimated_days || '?'))} days baseline</span></div>` : '<p class="muted small">Run provider matching after repair paths have been ranked.</p>'}
-      <div class="actions"><button class="btn green" onclick="runProviderMatch()" ${S.busy || !S.api.repairCase ? 'disabled' : ''}>Match providers</button><a class="btn secondary" href="#/repair-paths">Back to repair paths</a></div>
+      <div class="actions"><button class="btn green" onclick="runProviderMatch()" ${S.busy || !S.api.repairCase ? 'disabled' : ''}>Find production help</button><a class="btn secondary" href="#/repair-paths">Back to repair paths</a></div>
     </div>
     <aside class="panel dark-panel stack">
       <h3>Quote Engine v1</h3>
@@ -1146,13 +1146,13 @@ function providerNetwork() {
   const providers = getActiveProviders();
   const match = activeProviderMatch();
   return layout('Providers', html`
-    <section class="section-head"><div><p class="eyebrow">Provider Match & Quote Engine v1</p><h2>Local providers ranked by trust and repair fit.</h2></div><p class="muted">Professional services and independent makers can both compete when quality, constraints and trust are explicit.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 4 of 4 · Quote and production</p><h2>Get a price or production help.</h2></div><p class="muted">Re-born now knows enough to route the replacement part to a maker, service or repair provider.</p></section>
     ${providerMatchPanel()}
     <section class="stack section">
       ${providers.map(p => `<article class="card provider-card interactive ${S.selectedProvider === p.name ? 'selected' : ''}" onclick="REBORN_STATE.set('selectedProvider', '${safe(p.name)}'); toast('${safe(p.name)} selected.'); render();"><div class="stack"><div><h3>${safe(p.name)}</h3><p class="muted">${safe(p.type)} · ${safe(p.distance)} · ${safe(p.jobs)} · ${safe(p.matchScore ? 'match score' : 'provider record')}</p></div>${badges([[`Rating ${p.rating}`, 'green'], [`Trust ${p.trust}`, 'blue'], [p.material, 'orange'], [p.eta, '']])}</div><div><div class="price">${safe(p.price)}</div><p class="muted small">estimated total</p><div class="actions"><button class="btn green" onclick="event.stopPropagation(); requestProviderQuote('${safe(p.providerId || p.id || p.name)}')" ${S.busy || !match ? 'disabled' : ''}>Request quote</button></div></div></article>`).join('')}
     </section>
-    <section class="section panel stack"><h3>Provider agreement preview</h3><p class="muted">Re-born collects a platform fee on every fulfilled repair. Provider receives clear model constraints, quality checks and delivery expectations before accepting.</p><div class="actions"><a class="btn green" href="#/checkout">Continue to repair order</a><a class="btn secondary" href="#/provider">Open provider view</a><button class="btn secondary" onclick="runProviderMatch()" ${S.busy || !S.api.repairCase ? 'disabled' : ''}>Re-run match</button></div></section>
-  `, { currentStep: 'repair-paths' });
+    <section class="section panel stack"><h3>What the provider receives</h3><p class="muted">The provider receives the photo/file evidence, replacement route, material constraints and quality checks before accepting.</p><div class="actions"><a class="btn green" href="#/checkout">Continue</a><button class="btn secondary" onclick="runProviderMatch()" ${S.busy || !S.api.repairCase ? 'disabled' : ''}>Re-run provider match</button></div></section>
+  `, { currentStep: 'provider-network' });
 }
 
 function checkout() {

@@ -169,6 +169,10 @@ return static function (Router $router, RepairController $repairController, Auth
                 'real_world_validation_cases',
                 'stakeholder_lead_scoring',
                 'public_pilot_audit',
+                'fixpart_benchmark_positioning',
+                'repair_first_offer_architecture',
+                'replacement_part_generation_wizard',
+                'four_step_user_repair_flow',
                 'domain_events',
             ],
         ], $request->requestId());
