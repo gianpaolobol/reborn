@@ -42,10 +42,14 @@ jobs:
 
       - name: Verify PHP runtime
         run: |
+          echo "Workflow runtime marker: STEP38_RUNTIME_SCRIPT_VERIFY_V4"
           php -v
           php -m | grep -Ei 'PDO|pdo_sqlite|sqlite3|fileinfo|json'
-          php -r 'foreach (["pdo","pdo_sqlite","sqlite3","fileinfo","json"] as $ext) { if (!extension_loaded($ext)) { fwrite(STDERR, "Missing extension: ".$ext.PHP_EOL); exit(1); } } echo "Required PHP extensions loaded".PHP_EOL;'
-          php -r '$pdo = new PDO("sqlite::memory:"); $pdo->exec("CREATE TABLE smoke_test (id INTEGER PRIMARY KEY, name TEXT)"); echo "SQLite PDO memory database ok".PHP_EOL;'
+          if grep -R "php -r" .github/workflows/smoke-tests.yml; then
+            echo "Inline php -r checks are forbidden in this workflow. Use scripts/ci-verify-runtime.php instead."
+            exit 1
+          fi
+          php scripts/ci-verify-runtime.php
 
       - name: Verify PowerShell runtime
         shell: pwsh

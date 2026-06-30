@@ -189,3 +189,8 @@ These artifacts identify whether the failure is a database seed issue, an API au
 The CI smoke suite performs a demo credential reset and verification immediately before executing the API smoke scripts. This is deliberately duplicated inside `scripts/ci-smoke-tests.ps1`, not only in the workflow YAML, so that manual invocations of the suite also get the same deterministic auth setup.
 
 `DEMO_AUTH_FALLBACK_ENABLED=true` is set only in `.env.ci.example`. Production environments must not enable this flag.
+
+
+### Runtime verification V4
+
+The CI runtime check now uses `scripts/ci-verify-runtime.php` instead of inline `php -r` commands. The workflow log must show `STEP38_RUNTIME_SCRIPT_VERIFY_V4`. If a run still fails with a PHP command-line parse error, the run is using an older workflow commit.

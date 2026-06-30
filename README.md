@@ -739,3 +739,8 @@ This step does not deploy Re-born. It adds repeatable verification so future ste
 ### CI auth hardening note
 
 The GitHub Actions smoke pipeline now resets and verifies the deterministic demo credentials inside `scripts/ci-smoke-tests.ps1` immediately before the full smoke suite. The CI environment also enables `DEMO_AUTH_FALLBACK_ENABLED=true` for the five demo accounts only; keep this disabled in production.
+
+
+### Runtime verification V4
+
+The CI runtime check now uses `scripts/ci-verify-runtime.php` instead of inline `php -r` commands. The workflow log must show `STEP38_RUNTIME_SCRIPT_VERIFY_V4`. If a run still fails with a PHP command-line parse error, the run is using an older workflow commit.

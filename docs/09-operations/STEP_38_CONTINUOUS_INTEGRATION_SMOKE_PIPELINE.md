@@ -160,3 +160,8 @@ The CI also runs `scripts/ci-api-auth-preflight.ps1` before the full smoke suite
 The CI now includes an additional guard against stale demo credentials before the smoke suite starts. In `APP_ENV=testing` with `DEMO_AUTH_FALLBACK_ENABLED=true`, only the five known demo accounts may use the deterministic demo password `password` if a legacy database still contains a stale hash. This fallback is intentionally scoped to CI/local demo accounts and must remain disabled in production.
 
 The smoke suite also runs `scripts/reset-demo-credentials.php` and `scripts/verify-demo-credentials.php` from inside `scripts/ci-smoke-tests.ps1` immediately before the first API login. If identity still fails, `storage/logs/ci-smoke-auth-guard-failure.json` and `storage/logs/ci-identity-login-failure.json` provide diagnostics.
+
+
+### Runtime verification V4
+
+The CI runtime check now uses `scripts/ci-verify-runtime.php` instead of inline `php -r` commands. The workflow log must show `STEP38_RUNTIME_SCRIPT_VERIFY_V4`. If a run still fails with a PHP command-line parse error, the run is using an older workflow commit.
