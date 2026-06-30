@@ -44,8 +44,8 @@ jobs:
         run: |
           php -v
           php -m | grep -Ei 'PDO|pdo_sqlite|sqlite3|fileinfo|json'
-          php -r "foreach (['pdo','pdo_sqlite','sqlite3','fileinfo','json'] as $ext) { if (!extension_loaded($ext)) { fwrite(STDERR, 'Missing extension: '.$ext.PHP_EOL); exit(1); } } echo 'Required PHP extensions loaded'.PHP_EOL;"
-          php -r "$pdo = new PDO('sqlite::memory:'); $pdo->exec('CREATE TABLE smoke_test (id INTEGER PRIMARY KEY, name TEXT)'); echo 'SQLite PDO memory database ok'.PHP_EOL;"
+          php -r 'foreach (["pdo","pdo_sqlite","sqlite3","fileinfo","json"] as $ext) { if (!extension_loaded($ext)) { fwrite(STDERR, "Missing extension: ".$ext.PHP_EOL); exit(1); } } echo "Required PHP extensions loaded".PHP_EOL;'
+          php -r '$pdo = new PDO("sqlite::memory:"); $pdo->exec("CREATE TABLE smoke_test (id INTEGER PRIMARY KEY, name TEXT)"); echo "SQLite PDO memory database ok".PHP_EOL;'
 
       - name: Verify PowerShell runtime
         shell: pwsh
@@ -106,7 +106,7 @@ jobs:
           echo "Identity smoke script head:"
           nl -ba scripts/smoke-identity-access.ps1 | sed -n '1,90p'
           echo "CI smoke script guard lines:"
-          grep -n "Outdated scripts/smoke-identity-access.ps1\|Invoke-CiPhpScript "scripts/reset-demo-credentials.php"\|CI smoke script version" scripts/ci-smoke-tests.ps1
+          grep -n 'Outdated scripts/smoke-identity-access.ps1\|Invoke-CiPhpScript "scripts/reset-demo-credentials.php"\|CI smoke script version' scripts/ci-smoke-tests.ps1
 
       - name: Verify API auth preflight
         shell: pwsh
