@@ -67,6 +67,7 @@ This file is uploaded by GitHub Actions as part of the `reborn-ci-release-eviden
 | 31 | 40 | Demo | Guided Repair Journey & Investor Walkthrough | `smoke-demo-walkthrough-investor-journey.ps1` | release-blocking |
 | 32 | 41 | Pilot | Demo Data Room, Pilot Launch Pack & Stakeholder Feedback Loop | `smoke-demo-data-room-pilot-feedback-loop.ps1` | release-blocking |
 | 33 | 42 | Pilot | Public Pilot Demo, Partner Intake & Real-World Validation | `smoke-public-pilot-real-world-validation.ps1` | release-blocking |
+| 34 | 43 | UX | Guided User Repair Experience Simplification | `smoke-guided-user-repair-experience.ps1` | release-blocking |
 
 ## Gate levels
 

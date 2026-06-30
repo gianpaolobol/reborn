@@ -799,3 +799,26 @@ powershell -ExecutionPolicy Bypass -File .\scripts\smoke-public-pilot-real-world
 ```
 
 The full CI suite now runs 33 smoke tests and the release evidence matrix includes Step 42 as a release-blocking real-world validation gate. This step does not approve production launch, provider activation, real payments, payouts, logistics, warranty terms or public success/sustainability claims. It collects external interest and converts it into governed pilot evidence.
+
+
+## Step 43 — Guided User Repair Experience Simplification v1
+
+Step 43 simplifies the prototype for first-time repair users. The default route now opens a guided repair experience at `#/repair-guide`, the top navigation is reduced to the essential user path, and advanced governance/investor/operator consoles are grouped under `#/advanced` instead of overwhelming the main journey.
+
+The Step 43 UX rule is: normal users get one linear repair path; operators still get full governance depth, but outside the primary navigation.
+
+New/updated prototype routes:
+
+```text
+#/repair-guide
+#/advanced
+#/overview
+```
+
+New smoke test:
+
+```text
+scripts/smoke-guided-user-repair-experience.ps1
+```
+
+The full CI suite now runs 34 smoke tests and the release evidence matrix includes Step 43 as a release-blocking user activation gate. This step does not remove governance modules; it reorganises them so the product is understandable before it is impressive.

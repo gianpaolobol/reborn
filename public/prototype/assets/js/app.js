@@ -84,42 +84,34 @@ function layout(_title, body, opts = {}) {
 }
 
 function stepper(active) {
+  const userStepAliases = {
+    '/': 'repair-guide',
+    'home': 'repair-guide',
+    'repair-guide': 'repair-guide',
+    'start': 'start',
+    'capture': 'capture',
+    'diagnosis': 'capture',
+    'repair-paths': 'repair-paths',
+    'part-detail': 'repair-paths',
+    'provider-network': 'provider-network',
+    'checkout': 'checkout',
+    'fulfilment': 'checkout'
+  };
+  const normalized = userStepAliases[active] || active;
   const steps = [
-    ['start', '01', 'Describe'],
-    ['capture', '02', 'Capture'],
-    ['diagnosis', '03', 'Diagnose'],
-    ['repair-paths', '04', 'Decide'],
-    ['checkout', '05', 'Order'],
-    ['fulfilment', '06', 'Fulfil'],
-    ['learning', '07', 'Learn'],
-    ['trust', '08', 'Trust'],
-    ['governance', '09', 'Govern'],
-    ['ops', '10', 'Ops'],
-    ['readiness', '11', 'Ready'],
-    ['observability', '12', 'Observe'],
-    ['incidents', '13', 'Respond'],
-    ['notifications', '14', 'Notify'],
-    ['service-governance', '15', 'SLA'],
-    ['privacy-governance', '16', 'Privacy'],
-    ['release-management', '17', 'Release'],
-    ['partner-onboarding', '18', 'Partners'],
-    ['marketplace-revenue', '19', 'Revenue'],
-    ['maker-economy', '20', 'Makers'],
-    ['ai-governance', '21', 'AI Gov'],
-    ['ai-provider-sandbox', '22', 'AI Ops'],
-    ['geometry-printability', '23', 'Geometry'],
-    ['provider-routing', '24', 'Routing'],
-    ['dispatch-governance', '25', 'Dispatch'],
-    ['customer-care', '26', 'Care'],
-    ['sustainability-impact', '27', 'Impact'],
-    ['investor-reporting', '28', 'Investor'],
-    ['demo-walkthrough', '29', 'Demo'],
-    ['pilot-launch', '30', 'Pilot'],
-    ['public-pilot', '31', 'Public']
+    ['repair-guide', '01', 'Guide'],
+    ['start', '02', 'Describe'],
+    ['capture', '03', 'Evidence'],
+    ['repair-paths', '04', 'Options'],
+    ['provider-network', '05', 'Quote'],
+    ['checkout', '06', 'Confirm']
   ];
-  const activeIndex = steps.findIndex(s => s[0] === active);
-  return html`<div class="stepper" aria-label="Repair journey progress">
-    ${steps.map((s, i) => `<div class="step ${i < activeIndex ? 'done' : ''} ${s[0] === active ? 'active' : ''}"><strong>${s[1]}</strong>${s[2]}</div>`).join('')}
+  const activeIndex = steps.findIndex(s => s[0] === normalized);
+  if (activeIndex < 0) {
+    return html`<div class="advanced-mode-note"><strong>Advanced console</strong><span>This area is for operators, investors or governance review. The user repair flow stays in six visible steps.</span><a href="#/repair-guide">Back to guided repair</a></div>`;
+  }
+  return html`<div class="stepper simple-stepper" aria-label="Guided repair progress">
+    ${steps.map((s, i) => `<div class="step ${i < activeIndex ? 'done' : ''} ${s[0] === normalized ? 'active' : ''}"><strong>${s[1]}</strong>${s[2]}</div>`).join('')}
   </div>`;
 }
 
@@ -351,8 +343,8 @@ function roleDashboardView(role) {
   `);
 }
 
-function home() {
-  setActiveNav('home');
+function platformOverview() {
+  setActiveNav('advanced');
   const p = getActiveProduct();
   const km = getKnowledgeMetrics();
   return layout('Home', html`
@@ -396,14 +388,175 @@ function home() {
   `);
 }
 
+function guidedJourneySteps() {
+  const repairCase = S.api.repairCase;
+  const attachments = activeAttachments();
+  const recognition = activeRecognitionJob();
+  const decision = activeRepairPathDecision();
+  const providerMatch = activeProviderMatch();
+  const quote = activeQuoteRequest();
+  const order = activeRepairOrder();
+
+  return [
+    {
+      id: 'describe',
+      title: 'Describe the broken object',
+      helper: repairCase ? `${repairCase.title || 'Repair case'} is saved.` : 'Tell Re-born what broke and what you want to recover.',
+      done: Boolean(repairCase),
+      href: '#/start'
+    },
+    {
+      id: 'evidence',
+      title: 'Add photos or a file',
+      helper: attachments.length ? `${attachments.length} evidence file(s) linked.` : 'Upload photos, dimensions, STL/STEP or a manual if you have one.',
+      done: attachments.length > 0,
+      href: '#/capture'
+    },
+    {
+      id: 'diagnosis',
+      title: 'Get a first diagnosis',
+      helper: recognition ? 'Recognition completed. Re-born can now rank repair options.' : 'The system identifies object, damage and possible next action.',
+      done: Boolean(recognition),
+      href: '#/capture'
+    },
+    {
+      id: 'options',
+      title: 'Choose the safest repair path',
+      helper: decision ? 'Repair paths are ranked by feasibility, risk, price and time.' : 'Compare spare part, maker/CAD work, AI fallback or local provider.',
+      done: Boolean(decision),
+      href: '#/repair-paths'
+    },
+    {
+      id: 'quote',
+      title: 'Get a quote and proceed',
+      helper: quote ? 'A preliminary quote is available.' : providerMatch ? 'Providers are matched. Request a quote from the best fit.' : 'Re-born routes the case to suitable providers only after diagnosis.',
+      done: Boolean(quote || order),
+      href: providerMatch ? '#/provider-network' : '#/repair-paths'
+    }
+  ];
+}
+
+function nextGuidedAction() {
+  const repairCase = S.api.repairCase;
+  const attachments = activeAttachments();
+  const recognition = activeRecognitionJob();
+  const decision = activeRepairPathDecision();
+  const providerMatch = activeProviderMatch();
+  const quote = activeQuoteRequest();
+  const order = activeRepairOrder();
+
+  if (S.api.status === 'live' && S.auth.status !== 'authenticated') {
+    return { label: 'Login to start a real repair', href: '#/login', note: 'Use a demo account, then return here.' };
+  }
+  if (!repairCase) return { label: 'Start guided repair', href: '#/start', note: 'Step 1 of 5: describe the object.' };
+  if (!attachments.length) return { label: 'Add photos or files', href: '#/capture', note: 'Step 2 of 5: upload evidence.' };
+  if (!recognition) return { label: 'Run diagnosis', onclick: 'runAIRecognition()', note: 'Step 3 of 5: identify the object and damage.' };
+  if (!decision) return { label: 'Show repair options', onclick: 'runRepairPathDecision()', note: 'Step 4 of 5: compare repair paths.' };
+  if (!providerMatch) return { label: 'Find suitable providers', onclick: 'runProviderMatch()', note: 'Step 5 of 5: route the repair to a provider.' };
+  if (!quote) return { label: 'Request a quote', href: '#/provider-network', note: 'Choose a matched provider and request an estimate.' };
+  if (!order) return { label: 'Review quote and order', href: '#/checkout', note: 'Mock checkout only; no real payment is charged.' };
+  return { label: 'Track repair status', href: '#/fulfilment', note: 'Follow fulfilment, acceptance and proof-of-repair.' };
+}
+
+function primaryActionButton(action) {
+  if (action.onclick) {
+    return `<button class="btn green large-cta" type="button" onclick="${action.onclick}" ${S.busy ? 'disabled' : ''}>${safe(action.label)}</button>`;
+  }
+  return `<a class="btn green large-cta" href="${safe(action.href)}">${safe(action.label)}</a>`;
+}
+
+function guidedRepairProgress() {
+  const steps = guidedJourneySteps();
+  const done = steps.filter(step => step.done).length;
+  const percent = Math.round((done / steps.length) * 100);
+  return html`<div class="guided-progress" aria-label="Guided repair progress">
+    <div class="guided-progress-head"><strong>${done}/${steps.length} completed</strong><span>${percent}%</span></div>
+    <div class="guided-progress-bar"><span style="width:${percent}%"></span></div>
+    <div class="guided-step-list">
+      ${steps.map((step, index) => `<a class="guided-step-card ${step.done ? 'done' : ''}" href="${step.href}"><span>${index + 1}</span><div><strong>${safe(step.title)}</strong><p>${safe(step.helper)}</p></div></a>`).join('')}
+    </div>
+  </div>`;
+}
+
+function home() {
+  return repairGuide();
+}
+
+function repairGuide() {
+  setActiveNav('repair-guide');
+  const action = nextGuidedAction();
+  const repairCase = S.api.repairCase;
+  const p = getActiveProduct();
+  return layout('Guided repair', html`
+    <section class="guided-hero">
+      <div class="hero-panel stack">
+        <p class="eyebrow">Guided repair</p>
+        <h1>Make the object work again.</h1>
+        <p class="lead">A simple path for people who do not know what an STL, CAD file or provider workflow is. Re-born asks for the minimum information, explains the next step, and hides advanced governance until it is needed.</p>
+        <div class="actions guided-primary-action">
+          ${primaryActionButton(action)}
+          <a class="btn secondary" href="#/advanced">Advanced/operator area</a>
+        </div>
+        <p class="muted small">${safe(action.note)}</p>
+      </div>
+      <aside class="panel stack user-current-state">
+        <p class="eyebrow">Current repair</p>
+        <h2>${safe(repairCase?.title || 'No active repair yet')}</h2>
+        <p class="muted">${repairCase ? `${repairCase.category || 'repair case'} · ${String(repairCase.id || '').slice(0, 8)}` : 'Start with one broken object or one component. You can add photos, dimensions or a 3D/CAD file later.'}</p>
+        <div class="grid two">
+          ${metric(activeAttachments().length, 'Files')}
+          ${metric(activeRecognitionJob() ? 'Done' : 'Pending', 'Diagnosis')}
+          ${metric(activeRepairPathDecision() ? 'Ranked' : 'Pending', 'Options')}
+          ${metric(activeQuoteRequest() ? formatEuro(Number(activeQuoteRequest().quote_json?.total_cents || 0)) : 'Pending', 'Quote')}
+        </div>
+      </aside>
+    </section>
+
+    <section class="section grid two">
+      <div class="panel stack">
+        <div class="section-head"><div><p class="eyebrow">Your path</p><h2>Five clear steps, one action at a time.</h2></div></div>
+        ${guidedRepairProgress()}
+      </div>
+      <aside class="panel dark-panel stack">
+        <h3>What Re-born decides for you</h3>
+        <p class="muted">You do not need to choose between STL, AI, CAD, provider or maker workflows at the beginning. The system first understands the broken object, then recommends the safest path.</p>
+        ${badges([['repair-first', 'green'], ['no STL marketplace', 'blue'], ['human validation before production', 'orange']])}
+      </aside>
+    </section>
+
+    <section class="section panel stack simplified-note">
+      <h3>Plain-language promise</h3>
+      <p class="muted">Upload evidence only when useful. Generate a model only when an existing spare or verified model is not enough. Ask a provider only after the case is clear enough to quote. This keeps the experience linear for users and preserves the full governance layer for operators.</p>
+      <div class="actions"><a class="btn green" href="#/start">Describe my object</a><a class="btn secondary" href="#/public-pilot">Join the public pilot</a><a class="btn secondary" href="#/overview">Platform overview</a></div>
+    </section>
+  `, { currentStep: 'repair-guide' });
+}
+
+function advancedConsoleDirectory() {
+  setActiveNav('advanced');
+  const groups = [
+    ['User journey', [['Describe', '#/start'], ['Photos & files', '#/capture'], ['Diagnosis', '#/diagnosis'], ['Repair options', '#/repair-paths'], ['Providers & quote', '#/provider-network'], ['Checkout', '#/checkout'], ['Fulfilment', '#/fulfilment']]],
+    ['Operations', [['Dashboard', '#/account'], ['Ops', '#/ops'], ['Readiness', '#/readiness'], ['Observability', '#/observability'], ['Incidents', '#/incidents'], ['Notifications', '#/notifications'], ['SLA', '#/service-governance'], ['Privacy', '#/privacy-governance']]],
+    ['Growth & pilot', [['Release', '#/release-management'], ['Partners', '#/partner-onboarding'], ['Revenue', '#/marketplace-revenue'], ['Maker economy', '#/maker-economy'], ['Investor', '#/investor-reporting'], ['Demo walkthrough', '#/demo-walkthrough'], ['Pilot launch', '#/pilot-launch'], ['Public pilot', '#/public-pilot']]],
+    ['Technical governance', [['AI governance', '#/ai-governance'], ['AI provider sandbox', '#/ai-provider-sandbox'], ['Geometry', '#/geometry-printability'], ['Provider routing', '#/provider-routing'], ['Dispatch', '#/dispatch-governance'], ['Customer care', '#/customer-care'], ['Sustainability', '#/sustainability-impact']]]
+  ];
+  return layout('Advanced consoles', html`
+    <section class="section-head"><div><p class="eyebrow">Advanced/operator area</p><h2>Power tools are grouped here instead of overwhelming the user journey.</h2></div><p class="muted">Use this directory for admin, investor, governance and pilot validation. First-time repair users should stay on the guided repair path.</p></section>
+    <section class="grid two advanced-directory">
+      ${groups.map(([title, links]) => `<article class="panel stack"><h3>${safe(title)}</h3><div class="console-link-list">${links.map(([label, href]) => `<a href="${href}">${safe(label)}</a>`).join('')}</div></article>`).join('')}
+    </section>
+    <section class="section panel stack"><h3>UX rule after Step 43</h3><p class="muted">New governance modules may still exist, but they must not add another primary navigation item unless a repair user needs it to complete the basic repair journey.</p><div class="actions"><a class="btn green" href="#/repair-guide">Back to guided repair</a><a class="btn secondary" href="#/overview">Platform overview</a></div></section>
+  `);
+}
+
 function start() {
   setActiveNav('start');
   return layout('Start repair', html`
     <section class="hero">
       <form class="panel stack" onsubmit="submitIntakeFromPrototype(event)">
-        <p class="eyebrow">Repair intake</p>
-        <h2>Tell Re-born what stopped working.</h2>
-        <p class="muted">This is not an STL upload form. It is a repair request that can create a live <code>repair_case</code> through the PHP API.</p>
+        <p class="eyebrow">Step 1 of 5 · Describe</p>
+        <h2>Tell Re-born what is broken.</h2>
+        <p class="muted">Keep it simple: object, brand/model if known, what broke, and what should work again. You can add photos or files in the next step.</p>
         <div class="form-grid">
           <div class="field"><label for="repairTitle">Object type</label><input id="repairTitle" name="title" value="Dishwasher basket wheel" /></div>
           <div class="field"><label for="repairBrand">Brand / model if known</label><input id="repairBrand" name="brand" value="Bosch Series 4" /></div>
@@ -411,11 +564,11 @@ function start() {
           <div class="field"><label for="repairUrgency">Repair urgency</label><select id="repairUrgency" name="urgency"><option>Fast, within 48 hours</option><option>Lowest cost</option><option>Best quality</option><option>Lowest environmental impact</option></select></div>
         </div>
         <div class="field"><label for="repairDescription">Description</label><textarea id="repairDescription" name="description">The lower basket wheel is broken. The dishwasher still works but the basket no longer slides correctly.</textarea></div>
-        <div class="actions"><button class="btn green" type="submit" ${S.busy ? 'disabled' : ''}>Create live repair case</button><a class="btn secondary" href="#/capture">Continue with mock flow</a></div>
+        <div class="actions"><button class="btn green" type="submit" ${S.busy ? 'disabled' : ''}>Save and continue</button><a class="btn secondary" href="#/repair-guide">Back to guided path</a></div>
       </form>
       <aside class="panel dark-panel stack">
-        <h3>What Re-born will do next</h3>
-        <p class="muted">Recognition Engine will identify the object, Knowledge Engine will search existing repair DNA, Decision Engine will rank options, Learning Engine will update the graph after completion.</p>
+        <h3>Next step</h3>
+        <p class="muted">After saving the request, Re-born will ask for photos or files. You do not need to choose AI, maker, provider or STL now.</p>
         ${badges([['POST /api/v1/repair-cases', 'green'], ['Domain event', 'blue'], ['Repair DNA draft', 'orange']])}
       </aside>
     </section>
@@ -860,7 +1013,7 @@ function diagnosisTimeline() {
 }
 
 function capture() {
-  setActiveNav('start');
+  setActiveNav('capture');
 
   if (S.api.status !== 'live') {
     return layout('Upload repair evidence', html`
@@ -899,15 +1052,15 @@ function capture() {
   }
 
   return layout('Upload repair evidence', html`
-    <section class="section-head"><div><p class="eyebrow">Step 11 · Repair evidence</p><h2>Upload photos for repair diagnosis</h2></div><p class="muted">Add photos, manuals or CAD files so Re-born can understand what needs to be repaired.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 2 of 5 · Evidence</p><h2>Add photos, dimensions or files.</h2></div><p class="muted">Upload only what helps explain the broken part. A phone photo is enough to continue; CAD/STL/STEP files are optional.</p></section>
     <section class="grid two">
       <div class="panel stack">
         <div class="notice"><strong>Active repair case</strong><span>${safe(repairCase.title)} · ${safe(repairCase.category)} · ${safe(String(repairCase.id).slice(0, 8))}</span></div>
         <div class="dropzone file-dropzone">
-          <div><div class="dropzone-icon">▣</div><h3>Select repair evidence</h3><p class="muted">JPEG, PNG, WebP, PDF, STL, STEP, STP or OBJ. MVP limit: 15 MB per file.</p><input id="repairFileInput" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,.stl,.step,.stp,.obj" onchange="handleRepairFilesSelected(event)" /></div>
+          <div><div class="dropzone-icon">▣</div><h3>Select photos or files</h3><p class="muted">Best: 2–4 photos, one close-up, one full object, one size reference. Optional: PDF, STL, STEP, STP or OBJ.</p><input id="repairFileInput" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,.stl,.step,.stp,.obj" onchange="handleRepairFilesSelected(event)" /></div>
         </div>
         ${selectedFilePreview()}
-        <div class="actions"><button class="btn green" onclick="uploadSelectedRepairFiles()" ${S.busy ? 'disabled' : ''}>Upload selected files</button><button class="btn orange" onclick="runAIRecognition()" ${S.busy || !activeAttachments().length ? 'disabled' : ''}>Run AI recognition</button><a class="btn secondary" href="#/start">Edit intake</a></div>
+        <div class="actions"><button class="btn green" onclick="uploadSelectedRepairFiles()" ${S.busy ? 'disabled' : ''}>Upload selected files</button><button class="btn orange" onclick="runAIRecognition()" ${S.busy || !activeAttachments().length ? 'disabled' : ''}>Run diagnosis</button><a class="btn secondary" href="#/repair-guide">Back to guide</a></div>
       </div>
       <aside class="panel stack">
         <h3>Uploaded attachments</h3>
@@ -923,6 +1076,7 @@ function capture() {
 }
 
 function diagnosis() {
+  setActiveNav('capture');
   const p = getActiveProduct();
   const km = getKnowledgeMetrics();
   return layout('Diagnosis', html`
@@ -945,6 +1099,7 @@ function diagnosis() {
 }
 
 function repairPaths() {
+  setActiveNav('repair-paths');
   const paths = getActiveRepairPaths();
   const decision = activeRepairPathDecision();
   const decisionResult = decision?.result_json;
@@ -1001,6 +1156,7 @@ function providerNetwork() {
 }
 
 function checkout() {
+  setActiveNav('provider-network');
   const p = getActiveProduct();
   const quote = activeQuoteRequest();
   const order = activeRepairOrder();
@@ -1030,6 +1186,7 @@ function checkout() {
 }
 
 function fulfilment() {
+  setActiveNav('provider-network');
   const order = activeRepairOrder();
   const intent = activePaymentIntent();
   const fulfilment = activeFulfilment();
@@ -3626,7 +3783,10 @@ async function approveInvestorReadiness(id) {
 }
 
 const routes = {
-  '/': home,
+  '/': repairGuide,
+  '/repair-guide': repairGuide,
+  '/overview': platformOverview,
+  '/advanced': advancedConsoleDirectory,
   '/start': start,
   '/capture': capture,
   '/diagnosis': diagnosis,
@@ -5012,6 +5172,8 @@ window.createDemoGeometryAsset = createDemoGeometryAsset;
 window.evaluateGeometryAsset = evaluateGeometryAsset;
 window.evaluateFirstGeometryAsset = evaluateFirstGeometryAsset;
 window.approveGeometryReview = approveGeometryReview;
+window.repairGuide = repairGuide;
+window.advancedConsoleDirectory = advancedConsoleDirectory;
 window.render = render;
 
 window.addEventListener('hashchange', render);

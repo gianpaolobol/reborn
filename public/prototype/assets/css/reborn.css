@@ -503,3 +503,112 @@ body.is-busy::after {
 .recognition-result .metric strong { font-size: 1.35rem; overflow-wrap: anywhere; }
 .diagnosis-timeline .timeline-row.done .timeline-content { border-left-color: var(--repair-green); }
 .diagnosis-timeline .timeline-row.done .timeline-time { color: #167243; font-weight: 800; }
+
+/* Step 43 — user-guided repair experience simplification */
+.topnav .advanced-link {
+  border: 1px solid var(--line);
+  background: rgba(17, 19, 21, .035);
+}
+.simple-stepper { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.advanced-mode-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 122, 26, .32);
+  border-left: 5px solid var(--safety-orange);
+  border-radius: var(--radius);
+  background: rgba(255, 122, 26, .08);
+}
+.advanced-mode-note strong { white-space: nowrap; }
+.advanced-mode-note span { color: var(--graphite-700); }
+.advanced-mode-note a { font-weight: 800; color: var(--graphite-950); }
+.guided-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr);
+  gap: 24px;
+  align-items: stretch;
+}
+.guided-primary-action .large-cta {
+  min-height: 52px;
+  padding-inline: 22px;
+  font-size: 1.02rem;
+}
+.user-current-state .metric strong { font-size: 1.38rem; }
+.guided-progress { display: grid; gap: 14px; }
+.guided-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--graphite-700);
+}
+.guided-progress-bar {
+  height: 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  background: white;
+}
+.guided-progress-bar span {
+  display: block;
+  height: 100%;
+  background: var(--repair-green);
+}
+.guided-step-list { display: grid; gap: 10px; }
+.guided-step-card {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  text-decoration: none;
+}
+.guided-step-card:hover { text-decoration: none; border-color: rgba(35, 100, 255, .38); }
+.guided-step-card > span {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(17, 19, 21, .08);
+  color: var(--graphite-700);
+  font-weight: 850;
+}
+.guided-step-card.done {
+  border-color: rgba(47, 191, 113, .42);
+  background: rgba(47, 191, 113, .07);
+}
+.guided-step-card.done > span {
+  background: var(--repair-green);
+  color: var(--graphite-950);
+}
+.guided-step-card p { color: var(--graphite-500); font-size: .9rem; margin-top: 3px; }
+.simplified-note { border-left: 5px solid var(--repair-green); }
+.console-link-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.console-link-list a {
+  display: block;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  font-weight: 750;
+}
+.console-link-list a:hover { text-decoration: none; border-color: rgba(35,100,255,.4); }
+.footer-links { justify-content: flex-end; }
+
+@media (max-width: 920px) {
+  .guided-hero { grid-template-columns: 1fr; }
+  .simple-stepper { grid-template-columns: 1fr; }
+  .advanced-mode-note { align-items: flex-start; flex-direction: column; }
+  .console-link-list { grid-template-columns: 1fr; }
+}
