@@ -6,7 +6,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-$CiSmokeSuiteVersion = "STEP48_6_CI_SMOKE_SUITE_WITH_PROVIDER_ROUTER_COMPATIBLE_STRUCTURAL_AI_SMOKES_V1"
+$CiSmokeSuiteVersion = "STEP49_CI_SMOKE_SUITE_WITH_LIVE_DEMO_WIZARD_AUTH_FIX_V1"
 Write-Host "CI smoke script version: $CiSmokeSuiteVersion" -ForegroundColor Magenta
 
 $env:REBORN_BASE_URL = $BaseUrl

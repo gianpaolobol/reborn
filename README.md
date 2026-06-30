@@ -1068,3 +1068,8 @@ The generic `smoke-repair-upload-recognition.ps1` test now submits `recognition_
 ### Step 48.6 — deterministic recognition for generic CI smoke tests
 
 Generic CI smoke tests that exercise upload, path-decision and provider/quote pipelines now pass `recognition_mode=deterministic_smoke` when creating recognition jobs. This keeps the CI suite deterministic and prevents live Gemini/OpenAI calls from causing timeout, quota or network failures. Real model quality is still validated separately with `scripts/debug-ai-vision-quality-live.ps1` using real images.
+
+
+## Step 49 — Live demo wizard auth fix
+
+The public repair wizard now signs in the safe demo repair user (`repair.user@reborn.local`) in the background before uploading photos when the backend is live. This prevents the one-button demo from silently falling back to mock recognition just because the browser session is unauthenticated. The automatic case category is now `generic`, which is accepted by the backend validator and can be refined by the live vision result.

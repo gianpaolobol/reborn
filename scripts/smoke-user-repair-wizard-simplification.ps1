@@ -71,4 +71,14 @@ foreach ($marker in @(".user-wizard-hero", ".single-primary-action", ".user-repa
     Ok "Step 46 CSS marker present: $marker"
 }
 
-Write-Host "Step 46 user repair wizard simplification smoke test passed." -ForegroundColor Green
+foreach ($marker in @(
+    "DEMO_REPAIR_USER",
+    "ensureWizardRepairUserSession",
+    "Accesso demo automatico",
+    "category: 'generic'"
+)) {
+    if ($appText -notlike "*$marker*") { Fail "Missing Step 49 live demo wizard marker: $marker" }
+    Ok "Step 49 live demo wizard marker present: $marker"
+}
+
+Write-Host "Step 46/49 user repair wizard simplification smoke test passed." -ForegroundColor Green

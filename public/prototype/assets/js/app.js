@@ -5,6 +5,9 @@ const menuButton = document.getElementById('menuButton');
 const D = window.REBORN_DATA;
 const S = window.REBORN_STATE;
 
+// Step 49: the public demo must not fall back to mock recognition just because the user has not logged in yet.
+// It signs in the safe demo repair user in the background, then uses the configured live vision provider.
+const DEMO_REPAIR_USER = { email: 'repair.user@reborn.local', password: 'password' };
 
 const REBORN_I18N = {
   it: {
@@ -4868,6 +4871,29 @@ async function uploadAndIdentifySelectedRepairFiles() {
   return uploadSelectedRepairFilesInternal({ autoIdentify: true });
 }
 
+
+async function ensureWizardRepairUserSession() {
+  if (S.auth.status === 'authenticated' && S.auth.user) return true;
+  if (S.api.status !== 'live' || !window.REBORN_API?.login) return false;
+
+  S.setApi({
+    status: 'live',
+    message: 'Accesso demo automatico per usare il riconoscimento AI live…',
+    lastError: null
+  });
+  render();
+
+  const payload = await window.REBORN_API.login(DEMO_REPAIR_USER.email, DEMO_REPAIR_USER.password);
+  const user = payload.user || (await window.REBORN_API.me().catch(() => ({ user: null }))).user;
+  S.setAuth({
+    status: 'authenticated',
+    user: user || { email: DEMO_REPAIR_USER.email, role: 'repair_user', name: 'Demo Repair User' },
+    tokenStored: Boolean(window.REBORN_API.getToken && window.REBORN_API.getToken()),
+    lastLoginAt: new Date().toISOString()
+  });
+  return true;
+}
+
 async function uploadSelectedRepairFilesInternal({ autoIdentify = false } = {}) {
   if (S.api.status !== 'live') {
     if (autoIdentify) runMockRecognition();
@@ -4877,12 +4903,23 @@ async function uploadSelectedRepairFilesInternal({ autoIdentify = false } = {}) 
 
   if (S.auth.status !== 'authenticated') {
     if (autoIdentify) {
-      runMockRecognition();
+      try {
+        const signedIn = await ensureWizardRepairUserSession();
+        if (!signedIn) {
+          throw new Error('Non è stato possibile avviare la sessione demo per il riconoscimento live.');
+        }
+      } catch (error) {
+        S.setApi({ status: 'error', message: `${t('loginRequiredUpload')}: ${error.message}`, lastError: error.message });
+        toast(`${t('loginRequiredUpload')}: ${error.message}`);
+        location.hash = '#/login';
+        render();
+        return;
+      }
+    } else {
+      toast(t('loginRequiredUpload'));
+      location.hash = '#/login';
       return;
     }
-    toast(t('loginRequiredUpload'));
-    location.hash = '#/login';
-    return;
   }
 
   let repairCase = S.api.repairCase;
@@ -4905,7 +4942,7 @@ async function uploadSelectedRepairFilesInternal({ autoIdentify = false } = {}) 
     if (!repairCase) {
       const created = await window.REBORN_API.createRepairCase({
         title: 'Richiesta ricambio da foto',
-        category: 'replacement_part',
+        category: 'generic',
         description: 'Richiesta guidata creata automaticamente dal wizard foto -> analisi -> ricambio. L’utente non conosce necessariamente il nome del pezzo.'
       });
       repairCase = created.repair_case;
