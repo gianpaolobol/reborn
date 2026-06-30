@@ -101,7 +101,8 @@ try {
 
     $app = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/assets/js/app.js" -UseBasicParsing -TimeoutSec 15
     $appText = [string]$app.Content
-    foreach ($marker in @("Primo sguardo AI", "Carica foto e identifica il pezzo", "Carica altre immagini", "pezzo riconosciuto", "servono altre immagini", "Testo letto nell’immagine", "Codice pezzo", "Dimensioni lette", "sourceImageLabel", "openRepairPhotoPicker", "handleRepairFilesSelectedAndIdentify", "language-switch", "syncStaticChromeLanguage")) {
+    # Keep markers ASCII-safe for Windows PowerShell 5.1 encoding behavior.
+    foreach ($marker in @("Primo sguardo AI", "Carica foto e identifica il pezzo", "Carica altre immagini", "pezzo riconosciuto", "servono altre immagini", "Testo letto nell", "Codice pezzo", "Dimensioni lette", "sourceImageLabel", "openRepairPhotoPicker", "handleRepairFilesSelectedAndIdentify", "language-switch", "syncStaticChromeLanguage")) {
         if ($appText -notlike "*$marker*") { Fail "Missing Step 45.4 prototype marker: $marker" }
         Ok "Prototype marker present: $marker"
     }

@@ -921,3 +921,35 @@ The debug script also accepts multiple image paths, for example:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\debug-ai-photo-recognition-live.ps1 -BaseUrl http://127.0.0.1:8080 -ImagePath "C:\foto\dettaglio.jpg","C:\foto\misure.jpg"
 ```
+
+## Step 46 — User Repair Wizard Simplification
+
+Step 46 refocuses the public prototype on a single non-technical journey:
+
+```text
+Foto -> Analisi -> Ricambio
+```
+
+The default user-facing route is now `#/repair-guide`, rendered by `userRepairWizard` in `public/prototype/assets/js/app.js`. Legacy first-run routes such as `#/start`, `#/capture`, `#/diagnosis`, `#/repair-paths` and `#/provider-network` are intentionally mapped back to the same simplified wizard so a base user is not exposed to provider routing, maker selection, governance, quote engines or admin console concepts.
+
+Visible UX rules:
+
+- Italian remains the default language, with `IT | EN` available.
+- The homepage/wizard shows one primary CTA at a time.
+- The user starts from one photo and does not need to know the part name.
+- AI output is normalized into two clear cases: `Pezzo riconosciuto` or `Servono altre immagini`.
+- Missing inputs are minimal and always include a `Non lo so` option.
+- Decision, provider matching and quote logic stay behind the scenes.
+- Advanced consoles remain available only from `#/advanced`.
+
+Run the dedicated smoke test after starting the PHP dev server:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-user-repair-wizard-simplification.ps1 -BaseUrl http://127.0.0.1:8080
+```
+
+The full CI suite now includes this Step 46 smoke script and the release evidence matrix has been extended to Step 46.
+
+### Step 46.1 smoke hotfix — PowerShell 5.1 encoding-safe marker
+
+The Step 45.4 AI photo recognition smoke test now checks the user-facing OCR label with the ASCII-safe partial marker `Testo letto nell` instead of a rigid typographic-apostrophe string. This preserves the UX copy `Testo letto nell’immagine` while avoiding Windows PowerShell 5.1 mojibake such as `nellâ€™immagine` during CI/local smoke execution.

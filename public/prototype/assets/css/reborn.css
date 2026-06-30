@@ -710,3 +710,162 @@ body.is-busy::after {
 .one-button-upload-panel .large-cta {
   letter-spacing: -.01em;
 }
+
+/* STEP 46 — User Repair Wizard Simplification */
+.user-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  color: var(--graphite-700);
+  font-size: .92rem;
+}
+.user-status > span { font-weight: 800; }
+.user-status.live > span::before { content: '● '; color: var(--repair-green); }
+.user-status.mock > span::before { content: '● '; color: var(--safety-orange); }
+.user-status.error > span::before { content: '● '; color: #c2410c; }
+.user-wizard-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
+  gap: clamp(18px, 4vw, 42px);
+  align-items: stretch;
+  padding: clamp(28px, 6vw, 72px);
+  border: 1px solid var(--line);
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at top left, rgba(46, 204, 113, .28), transparent 32%),
+    linear-gradient(135deg, #ffffff 0%, #f7f4ec 100%);
+  box-shadow: var(--shadow);
+}
+.user-wizard-hero.compact-help { grid-template-columns: 1fr; }
+.user-wizard-copy h1 {
+  max-width: 11ch;
+  margin: 0;
+  font-size: clamp(3rem, 9vw, 7rem);
+  line-height: .86;
+  letter-spacing: -.075em;
+}
+.user-wizard-copy .lead {
+  max-width: 720px;
+  margin-top: 18px;
+  font-size: clamp(1.18rem, 2vw, 1.55rem);
+}
+.single-primary-action {
+  display: flex;
+  margin-top: 28px;
+}
+.single-primary-action .large-cta {
+  min-height: 60px;
+  padding-inline: 26px;
+  font-size: 1.02rem;
+}
+.user-wizard-panel,
+.user-wizard-card {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, .88);
+  padding: clamp(18px, 3vw, 28px);
+}
+.user-repair-progress {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.user-repair-step {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  color: var(--graphite-500);
+}
+.user-repair-step strong {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--graphite-100);
+  color: var(--graphite-950);
+}
+.user-repair-step.active {
+  border-color: var(--graphite-950);
+  color: var(--graphite-950);
+  box-shadow: inset 0 0 0 1px var(--graphite-950);
+}
+.user-repair-step.done strong { background: var(--repair-green); }
+.user-wizard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, .55fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+.user-wizard-card h2 { margin-top: 0; }
+.result-card.recognized { border-color: rgba(46, 204, 113, .72); }
+.result-card.needs-more { border-color: rgba(245, 158, 11, .82); }
+.result-card.analyzing { background: linear-gradient(135deg, #ffffff, #eef6ff); }
+.simple-fact,
+.solution-block,
+.wizard-evidence {
+  display: grid;
+  gap: 4px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.simple-fact span,
+.solution-block strong,
+.wizard-evidence strong { color: var(--graphite-500); font-size: .88rem; }
+.simple-fact strong,
+.solution-block span,
+.wizard-evidence span { color: var(--graphite-950); }
+.user-next-action { margin-top: 12px; }
+.minimal-fields {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+.minimal-fields label {
+  display: grid;
+  gap: 6px;
+  font-weight: 800;
+}
+.minimal-fields input,
+.minimal-fields select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #fff;
+  color: var(--graphite-950);
+  font: inherit;
+}
+.background-card {
+  align-self: start;
+  background: var(--graphite-950);
+  color: var(--off-white);
+}
+.background-card .muted,
+.background-card p,
+.background-card a { color: rgba(255, 255, 255, .78); }
+.background-card a { font-weight: 900; }
+.solution-card .price { margin: 10px 0 16px; }
+.topnav a[data-nav="start"],
+.topnav a[data-nav="capture"],
+.topnav a[data-nav="repair-paths"],
+.topnav a[data-nav="provider-network"] { display: none; }
+@media (max-width: 860px) {
+  .user-wizard-hero,
+  .user-wizard-grid { grid-template-columns: 1fr; }
+  .user-wizard-copy h1 { max-width: 9ch; }
+  .single-primary-action .large-cta { width: 100%; justify-content: center; }
+  .user-status { align-items: flex-start; border-radius: 20px; flex-direction: column; }
+}

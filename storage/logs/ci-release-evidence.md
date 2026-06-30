@@ -1,13 +1,14 @@
 ﻿# Re-born CI Release Evidence
 
-Version: STEP44_RELEASE_EVIDENCE_WITH_REPAIR_FIRST_OFFER_ARCHITECTURE_V1
-Generated at: 2026-06-30T15:53:01.5052419Z
-Quality gate: **passed**
+Version: STEP46_USER_REPAIR_WIZARD_QUALITY_GATE_V1
+Generated at: 2026-06-30T18:35:00.3838177Z
+Quality gate: **failed**
 Smoke suite: **passed**
-Matrix rows: **35**
+Matrix rows: **37**
 
 ## Failed checks
-No failed checks.
+- all_matrix_results_present
+- all_release_blocking_gates_passed
 
 ## Files
 - `storage/logs/ci-smoke-results.json`

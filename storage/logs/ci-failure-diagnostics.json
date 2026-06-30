@@ -1,0 +1,643 @@
+﻿{
+    "failed_script":  "smoke-ai-photo-recognition-replacement-brief.ps1",
+    "failed_at":  "2026-06-30T18:28:29.8990022Z",
+    "error_message":  "Missing Step 45.4 prototype marker: Testo letto nellâ€™immagine",
+    "position":  "In C:\\REBORN\\REBORN\\scripts\\smoke-ai-photo-recognition-replacement-brief.ps1:9 car:27\r\n+ function Fail($message) { throw $message }\r\n+                           ~~~~~~~~~~~~~~",
+    "script_stack_trace":  "in Fail, C:\\REBORN\\REBORN\\scripts\\smoke-ai-photo-recognition-replacement-brief.ps1: riga 9\r\nin \u003cScriptBlock\u003e, C:\\REBORN\\REBORN\\scripts\\smoke-ai-photo-recognition-replacement-brief.ps1: riga 105\r\nin \u003cScriptBlock\u003e, C:\\REBORN\\REBORN\\scripts\\ci-smoke-tests.ps1: riga 218",
+    "readiness":  {
+                      "success":  true,
+                      "readiness":  {
+                                        "status":  "degraded",
+                                        "environment":  "development",
+                                        "generated_at":  "2026-06-30T18:28:29+00:00",
+                                        "checks":  {
+                                                       "database":  {
+                                                                        "status":  "ok",
+                                                                        "message":  "Database connection responds."
+                                                                    },
+                                                       "migrations":  {
+                                                                          "status":  "ok",
+                                                                          "executed_count":  34,
+                                                                          "latest":  "034_public_pilot_demo_partner_intake_validation.sql",
+                                                                          "message":  "All MVP hardening, governance, marketplace, maker economy, AI governance, geometry, routing, dispatch, customer care, sustainability, investor, demo, pilot launch and public pilot migrations are present."
+                                                                      },
+                                                       "storage":  {
+                                                                       "status":  "ok",
+                                                                       "paths":  {
+                                                                                     "storage":  {
+                                                                                                     "path":  "C:\\REBORN\\reborn/storage",
+                                                                                                     "writable":  true
+                                                                                                 },
+                                                                                     "logs":  {
+                                                                                                  "path":  "C:\\REBORN\\reborn/storage/logs",
+                                                                                                  "writable":  true
+                                                                                              },
+                                                                                     "uploads":  {
+                                                                                                     "path":  "C:\\REBORN\\reborn/storage/uploads",
+                                                                                                     "writable":  true
+                                                                                                 },
+                                                                                     "database":  {
+                                                                                                      "path":  "C:\\REBORN\\reborn/storage/database",
+                                                                                                      "writable":  true
+                                                                                                  }
+                                                                                 }
+                                                                   },
+                                                       "configuration":  {
+                                                                             "status":  "warn",
+                                                                             "app_env":  "development",
+                                                                             "app_debug":  true,
+                                                                             "warnings":  [
+                                                                                              "APP_ENV is not production; this is acceptable for local smoke tests."
+                                                                                          ]
+                                                                         },
+                                                       "security":  {
+                                                                        "status":  "ok",
+                                                                        "security_headers_enabled":  true,
+                                                                        "rate_limit_enabled":  true,
+                                                                        "rate_limit_max_requests":  240,
+                                                                        "rate_limit_window_seconds":  60
+                                                                    },
+                                                       "runtime":  {
+                                                                       "status":  "warn",
+                                                                       "php_version":  "8.4.22",
+                                                                       "required_extensions":  {
+                                                                                                   "pdo":  true,
+                                                                                                   "pdo_sqlite":  true,
+                                                                                                   "json":  true
+                                                                                               },
+                                                                       "optional_extensions":  {
+                                                                                                   "sqlite3":  true,
+                                                                                                   "fileinfo":  false
+                                                                                               },
+                                                                       "missing_required":  [
+
+                                                                                            ],
+                                                                       "missing_optional":  [
+                                                                                                "fileinfo"
+                                                                                            ],
+                                                                       "message":  "Runtime is usable, but one or more optional extensions should be enabled before production."
+                                                                   },
+                                                       "observability":  {
+                                                                             "status":  "ok",
+                                                                             "message":  "HTTP metrics recorder is available.",
+                                                                             "recorded_requests":  7866,
+                                                                             "last_request_at":  "2026-06-30T18:28:29+00:00"
+                                                                         },
+                                                       "backup":  {
+                                                                      "status":  "ok",
+                                                                      "message":  "At least one completed backup exists.",
+                                                                      "backup_dir":  "C:\\REBORN\\reborn/storage/backups",
+                                                                      "latest_completed_backup_at":  "2026-06-30T18:28:01+00:00"
+                                                                  },
+                                                       "incident_response":  {
+                                                                                 "status":  "ok",
+                                                                                 "message":  "Incident response tables are available.",
+                                                                                 "enabled_alert_rules":  4,
+                                                                                 "missing_tables":  [
+
+                                                                                                    ]
+                                                                             },
+                                                       "notification_center":  {
+                                                                                   "status":  "ok",
+                                                                                   "message":  "Notification and escalation tables are available.",
+                                                                                   "active_channels":  17,
+                                                                                   "enabled_notification_rules":  4,
+                                                                                   "enabled_escalation_policies":  4,
+                                                                                   "missing_tables":  [
+
+                                                                                                      ]
+                                                                               },
+                                                       "service_governance":  {
+                                                                                  "status":  "ok",
+                                                                                  "message":  "Service governance tables are available.",
+                                                                                  "enabled_sla_policies":  7,
+                                                                                  "operational_policies":  5,
+                                                                                  "missing_tables":  [
+
+                                                                                                     ]
+                                                                              },
+                                                       "privacy_governance":  {
+                                                                                  "status":  "ok",
+                                                                                  "message":  "Privacy, consent and data governance tables are available.",
+                                                                                  "privacy_notices":  3,
+                                                                                  "processing_records":  4,
+                                                                                  "enabled_retention_rules":  5,
+                                                                                  "missing_tables":  [
+
+                                                                                                     ]
+                                                                              },
+                                                       "release_management":  {
+                                                                                  "status":  "ok",
+                                                                                  "message":  "Release management and pilot readiness tables are available.",
+                                                                                  "enabled_or_beta_feature_flags":  6,
+                                                                                  "active_releases":  1,
+                                                                                  "pilot_cohorts":  3,
+                                                                                  "missing_tables":  [
+
+                                                                                                     ]
+                                                                              },
+                                                       "partner_onboarding":  {
+                                                                                  "status":  "ok",
+                                                                                  "message":  "Partner onboarding governance tables are available.",
+                                                                                  "partners":  13,
+                                                                                  "onboarding_tasks":  48,
+                                                                                  "agreements":  13,
+                                                                                  "missing_tables":  [
+
+                                                                                                     ]
+                                                                              },
+                                                       "marketplace_revenue":  {
+                                                                                   "status":  "ok",
+                                                                                   "message":  "Marketplace revenue, credits and payout governance tables are available.",
+                                                                                   "fee_policies":  3,
+                                                                                   "credit_accounts":  20,
+                                                                                   "payout_accounts":  12,
+                                                                                   "missing_tables":  [
+
+                                                                                                      ]
+                                                                               },
+                                                       "maker_economy":  {
+                                                                             "status":  "ok",
+                                                                             "message":  "Maker economy, model licensing and repair bounty governance tables are available.",
+                                                                             "maker_profiles":  10,
+                                                                             "model_assets":  10,
+                                                                             "model_licenses":  3,
+                                                                             "repair_bounties":  2,
+                                                                             "missing_tables":  [
+
+                                                                                                ]
+                                                                         },
+                                                       "ai_pipeline_governance":  {
+                                                                                      "status":  "ok",
+                                                                                      "message":  "AI pipeline governance, human review, dataset and safety rule tables are available.",
+                                                                                      "ai_model_providers":  3,
+                                                                                      "ai_pipeline_runs":  10,
+                                                                                      "ai_safety_rules":  3,
+                                                                                      "ai_dataset_items":  10,
+                                                                                      "missing_tables":  [
+
+                                                                                                         ]
+                                                                                  },
+                                                       "ai_provider_sandbox":  {
+                                                                                   "status":  "ok",
+                                                                                   "message":  "AI provider adapter sandbox and job orchestration tables are available. Missing provider secrets remain warnings while adapters are mock/sandbox only.",
+                                                                                   "sandbox_adapters":  4,
+                                                                                   "orchestration_jobs":  9,
+                                                                                   "missing_provider_secrets":  2,
+                                                                                   "missing_tables":  [
+
+                                                                                                      ]
+                                                                               },
+                                                       "geometry_printability":  {
+                                                                                     "status":  "ok",
+                                                                                     "message":  "CAD/geometry validation and printability governance tables are available. Real mesh/CAD kernel analysis remains out of scope for the local pilot.",
+                                                                                     "validation_profiles":  2,
+                                                                                     "printability_rules":  4,
+                                                                                     "geometry_assets":  9,
+                                                                                     "validation_runs":  8,
+                                                                                     "missing_tables":  [
+
+                                                                                                        ]
+                                                                                 },
+                                                       "provider_routing":  {
+                                                                                "status":  "ok",
+                                                                                "message":  "Provider capability, machine profile and fulfilment routing governance tables are available. Real capacity booking remains out of scope for the local pilot.",
+                                                                                "provider_capabilities":  3,
+                                                                                "machine_profiles":  4,
+                                                                                "routing_policies":  3,
+                                                                                "routing_requests":  9,
+                                                                                "missing_tables":  [
+
+                                                                                                   ]
+                                                                            },
+                                                       "dispatch_governance":  {
+                                                                                   "status":  "ok",
+                                                                                   "message":  "Dispatch, shipment tracking and proof-of-repair governance tables are available. Real courier booking and return logistics remain out of scope for the local pilot.",
+                                                                                   "dispatch_policies":  3,
+                                                                                   "dispatches":  8,
+                                                                                   "tracking_events":  24,
+                                                                                   "proof_of_repair_records":  8,
+                                                                                   "missing_tables":  [
+
+                                                                                                      ]
+                                                                               },
+                                                       "customer_care_governance":  {
+                                                                                        "status":  "ok",
+                                                                                        "message":  "Customer acceptance, warranty placeholder and post-repair support governance tables are available. Legal warranty terms, refunds and CRM integrations remain out of scope for the local pilot.",
+                                                                                        "acceptance_policies":  3,
+                                                                                        "warranty_policies":  2,
+                                                                                        "acceptance_records":  8,
+                                                                                        "support_tickets":  8,
+                                                                                        "missing_tables":  [
+
+                                                                                                           ]
+                                                                                    },
+                                                       "sustainability_impact":  {
+                                                                                     "status":  "ok",
+                                                                                     "message":  "Sustainability impact, circularity metrics and repair outcome intelligence tables are available. Public environmental claims remain out of scope until methodology is validated.",
+                                                                                     "sustainability_factors":  6,
+                                                                                     "repair_impact_records":  8,
+                                                                                     "circularity_snapshots":  8,
+                                                                                     "open_insights":  9,
+                                                                                     "missing_tables":  [
+
+                                                                                                        ]
+                                                                                 },
+                                                       "investor_reporting":  {
+                                                                                  "status":  "ok",
+                                                                                  "message":  "Investor demo KPI, narrative and board reporting governance tables are available. Metrics remain pilot/local evidence until externally validated.",
+                                                                                  "kpi_definitions":  6,
+                                                                                  "narrative_sections":  5,
+                                                                                  "readiness_reviews":  8,
+                                                                                  "missing_tables":  [
+
+                                                                                                     ]
+                                                                              },
+                                                       "demo_walkthrough":  {
+                                                                                "status":  "ok",
+                                                                                "message":  "Demo mode, guided repair journey and investor walkthrough tables are available. Demo output remains local/pilot evidence with explicit caveats.",
+                                                                                "active_modes":  2,
+                                                                                "active_steps":  8,
+                                                                                "readiness_reviews":  7,
+                                                                                "missing_tables":  [
+
+                                                                                                   ]
+                                                                            },
+                                                       "pilot_launch":  {
+                                                                            "status":  "ok",
+                                                                            "message":  "Demo data room, pilot launch checklist and stakeholder feedback loop tables are available. Pilot launch remains conditional until legal, provider, fulfilment and production readiness are validated.",
+                                                                            "ready_data_room_assets":  11,
+                                                                            "checklist_items":  6,
+                                                                            "feedback_loops":  8,
+                                                                            "go_no_go_decisions":  8,
+                                                                            "missing_tables":  [
+
+                                                                                               ]
+                                                                        },
+                                                       "public_pilot":  {
+                                                                            "status":  "ok",
+                                                                            "message":  "Public pilot demo, external stakeholder intake, lead scoring and real-world validation case tables are available. Public pilot remains controlled and caveated until legal, provider, payments, fulfilment and production readiness are validated.",
+                                                                            "active_public_pages":  3,
+                                                                            "intake_submissions":  8,
+                                                                            "validation_cases":  13,
+                                                                            "lead_scores":  8,
+                                                                            "missing_tables":  [
+
+                                                                                               ]
+                                                                        }
+                                                   }
+                                    },
+                      "meta":  {
+                                   "request_id":  "b646348c19a385e2"
+                               }
+                  },
+    "health":  {
+                   "success":  true,
+                   "status":  "ok",
+                   "service":  "Re-born Repair Intelligence API",
+                   "version":  "v1",
+                   "mission":  "Allow anyone to repair anything.",
+                   "capabilities":  [
+                                        "repair_case_intake",
+                                        "mock_diagnosis",
+                                        "repair_paths",
+                                        "provider_matching",
+                                        "knowledge_nodes",
+                                        "repair_attachments",
+                                        "identity_access_mvp",
+                                        "repair_case_ownership",
+                                        "role_dashboards",
+                                        "role_based_authorization",
+                                        "repair_uploads",
+                                        "ai_recognition_jobs",
+                                        "openai_photo_recognition_api",
+                                        "ai_replacement_part_brief",
+                                        "guided_missing_inputs",
+                                        "repair_path_decision_engine",
+                                        "provider_match_engine",
+                                        "provider_quote_engine",
+                                        "repair_order_engine",
+                                        "mock_payment_intents",
+                                        "repair_fulfilment_workflow",
+                                        "provider_acceptance",
+                                        "repair_completion_reports",
+                                        "repair_learning_events",
+                                        "knowledge_graph_feedback",
+                                        "trust_reviews",
+                                        "provider_quality_scoring",
+                                        "provider_trust_signals",
+                                        "provider_ranking_governance",
+                                        "marketplace_governance_actions",
+                                        "governance_audit",
+                                        "admin_operations_console",
+                                        "moderation_workflow",
+                                        "ops_review_queue",
+                                        "ops_escalations",
+                                        "ops_audit_log",
+                                        "production_readiness_hardening",
+                                        "security_headers",
+                                        "rate_limiting",
+                                        "readiness_checks",
+                                        "deploy_checklist",
+                                        "observability_dashboard",
+                                        "http_metrics",
+                                        "api_log_viewer",
+                                        "backup_automation",
+                                        "deployment_runbook",
+                                        "smoke_test_summary",
+                                        "incident_response",
+                                        "alert_rules",
+                                        "status_page",
+                                        "maintenance_windows",
+                                        "notification_center",
+                                        "notification_channels",
+                                        "notification_dispatch",
+                                        "escalation_policies",
+                                        "escalation_runs",
+                                        "service_governance",
+                                        "sla_policies",
+                                        "sla_evaluations",
+                                        "operational_policies",
+                                        "policy_attestations",
+                                        "privacy_governance",
+                                        "privacy_notices",
+                                        "consent_records",
+                                        "data_processing_records",
+                                        "retention_rules",
+                                        "data_subject_requests",
+                                        "data_exports",
+                                        "release_management",
+                                        "feature_flags",
+                                        "release_gates",
+                                        "beta_readiness",
+                                        "pilot_cohorts",
+                                        "pilot_participants",
+                                        "partner_onboarding",
+                                        "partner_accounts",
+                                        "partner_readiness",
+                                        "partner_agreements",
+                                        "partner_integrations",
+                                        "marketplace_revenue_governance",
+                                        "repair_credits",
+                                        "credit_ledger",
+                                        "payout_governance",
+                                        "fee_policies",
+                                        "maker_economy",
+                                        "maker_profiles",
+                                        "model_licensing",
+                                        "model_download_governance",
+                                        "maker_royalties",
+                                        "repair_bounties",
+                                        "bounty_submissions",
+                                        "ai_pipeline_governance",
+                                        "ai_model_providers",
+                                        "ai_human_review",
+                                        "ai_dataset_governance",
+                                        "ai_quality_evaluations",
+                                        "ai_provider_adapter_sandbox",
+                                        "ai_job_orchestration",
+                                        "ai_provider_cost_ledger",
+                                        "ai_artifact_stubs",
+                                        "cad_geometry_validation",
+                                        "printability_governance",
+                                        "geometry_human_review",
+                                        "provider_capability_governance",
+                                        "machine_profile_governance",
+                                        "provider_fulfilment_routing",
+                                        "routing_human_review",
+                                        "fulfilment_dispatch_governance",
+                                        "shipment_tracking_governance",
+                                        "proof_of_repair_governance",
+                                        "dispatch_human_review",
+                                        "customer_acceptance_governance",
+                                        "warranty_governance",
+                                        "post_repair_support",
+                                        "customer_feedback_loop",
+                                        "post_repair_human_review",
+                                        "sustainability_impact",
+                                        "circularity_metrics",
+                                        "repair_outcome_intelligence",
+                                        "impact_review_governance",
+                                        "investor_reporting",
+                                        "investor_kpi_snapshots",
+                                        "demo_narrative_sections",
+                                        "board_reports",
+                                        "board_report_evidence",
+                                        "investor_demo_readiness",
+                                        "demo_mode",
+                                        "guided_repair_journey",
+                                        "investor_walkthrough",
+                                        "demo_sessions",
+                                        "demo_feedback",
+                                        "demo_readiness_reviews",
+                                        "demo_data_room",
+                                        "pilot_launch_checklist",
+                                        "stakeholder_feedback_loop",
+                                        "post_demo_reports",
+                                        "pilot_go_no_go_decisions",
+                                        "public_pilot_demo",
+                                        "partner_provider_maker_intake",
+                                        "external_pilot_intake",
+                                        "real_world_validation_cases",
+                                        "stakeholder_lead_scoring",
+                                        "public_pilot_audit",
+                                        "fixpart_benchmark_positioning",
+                                        "repair_first_offer_architecture",
+                                        "replacement_part_generation_wizard",
+                                        "user_repair_wizard_simplification",
+                                        "decision_behind_the_scenes_wizard",
+                                        "one_primary_cta_user_flow",
+                                        "four_step_user_repair_flow",
+                                        "domain_events"
+                                    ],
+                   "meta":  {
+                                "request_id":  "3590b252eb88d77c"
+                            }
+               },
+    "server_log_tail":  [
+
+                        ],
+    "results_so_far":  [
+                           {
+                               "script":  "smoke-identity-access.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  0.86
+                           },
+                           {
+                               "script":  "smoke-ownership-dashboards.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.41
+                           },
+                           {
+                               "script":  "smoke-prototype-auth-ui.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  2.24
+                           },
+                           {
+                               "script":  "smoke-repair-upload-recognition.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.44
+                           },
+                           {
+                               "script":  "smoke-repair-path-decision.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.6
+                           },
+                           {
+                               "script":  "smoke-provider-match-quote.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.83
+                           },
+                           {
+                               "script":  "smoke-repair-order-payment-intent.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.79
+                           },
+                           {
+                               "script":  "smoke-repair-fulfilment-workflow.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  2.15
+                           },
+                           {
+                               "script":  "smoke-repair-completion-learning.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  2.6
+                           },
+                           {
+                               "script":  "smoke-provider-trust-quality.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  2.66
+                           },
+                           {
+                               "script":  "smoke-provider-ranking-governance.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.43
+                           },
+                           {
+                               "script":  "smoke-admin-ops-moderation.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.62
+                           },
+                           {
+                               "script":  "smoke-production-readiness.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.09
+                           },
+                           {
+                               "script":  "smoke-observability-ops.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.67
+                           },
+                           {
+                               "script":  "smoke-incident-response-status.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.61
+                           },
+                           {
+                               "script":  "smoke-notification-escalation.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.58
+                           },
+                           {
+                               "script":  "smoke-service-governance-sla.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.54
+                           },
+                           {
+                               "script":  "smoke-privacy-data-governance.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.9
+                           },
+                           {
+                               "script":  "smoke-beta-release-management.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  2.19
+                           },
+                           {
+                               "script":  "smoke-partner-onboarding-governance.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.94
+                           },
+                           {
+                               "script":  "smoke-marketplace-revenue-governance.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.76
+                           },
+                           {
+                               "script":  "smoke-maker-economy-governance.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.88
+                           },
+                           {
+                               "script":  "smoke-ai-pipeline-governance.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.41
+                           },
+                           {
+                               "script":  "smoke-ai-provider-sandbox-orchestration.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.53
+                           },
+                           {
+                               "script":  "smoke-geometry-printability-governance.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.47
+                           },
+                           {
+                               "script":  "smoke-provider-routing-governance.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.58
+                           },
+                           {
+                               "script":  "smoke-dispatch-proof-governance.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.78
+                           },
+                           {
+                               "script":  "smoke-customer-care-warranty-support.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.89
+                           },
+                           {
+                               "script":  "smoke-sustainability-impact-circularity.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.73
+                           },
+                           {
+                               "script":  "smoke-investor-reporting-board-readiness.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.84
+                           },
+                           {
+                               "script":  "smoke-demo-walkthrough-investor-journey.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.65
+                           },
+                           {
+                               "script":  "smoke-demo-data-room-pilot-feedback-loop.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  2.18
+                           },
+                           {
+                               "script":  "smoke-public-pilot-real-world-validation.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  1.84
+                           },
+                           {
+                               "script":  "smoke-guided-user-repair-experience.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  0.73
+                           },
+                           {
+                               "script":  "smoke-repair-first-offer-architecture.ps1",
+                               "status":  "passed",
+                               "duration_seconds":  0.83
+                           },
+                           {
+                               "script":  "smoke-ai-photo-recognition-replacement-brief.ps1",
+                               "status":  "failed",
+                               "duration_seconds":  0.87,
+                               "error":  "Missing Step 45.4 prototype marker: Testo letto nellâ€™immagine"
+                           }
+                       ]
+}

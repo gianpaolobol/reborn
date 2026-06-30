@@ -3,6 +3,14 @@ window.REBORN_STATE = {
   selectedProvider: 'Bologna 3D Lab',
   uploaded: false,
   selectedUploadFiles: [],
+  userRepairWizard: {
+    currentStep: 'photo',
+    uploadedImages: [],
+    recognitionResult: null,
+    missingInputs: [],
+    recommendedPath: null,
+    language: 'it'
+  },
   role: 'customer',
   busy: false,
   auth: {

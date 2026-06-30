@@ -7,9 +7,10 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-$Step45Version = "STEP45_7_CI_MARKER_COMPATIBILITY_QUALITY_GATE_HOTFIX_V1"
+$Step45Version = "STEP46_USER_REPAIR_WIZARD_QUALITY_GATE_V1"
 # Legacy workflow guard marker retained intentionally so GitHub Actions grep checks remain compatible after hotfixes.
 # STEP45_RELEASE_EVIDENCE_WITH_AI_PHOTO_RECOGNITION_V1
+# STEP46_RELEASE_EVIDENCE_WITH_USER_REPAIR_WIZARD_V1
 Write-Host "Release evidence script version: $Step45Version" -ForegroundColor Magenta
 
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
@@ -110,7 +111,8 @@ $RegressionMatrix = @(
     [ordered]@{ order = 33; step = 42; domain = "Pilot"; capability = "Public Pilot Demo, Partner Intake & Real-World Validation"; script = "smoke-public-pilot-real-world-validation.ps1"; gate = "release-blocking"; asset = "Real-World Validation" },
     [ordered]@{ order = 34; step = 43; domain = "UX"; capability = "Guided User Repair Experience Simplification"; script = "smoke-guided-user-repair-experience.ps1"; gate = "release-blocking"; asset = "User Activation" },
     [ordered]@{ order = 35; step = 44; domain = "UX"; capability = "Repair-First Offer Architecture & Replacement-Part Wizard"; script = "smoke-repair-first-offer-architecture.ps1"; gate = "release-blocking"; asset = "User Activation" },
-    [ordered]@{ order = 36; step = 45; domain = "AI / UX"; capability = "AI Photo Recognition & Replacement-Part Brief"; script = "smoke-ai-photo-recognition-replacement-brief.ps1"; gate = "release-blocking"; asset = "AI Learning" }
+    [ordered]@{ order = 36; step = 45; domain = "AI / UX"; capability = "AI Photo Recognition & Replacement-Part Brief"; script = "smoke-ai-photo-recognition-replacement-brief.ps1"; gate = "release-blocking"; asset = "AI Learning" },
+    [ordered]@{ order = 37; step = 46; domain = "UX"; capability = "User Repair Wizard Simplification"; script = "smoke-user-repair-wizard-simplification.ps1"; gate = "release-blocking"; asset = "User Activation" }
 )
 
 $SmokeSummary = $null
@@ -265,7 +267,7 @@ $markdown -join "`n" | Out-File -Encoding UTF8 $MarkdownSummaryPath
 
 if ($env:GITHUB_STEP_SUMMARY) {
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
-    Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Step 45 release quality gate"
+    Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Step 46 release quality gate"
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Quality gate: **$GateStatus**"
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
@@ -275,13 +277,13 @@ if ($env:GITHUB_STEP_SUMMARY) {
 }
 
 if ($GateStatus -eq "passed") {
-    Write-CiNotice "Release quality gate passed" "Step 45 release evidence generated and quality gate passed."
-    Write-Host "Step 45 release evidence generated. Quality gate passed." -ForegroundColor Green
+    Write-CiNotice "Release quality gate passed" "Step 46 release evidence generated and quality gate passed."
+    Write-Host "Step 46 release evidence generated. Quality gate passed." -ForegroundColor Green
     exit 0
 }
 
-Write-CiError "Release quality gate failed" "Step 45 quality gate failed. See storage/logs/ci-quality-gate.json."
-Write-Host "Step 45 release evidence generated. Quality gate failed." -ForegroundColor Red
+Write-CiError "Release quality gate failed" "Step 46 quality gate failed. See storage/logs/ci-quality-gate.json."
+Write-Host "Step 46 release evidence generated. Quality gate failed." -ForegroundColor Red
 if ($AllowFailedSuite) {
     exit 0
 }

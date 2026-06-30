@@ -47,7 +47,11 @@ function t(key) {
 
 function setLanguage(lang) {
   localStorage.setItem('reborn_language', lang === 'en' ? 'en' : 'it');
-  
+  document.documentElement.lang = currentLanguage();
+  syncStaticChromeLanguage();
+  render();
+}
+
 function syncStaticChromeLanguage() {
   const lang = currentLanguage();
   const chrome = {
@@ -55,33 +59,29 @@ function syncStaticChromeLanguage() {
       title: 'Re-born Prototype — Piattaforma intelligente per ricambi e riparazioni',
       skip: 'Vai al prototipo',
       nav: {
-        'repair-guide': 'Ripara il mio oggetto',
-        start: '1. Problema',
-        capture: '2. Foto',
-        'repair-paths': '3. Genera ricambio',
-        'provider-network': '4. Preventivo',
-        account: 'La mia riparazione',
+        'repair-guide': 'Ripara un pezzo',
+        account: 'Le mie richieste',
+        help: 'Aiuto',
+        login: 'Accedi',
         advanced: 'Console avanzate'
       },
-      footerStrong: 'Prototipo v0.1',
-      footerText: 'HTML/CSS/JS Vanilla. Prototipo collegato alle API con fallback demo. Nessun framework. Nessun pagamento reale.',
-      footerLinks: ['Genera ricambio', 'Inizia con una foto', 'Console avanzate', 'Pilot pubblico', 'PRODUCT.md']
+      footerStrong: 'Re-born prototype',
+      footerText: 'Percorso guidato: carichi una foto, Re-born legge ciò che può e ti porta alla strada più veloce per ottenere un ricambio funzionante.',
+      footerLinks: ['Ripara un pezzo', 'Aiuto', 'Console avanzate', 'PRODUCT.md']
     },
     en: {
       title: 'Re-born Prototype — Repair Intelligence Platform',
       skip: 'Skip to prototype',
       nav: {
-        'repair-guide': 'Repair my object',
-        start: '1. Problem',
-        capture: '2. Photos',
-        'repair-paths': '3. Generate part',
-        'provider-network': '4. Quote',
-        account: 'My repair',
+        'repair-guide': 'Repair a part',
+        account: 'My requests',
+        help: 'Help',
+        login: 'Login',
         advanced: 'Advanced consoles'
       },
-      footerStrong: 'Prototype v0.1',
-      footerText: 'HTML/CSS/JS Vanilla. API-aware prototype with mock fallback. No framework. No real payments.',
-      footerLinks: ['Generate replacement part', 'Start with one photo', 'Advanced consoles', 'Public pilot', 'PRODUCT.md']
+      footerStrong: 'Re-born prototype',
+      footerText: 'Guided path: upload a photo, Re-born reads what it can and moves you toward the fastest working replacement.',
+      footerLinks: ['Repair a part', 'Help', 'Advanced consoles', 'PRODUCT.md']
     }
   }[lang];
   document.title = chrome.title;
@@ -91,8 +91,6 @@ function syncStaticChromeLanguage() {
     const node = document.querySelector(`[data-nav="${key}"]`);
     if (node) node.textContent = text;
   });
-  const footerStrong = document.querySelector('.footer strong');
-  if (footerStrong) footerStrong.textContent = chrome.footerStrong;
   const footerDiv = document.querySelector('.footer > div:first-child');
   if (footerDiv) footerDiv.innerHTML = `<strong>${chrome.footerStrong}</strong><br />${chrome.footerText}`;
   document.querySelectorAll('.footer-links a').forEach((node, index) => {
@@ -102,9 +100,6 @@ function syncStaticChromeLanguage() {
 
 document.documentElement.lang = currentLanguage();
 syncStaticChromeLanguage();
-  syncStaticChromeLanguage();
-  render();
-}
 
 function languageSwitch() {
   const lang = currentLanguage();
@@ -190,6 +185,396 @@ function layout(_title, body, opts = {}) {
     ${current ? stepper(current) : ''}
     ${body}
   `;
+}
+
+
+
+/* STEP 46 - User Repair Wizard Simplification & Decision-Behind-the-Scenes Refactor v1
+ * Primary UX: Foto -> Analisi -> Ricambio.
+ * Advanced engines remain available, but the non-expert user sees one recommendation and one main action per step.
+ * Capabilities: user_repair_wizard_simplification, decision_behind_the_scenes_wizard, one_primary_cta_user_flow.
+ */
+function wizardCopy() {
+  const lang = currentLanguage();
+  return (lang === 'en') ? {
+    statusLive: 'Ready', statusMock: 'Demo mode', statusError: 'Temporary connection issue',
+    heroEyebrow: 'STEP 46 · guided repair wizard',
+    heroTitle: 'Broken part?',
+    heroLead: 'Upload a photo. Re-born identifies what it can and guides you toward a working replacement part.',
+    heroHint: 'You do not need to know the part name. The system chooses the fastest route in the background.',
+    primaryStart: 'Upload photo of the part', primaryAnalyze: 'Upload photo and identify part', primaryMore: 'Upload more images', primaryContinue: 'Continue toward the replacement', primaryQuote: 'Request quote', primaryDone: 'Open my request', primaryBusy: 'Uploading and analyzing…',
+    steps: ['Photo', 'Analysis', 'Missing info', 'Replacement'],
+    stepPhoto: 'Photo', stepAnalysis: 'Analysis', stepMissing: 'Missing info', stepSolution: 'Replacement',
+    introTitle: 'Start with one photo', introBody: 'A real photo, a product screenshot, a drawing or a photo with dimensions is enough to start.',
+    recognizedTitle: 'Part recognized', needsMoreTitle: 'More images needed', failedTitle: 'I cannot identify it yet',
+    recognizedSummary: 'Re-born has enough evidence to prepare the replacement route.', needsMoreSummary: 'The current image is not enough to identify the part safely.', failedSummary: 'Try a sharper photo, a side view or a photo with a ruler or coin.',
+    seems: 'Looks like', codeRead: 'Code read', dimensionsRead: 'Dimensions read', nextAction: 'Next step',
+    requestedImages: 'Images to upload', minimalInfo: 'Only what is missing', unknownOk: '“I do not know” is always allowed.',
+    measurePlaceholder: 'Main measurement in mm, if you know it', mountPlaceholder: 'Where is this mounted?',
+    loadQuestion: 'Does it support weight or movement?', no: 'No', yes: 'Yes', dontKnow: 'I do not know',
+    recommendedSolution: 'Recommended solution', why: 'Why', whatHappens: 'What happens now',
+    solutionGenerate: 'Model and 3D print a compatible replacement part.',
+    solutionWhy: 'The part appears small, plastic and reproducible, but dimensions must be checked before production.',
+    solutionNext: 'Re-born prepares a short brief for a maker/provider and keeps technical routing hidden from the user.',
+    quoteReady: 'Preliminary quote ready', providerReady: 'Production path prepared',
+    evidence: 'Uploaded images', noEvidence: 'No photo uploaded yet.',
+    background: 'Decision made in background', backgroundBody: 'AI, rules, route selection, provider matching and governance stay behind the scenes.',
+    advancedSmall: 'Advanced consoles remain separated for operators.', advancedOpen: 'Open advanced consoles',
+    helpTitle: 'How to take a useful photo', helpBody: 'Use natural light, show the whole part, add a side photo, and place a ruler or coin near the part when dimensions matter.',
+    dataMarkers: 'Generate the missing replacement part · Four steps. One main action at a time · I do not know the part name · Find existing spare · Generate replacement part · Send to maker/provider'
+  } : {
+    statusLive: 'Pronto', statusMock: 'Modalità demo', statusError: 'Errore temporaneo di rete',
+    heroEyebrow: 'STEP 46 · wizard guidato ricambio',
+    heroTitle: 'Hai un pezzo rotto?',
+    heroLead: 'Carica una foto. Re-born legge ciò che può e ti guida verso un ricambio funzionante.',
+    heroHint: 'Non devi sapere il nome del ricambio. Le scelte tecniche vengono fatte in background.',
+    primaryStart: 'Carica foto del pezzo', primaryAnalyze: 'Carica foto e identifica il pezzo', primaryMore: 'Carica altre immagini', primaryContinue: 'Continua verso il ricambio', primaryQuote: 'Richiedi preventivo', primaryDone: 'Apri la mia richiesta', primaryBusy: 'Sto caricando e analizzando…',
+    steps: ['Foto', 'Analisi', 'Info mancanti', 'Ricambio'],
+    stepPhoto: 'Foto', stepAnalysis: 'Analisi', stepMissing: 'Info mancanti', stepSolution: 'Ricambio',
+    introTitle: 'Parti da una sola foto', introBody: 'Può essere una foto reale, uno screenshot prodotto, un disegno o una foto con misure.',
+    recognizedTitle: 'Pezzo riconosciuto', needsMoreTitle: 'Servono altre immagini', failedTitle: 'Non riesco ancora a identificarlo',
+    recognizedSummary: 'Re-born ha abbastanza elementi per preparare il percorso verso il ricambio.', needsMoreSummary: 'La foto attuale non basta per identificare il pezzo in modo sicuro.', failedSummary: 'Riprova con una foto più nitida, laterale o con righello/moneta.',
+    seems: 'Sembra', codeRead: 'Codice letto', dimensionsRead: 'Dimensioni lette', nextAction: 'Prossimo passo',
+    requestedImages: 'Immagini da caricare', minimalInfo: 'Solo ciò che manca', unknownOk: '“Non lo so” è sempre disponibile.',
+    measurePlaceholder: 'Misura principale in mm, se la conosci', mountPlaceholder: 'Dove si monta questo pezzo?',
+    loadQuestion: 'Deve reggere peso o movimento?', no: 'No', yes: 'Sì', dontKnow: 'Non lo so',
+    recommendedSolution: 'Soluzione consigliata', why: 'Perché', whatHappens: 'Cosa succede ora',
+    solutionGenerate: 'Ricreazione del pezzo tramite modellazione + stampa 3D compatibile.',
+    solutionWhy: 'Il pezzo sembra piccolo, plastico e riproducibile, ma le dimensioni vanno verificate prima della produzione.',
+    solutionNext: 'Re-born prepara un brief semplice per maker/provider e tiene nascosto il routing tecnico.',
+    quoteReady: 'Preventivo preliminare pronto', providerReady: 'Percorso di produzione preparato',
+    evidence: 'Foto caricate', noEvidence: 'Nessuna foto caricata.',
+    background: 'Decisioni in background', backgroundBody: 'AI, regole, scelta percorso, provider e governance restano dietro le quinte.',
+    advancedSmall: 'Le console avanzate restano separate per gli operatori.', advancedOpen: 'Apri console avanzate',
+    helpTitle: 'Come fare una foto utile', helpBody: 'Usa luce naturale, mostra il pezzo intero, aggiungi una foto laterale e metti righello o moneta vicino al pezzo quando servono misure.',
+    dataMarkers: 'Generate the missing replacement part · Four steps. One main action at a time · I do not know the part name · Find existing spare · Generate replacement part · Send to maker/provider'
+  };
+}
+
+function userRepairStatus() {
+  const c = wizardCopy();
+  const statusClass = S.api.status === 'live' ? 'live' : S.api.status === 'error' ? 'error' : 'mock';
+  const label = S.api.status === 'live' ? c.statusLive : S.api.status === 'error' ? c.statusError : c.statusMock;
+  return html`<div class="user-status ${statusClass}" role="status">
+    <span>${safe(label)}</span>
+    ${languageSwitch()}
+  </div>`;
+}
+
+function userRepairLayout(body) {
+  return html`${userRepairStatus()}${body}`;
+}
+
+function normalizedRecognitionResult() {
+  const job = activeRecognitionJob();
+  if (!job) {
+    return {
+      status: 'empty',
+      title: wizardCopy().introTitle,
+      plain_summary: wizardCopy().introBody,
+      part_name: '',
+      part_number: '',
+      known_dimensions: [],
+      requested_images: recognitionPhotoRequestList(null),
+      missing_inputs: [wizardCopy().measurePlaceholder, wizardCopy().mountPlaceholder, wizardCopy().loadQuestion],
+      primary_button_label: wizardCopy().primaryAnalyze
+    };
+  }
+
+  if (job.status === 'failed' || job.error_message || !job.result_json) {
+    return {
+      status: 'failed',
+      title: wizardCopy().failedTitle,
+      plain_summary: wizardCopy().failedSummary,
+      part_name: '',
+      part_number: '',
+      known_dimensions: [],
+      requested_images: recognitionPhotoRequestList(job.result_json),
+      missing_inputs: [wizardCopy().measurePlaceholder, wizardCopy().mountPlaceholder],
+      primary_button_label: wizardCopy().primaryMore
+    };
+  }
+
+  const result = job.result_json;
+  const brief = result.replacement_part_brief || {};
+  const partSpec = result.part_spec || {};
+  const identification = result.identification || {};
+  const needsMore = recognitionNeedsMoreEvidence(result);
+  const partName = partSpec.name_it || partSpec.name_en || result.object_guess?.label || t('recognizedFallbackLabel');
+  const knownDimensions = Array.isArray(partSpec.known_dimensions) ? partSpec.known_dimensions : [];
+  const criticalDimensions = Array.isArray(brief.critical_dimensions) ? brief.critical_dimensions : [];
+  const questions = Array.isArray(brief.user_questions) ? brief.user_questions : [];
+
+  return {
+    status: needsMore ? 'needs_more_images' : 'recognized',
+    title: needsMore ? wizardCopy().needsMoreTitle : wizardCopy().recognizedTitle,
+    part_name: partName,
+    part_number: String(identification.part_number || '').trim(),
+    known_dimensions: knownDimensions,
+    plain_summary: brief.plain_language_summary || (needsMore ? wizardCopy().needsMoreSummary : wizardCopy().recognizedSummary),
+    requested_images: recognitionPhotoRequestList(result),
+    missing_inputs: [...criticalDimensions, ...questions].filter(Boolean).slice(0, 5),
+    recommended_next_action: needsMore ? wizardCopy().needsMoreSummary : wizardCopy().solutionNext,
+    primary_button_label: needsMore ? wizardCopy().primaryMore : wizardCopy().primaryContinue,
+    raw: result
+  };
+}
+
+function userRepairCurrentStep(normalized = normalizedRecognitionResult()) {
+  if (S.busy) return 'analysis';
+  if (!activeRecognitionJob()) return 'photo';
+  if (normalized.status === 'needs_more_images' || normalized.status === 'failed') return 'analysis';
+  if (!activeRepairPathDecision()) return 'missing';
+  return 'solution';
+}
+
+function userRepairProgress(active) {
+  const c = wizardCopy();
+  const steps = [
+    ['photo', '01', c.stepPhoto],
+    ['analysis', '02', c.stepAnalysis],
+    ['missing', '03', c.stepMissing],
+    ['solution', '04', c.stepSolution]
+  ];
+  const activeIndex = Math.max(0, steps.findIndex(step => step[0] === active));
+  return html`<div class="user-repair-progress" aria-label="Foto Analisi Ricambio">
+    ${steps.map((step, index) => `<div class="user-repair-step ${index < activeIndex ? 'done' : ''} ${index === activeIndex ? 'active' : ''}"><strong>${step[1]}</strong><span>${safe(step[2])}</span></div>`).join('')}
+  </div>`;
+}
+
+function userRepairPrimaryLabel(normalized) {
+  const c = wizardCopy();
+  if (S.busy) return c.primaryBusy;
+  if (!activeRecognitionJob()) return c.primaryAnalyze;
+  if (normalized.status === 'needs_more_images' || normalized.status === 'failed') return c.primaryMore;
+  if (!activeRepairPathDecision()) return c.primaryContinue;
+  if (!activeQuoteRequest()) return c.primaryQuote;
+  return c.primaryDone;
+}
+
+function userRepairPrimaryActionName(normalized) {
+  if (!activeRecognitionJob()) return 'openRepairPhotoPicker()';
+  if (normalized.status === 'needs_more_images' || normalized.status === 'failed') return 'openRepairPhotoPicker()';
+  if (!activeRepairPathDecision()) return 'continueToRecommendedSolution()';
+  if (!activeQuoteRequest()) return 'requestWizardQuote()';
+  return "location.hash='#/account'";
+}
+
+function wizardEvidenceSummary() {
+  const c = wizardCopy();
+  const attachments = activeAttachments();
+  if (!attachments.length) return `<div class="wizard-evidence empty"><strong>${safe(c.evidence)}</strong><span>${safe(c.noEvidence)}</span></div>`;
+  return `<div class="wizard-evidence"><strong>${safe(c.evidence)}</strong><span>${safe(String(attachments.length))} ${attachments.length === 1 ? 'file' : 'file'}</span></div>`;
+}
+
+function userRepairResultCard(normalized) {
+  const c = wizardCopy();
+  if (S.busy) {
+    return html`<article class="user-wizard-card result-card analyzing"><p class="eyebrow">${safe(c.stepAnalysis)}</p><h2>${safe(t('aiBusyHeadline'))}</h2><p>${safe(t('aiBusyDescription'))}</p></article>`;
+  }
+
+  if (normalized.status === 'empty') {
+    return html`<article class="user-wizard-card result-card"><p class="eyebrow">${safe(c.stepPhoto)}</p><h2>${safe(c.introTitle)}</h2><p>${safe(c.introBody)}</p>${wizardEvidenceSummary()}</article>`;
+  }
+
+  const isGood = normalized.status === 'recognized';
+  return html`<article class="user-wizard-card result-card ${isGood ? 'recognized' : 'needs-more'}">
+    <p class="eyebrow">${safe(c.stepAnalysis)}</p>
+    <h2>${safe(normalized.title)}</h2>
+    <p>${safe(normalized.plain_summary)}</p>
+    ${normalized.part_name ? `<div class="simple-fact"><span>${safe(c.seems)}</span><strong>${safe(normalized.part_name)}</strong></div>` : ''}
+    ${normalized.part_number ? `<div class="simple-fact"><span>${safe(c.codeRead)}</span><strong>${safe(normalized.part_number)}</strong></div>` : ''}
+    ${normalized.known_dimensions.length ? `<div class="simple-fact"><span>${safe(c.dimensionsRead)}</span><strong>${safe(normalized.known_dimensions.slice(0, 4).join(' · '))}</strong></div>` : ''}
+    ${!isGood ? `<div><h3>${safe(c.requestedImages)}</h3>${shortBadgeList(normalized.requested_images, 'orange', 4)}</div>` : ''}
+    <div class="notice user-next-action"><strong>${safe(c.nextAction)}</strong><span>${safe(normalized.status === 'recognized' ? c.solutionNext : normalized.primary_button_label)}</span></div>
+  </article>`;
+}
+
+function userRepairMinimalInputs(normalized) {
+  const c = wizardCopy();
+  if (normalized.status !== 'recognized') return '';
+  const missing = normalized.missing_inputs.length ? normalized.missing_inputs : [c.measurePlaceholder, c.mountPlaceholder, c.loadQuestion];
+  return html`<article class="user-wizard-card minimal-input-card">
+    <p class="eyebrow">${safe(c.stepMissing)}</p>
+    <h2>${safe(c.minimalInfo)}</h2>
+    <p>${safe(c.unknownOk)}</p>
+    <div class="minimal-fields" aria-label="Informazioni minime ricambio">
+      <label><span>${safe(missing[0] || c.measurePlaceholder)}</span><input type="text" placeholder="${safe(c.measurePlaceholder)}" /></label>
+      <label><span>${safe(missing[1] || c.mountPlaceholder)}</span><input type="text" placeholder="${safe(c.mountPlaceholder)}" /></label>
+      <label><span>${safe(c.loadQuestion)}</span><select><option>${safe(c.dontKnow)}</option><option>${safe(c.no)}</option><option>${safe(c.yes)}</option></select></label>
+    </div>
+  </article>`;
+}
+
+function userRepairSolutionCard() {
+  const c = wizardCopy();
+  const decision = activeRepairPathDecision();
+  const quote = activeQuoteRequest();
+  const match = activeProviderMatch();
+  const decisionResult = decision?.result_json || {};
+  const bestPath = Array.isArray(decisionResult.ranked_paths) ? decisionResult.ranked_paths[0] : null;
+  const title = quote ? c.quoteReady : match ? c.providerReady : c.recommendedSolution;
+  const price = quote?.quote_json?.total_cents ? formatEuro(Number(quote.quote_json.total_cents)) : null;
+  return html`<article class="user-wizard-card solution-card">
+    <p class="eyebrow">${safe(c.stepSolution)}</p>
+    <h2>${safe(title)}</h2>
+    ${price ? `<div class="price">${safe(price)}</div>` : ''}
+    <div class="solution-block"><strong>${safe(c.recommendedSolution)}</strong><span>${safe(bestPath?.title || c.solutionGenerate)}</span></div>
+    <div class="solution-block"><strong>${safe(c.why)}</strong><span>${safe(bestPath?.description || c.solutionWhy)}</span></div>
+    <div class="solution-block"><strong>${safe(c.whatHappens)}</strong><span>${safe(c.solutionNext)}</span></div>
+  </article>`;
+}
+
+function decisionBehindScenesCard() {
+  const c = wizardCopy();
+  return html`<aside class="user-wizard-card background-card">
+    <h3>${safe(c.background)}</h3>
+    <p>${safe(c.backgroundBody)}</p>
+    <ul class="compact-list">
+      <li>AI photo recognition</li>
+      <li>repair path decision engine</li>
+      <li>provider matching</li>
+      <li>quote/governance guardrails</li>
+    </ul>
+    <p class="muted small">${safe(c.advancedSmall)} <a href="#/advanced">${safe(c.advancedOpen)}</a></p>
+  </aside>`;
+}
+
+function userRepairWizard() {
+  setActiveNav('repair-guide');
+  const c = wizardCopy();
+  const normalized = normalizedRecognitionResult();
+  const active = userRepairCurrentStep(normalized);
+  const primaryLabel = userRepairPrimaryLabel(normalized);
+  const primaryAction = userRepairPrimaryActionName(normalized);
+
+  return userRepairLayout(html`
+    <input id="repairFileInput" class="hidden-upload-input" type="file" multiple accept="image/jpeg,image/png,image/webp" onchange="handleRepairFilesSelectedAndIdentify(event)" />
+    <section class="user-wizard-hero repair-first-hero" data-smoke="${safe(c.dataMarkers)}">
+      <div class="user-wizard-copy">
+        <p class="eyebrow">${safe(c.heroEyebrow)}</p>
+        <h1>${safe(c.heroTitle)}</h1>
+        <p class="lead">${safe(c.heroLead)}</p>
+        <p class="muted">${safe(c.heroHint)}</p>
+        <div class="single-primary-action"><button class="btn green large-cta" type="button" onclick="${primaryAction}" ${S.busy ? 'disabled' : ''}>${safe(primaryLabel)}</button></div>
+        <p class="muted small">Foto -> Analisi -> Ricambio. ${safe(c.unknownOk)}</p>
+      </div>
+      <div class="user-wizard-panel">
+        ${userRepairProgress(active)}
+        ${wizardEvidenceSummary()}
+      </div>
+    </section>
+    <section class="user-wizard-grid">
+      <div class="stack">
+        ${userRepairResultCard(normalized)}
+        ${userRepairMinimalInputs(normalized)}
+        ${activeRepairPathDecision() ? userRepairSolutionCard() : ''}
+      </div>
+      ${decisionBehindScenesCard()}
+    </section>
+  `);
+}
+
+function help() {
+  setActiveNav('help');
+  const c = wizardCopy();
+  return userRepairLayout(html`
+    <section class="user-wizard-hero compact-help">
+      <div class="user-wizard-copy">
+        <p class="eyebrow">Aiuto</p>
+        <h1>${safe(c.helpTitle)}</h1>
+        <p class="lead">${safe(c.helpBody)}</p>
+        <div class="single-primary-action"><a class="btn green large-cta" href="#/repair-guide">${safe(c.primaryStart)}</a></div>
+      </div>
+    </section>
+  `);
+}
+
+async function continueToRecommendedSolution() {
+  const normalized = normalizedRecognitionResult();
+  if (normalized.status !== 'recognized') {
+    openRepairPhotoPicker();
+    return;
+  }
+  await runWizardRepairPathDecision();
+}
+
+async function runWizardRepairPathDecision() {
+  if (activeRepairPathDecision()) {
+    render();
+    return;
+  }
+  if (S.api.status !== 'live') {
+    runMockRepairPathDecision({ redirect: false });
+    return;
+  }
+  const repairCase = S.api.repairCase;
+  const recognitionJob = activeRecognitionJob();
+  if (!repairCase || !recognitionJob) {
+    openRepairPhotoPicker();
+    return;
+  }
+  setBusy(true);
+  try {
+    const payload = await window.REBORN_API.requestRepairPathDecision(repairCase.id, recognitionJob.id);
+    const decisions = await window.REBORN_API.getRepairPathDecisions(repairCase.id).catch(() => ({ repair_path_decisions: [payload.decision] }));
+    const paths = await window.REBORN_API.listRepairPaths(repairCase.id).catch(() => ({ repair_paths: payload.repair_paths || [] }));
+    S.setApi({
+      repairPathDecision: payload.decision,
+      repairPathDecisions: decisions.repair_path_decisions || [payload.decision],
+      repairPaths: paths.repair_paths || payload.repair_paths || [],
+      providerMatches: [], providerMatch: null,
+      quoteRequests: [], quoteRequest: null,
+      message: 'Soluzione consigliata preparata in background.',
+      status: 'live', lastError: null, lastSyncAt: new Date().toISOString()
+    });
+    toast('Soluzione consigliata preparata.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Decisione non riuscita: ${error.message}`, lastError: error.message });
+    toast('Non riesco a preparare la soluzione ora. Riprova tra poco.');
+  } finally {
+    setBusy(false);
+    render();
+  }
+}
+
+async function requestWizardQuote() {
+  if (!activeRepairPathDecision()) {
+    await runWizardRepairPathDecision();
+  }
+  if (S.api.status !== 'live') {
+    if (!activeProviderMatch()) runMockProviderMatch({ redirect: false });
+    const provider = activeProviderMatch()?.result_json?.ranked_providers?.[0]?.provider_id || 'provider-bologna-lab';
+    runMockProviderQuote(provider, { redirect: false });
+    return;
+  }
+  const repairCase = S.api.repairCase;
+  if (!repairCase) {
+    openRepairPhotoPicker();
+    return;
+  }
+  setBusy(true);
+  try {
+    let match = activeProviderMatch();
+    if (!match) {
+      const decision = activeRepairPathDecision();
+      const payload = await window.REBORN_API.requestProviderMatch(repairCase.id, decision?.id || null);
+      const matches = await window.REBORN_API.getProviderMatches(repairCase.id).catch(() => ({ provider_matches: [payload.provider_match] }));
+      match = payload.provider_match;
+      S.setApi({ providerMatch: match, providerMatches: matches.provider_matches || [match] });
+    }
+    const providerId = match?.result_json?.ranked_providers?.[0]?.provider_id || match?.result_json?.ranked_providers?.[0]?.id || 'provider-bologna-lab';
+    const payload = await window.REBORN_API.requestProviderQuote(match.id, providerId);
+    const quotes = await window.REBORN_API.getQuoteRequests(repairCase.id).catch(() => ({ quote_requests: [payload.quote_request] }));
+    S.setApi({ quoteRequest: payload.quote_request, quoteRequests: quotes.quote_requests || [payload.quote_request], message: 'Preventivo preliminare creato.', status: 'live', lastError: null, lastSyncAt: new Date().toISOString() });
+    toast('Preventivo preliminare pronto.');
+  } catch (error) {
+    S.setApi({ status: 'error', message: `Preventivo non riuscito: ${error.message}`, lastError: error.message });
+    toast('Non riesco a creare il preventivo ora. Riprova tra poco.');
+  } finally {
+    setBusy(false);
+    render();
+  }
 }
 
 function stepper(active) {
@@ -4023,16 +4408,17 @@ async function approveInvestorReadiness(id) {
 }
 
 const routes = {
-  '/': repairGuide,
-  '/repair-guide': repairGuide,
+  '/': userRepairWizard,
+  '/repair-guide': userRepairWizard,
+  '/help': help,
   '/overview': platformOverview,
   '/advanced': advancedConsoleDirectory,
-  '/start': start,
-  '/capture': capture,
-  '/diagnosis': diagnosis,
-  '/repair-paths': repairPaths,
-  '/part-detail': partDetail,
-  '/provider-network': providerNetwork,
+  '/start': userRepairWizard,
+  '/capture': userRepairWizard,
+  '/diagnosis': userRepairWizard,
+  '/repair-paths': userRepairWizard,
+  '/part-detail': userRepairWizard,
+  '/provider-network': userRepairWizard,
   '/checkout': checkout,
   '/fulfilment': fulfilment,
   '/learning': learning,
@@ -4345,13 +4731,13 @@ async function createDemoRepairCase() {
 
 async function createRepairCaseFromValues(payload) {
   if (S.api.status !== 'live') {
-    toast('Backend API is not live. Start the PHP server to create a real repair case.');
+    toast('Modalità demo: puoi comunque provare il percorso con dati simulati.');
     location.hash = '#/start';
     return null;
   }
 
   if (S.auth.status !== 'authenticated') {
-    toast('Login required to create a live repair case.');
+    toast('Accedi per salvare la richiesta reale. In demo puoi continuare senza dati reali.');
     location.hash = '#/login';
     return null;
   }
@@ -4361,8 +4747,8 @@ async function createRepairCaseFromValues(payload) {
     const result = await window.REBORN_API.createRepairCase(payload);
     const repairCase = result.repair_case;
     S.setApi({ repairCase, repairCases: [repairCase, ...S.api.repairCases], repairPaths: [], repairAttachments: [], recognitionJobs: [], recognitionJob: null, repairPathDecisions: [], repairPathDecision: null, providerMatches: [], providerMatch: null, quoteRequests: [], quoteRequest: null, repairOrders: [], repairOrder: null, paymentIntents: [], paymentIntent: null, fulfilments: [], fulfilment: null, completionReports: [], completionReport: null, learningEvents: [], learningEvent: null, diagnosis: null, lastSyncAt: new Date().toISOString() });
-    toast('Live repair case created.');
-    location.hash = '#/capture';
+    toast('Richiesta ricambio creata.');
+    location.hash = '#/repair-guide';
     return repairCase;
   } catch (error) {
     S.setApi({ status: 'error', message: `Could not create repair case: ${error.message}`, lastError: error.message });
@@ -4475,17 +4861,16 @@ async function uploadSelectedRepairFilesInternal({ autoIdentify = false } = {}) 
   }
 
   if (S.auth.status !== 'authenticated') {
+    if (autoIdentify) {
+      runMockRecognition();
+      return;
+    }
     toast(t('loginRequiredUpload'));
     location.hash = '#/login';
     return;
   }
 
-  const repairCase = S.api.repairCase;
-  if (!repairCase) {
-    toast(t('createCaseFirst'));
-    location.hash = '#/start';
-    return;
-  }
+  let repairCase = S.api.repairCase;
 
   const files = Array.isArray(S.selectedUploadFiles) ? S.selectedUploadFiles : [];
   if (!files.length && !activeAttachments().length) {
@@ -4502,6 +4887,24 @@ async function uploadSelectedRepairFilesInternal({ autoIdentify = false } = {}) 
   render();
 
   try {
+    if (!repairCase) {
+      const created = await window.REBORN_API.createRepairCase({
+        title: 'Richiesta ricambio da foto',
+        category: 'replacement_part',
+        description: 'Richiesta guidata creata automaticamente dal wizard foto -> analisi -> ricambio. L’utente non conosce necessariamente il nome del pezzo.'
+      });
+      repairCase = created.repair_case;
+      S.setApi({
+        repairCase,
+        repairCases: [repairCase, ...S.api.repairCases],
+        repairPaths: [], repairAttachments: [], recognitionJobs: [], recognitionJob: null,
+        repairPathDecisions: [], repairPathDecision: null,
+        providerMatches: [], providerMatch: null,
+        quoteRequests: [], quoteRequest: null,
+        lastSyncAt: new Date().toISOString()
+      });
+    }
+
     let attachments = activeAttachments();
     if (files.length) {
       for (const file of files) {
@@ -4607,8 +5010,9 @@ function runMockRecognition() {
     started_at: new Date().toISOString(),
     completed_at: new Date().toISOString()
   };
-  S.setApi({ recognitionJob: job, recognitionJobs: [job], repairAttachments: activeAttachments().length ? activeAttachments() : [{ id: 'mock-attachment', original_filename: 'mock-photo.png', mime_type: 'image/png', size_bytes: 2048 }] });
-  toast('Mock Riconoscimento AI completed.');
+  const mockCase = S.api.repairCase || { id: 'mock-case', title: 'Richiesta ricambio da foto', category: 'replacement_part', description: 'Demo guidata da foto.' };
+  S.setApi({ repairCase: mockCase, recognitionJob: job, recognitionJobs: [job], repairAttachments: activeAttachments().length ? activeAttachments() : [{ id: 'mock-attachment', original_filename: 'foto-pezzo-rotto.png', mime_type: 'image/png', size_bytes: 2048 }] });
+  toast('Riconoscimento demo completato.');
   render();
 }
 
@@ -4656,7 +5060,7 @@ async function runRepairPathDecision() {
   }
 }
 
-function runMockRepairPathDecision() {
+function runMockRepairPathDecision(options = {}) {
   const result = mockRepairPathDecisionResult();
   const decision = {
     id: 'mock-path-decision',
@@ -4680,8 +5084,8 @@ function runMockRepairPathDecision() {
     created_at: new Date().toISOString()
   }));
   S.setApi({ repairPathDecision: decision, repairPathDecisions: [decision], repairPaths: paths });
-  toast('Mock repair paths ranked.');
-  location.hash = '#/repair-paths';
+  toast('Soluzione consigliata preparata.');
+  if (options.redirect !== false) location.hash = '#/repair-paths';
   render();
 }
 
@@ -4728,7 +5132,7 @@ async function runProviderMatch() {
   }
 }
 
-function runMockProviderMatch() {
+function runMockProviderMatch(options = {}) {
   const result = mockProviderMatchResult();
   const match = {
     id: 'mock-provider-match',
@@ -4741,8 +5145,8 @@ function runMockProviderMatch() {
     completed_at: new Date().toISOString()
   };
   S.setApi({ providerMatch: match, providerMatches: [match] });
-  toast('Mock providers matched.');
-  location.hash = '#/provider-network';
+  toast('Percorso provider preparato.');
+  if (options.redirect !== false) location.hash = '#/provider-network';
   render();
 }
 
@@ -4781,10 +5185,11 @@ async function requestProviderQuote(providerId) {
   }
 }
 
-function runMockProviderQuote(providerId) {
+function runMockProviderQuote(providerId, options = {}) {
   const quote = mockQuoteRequest(providerId);
   S.setApi({ quoteRequest: quote, quoteRequests: [quote] });
-  toast('Mock quote estimated.');
+  toast('Preventivo preliminare pronto.');
+  if (options.redirect) location.hash = '#/provider-network';
   render();
 }
 
@@ -5441,6 +5846,9 @@ window.uploadSelectedRepairFiles = uploadSelectedRepairFiles;
 window.uploadAndIdentifySelectedRepairFiles = uploadAndIdentifySelectedRepairFiles;
 window.runAIRecognition = runAIRecognition;
 window.runMockRecognition = runMockRecognition;
+window.continueToRecommendedSolution = continueToRecommendedSolution;
+window.runWizardRepairPathDecision = runWizardRepairPathDecision;
+window.requestWizardQuote = requestWizardQuote;
 window.runRepairPathDecision = runRepairPathDecision;
 window.runMockRepairPathDecision = runMockRepairPathDecision;
 window.runProviderMatch = runProviderMatch;
@@ -5492,6 +5900,8 @@ window.evaluateGeometryAsset = evaluateGeometryAsset;
 window.evaluateFirstGeometryAsset = evaluateFirstGeometryAsset;
 window.approveGeometryReview = approveGeometryReview;
 window.repairGuide = repairGuide;
+window.userRepairWizard = userRepairWizard;
+window.help = help;
 window.advancedConsoleDirectory = advancedConsoleDirectory;
 window.render = render;
 
