@@ -7,7 +7,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-$Step45Version = "STEP45_RELEASE_EVIDENCE_WITH_AI_PHOTO_RECOGNITION_V1"
+$Step45Version = "STEP45_5_1_RELEASE_EVIDENCE_CI_LOCALIZATION_HOTFIX_V1"
 Write-Host "Release evidence script version: $Step45Version" -ForegroundColor Magenta
 
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
@@ -53,9 +53,16 @@ function Try-JsonGet([string]$Uri) {
 
 function Get-JsonProperty([object]$Object, [string]$Name, [object]$Default = $null) {
     if ($null -eq $Object) { return $Default }
+    if ($Object -is [System.Collections.IDictionary]) {
+        if ($Object.Contains($Name)) { return $Object[$Name] }
+        return $Default
+    }
     $property = $Object.PSObject.Properties[$Name]
     if ($null -eq $property) { return $Default }
     return $property.Value
+}
+function Get-MatrixRowValue([object]$Row, [string]$Name, [object]$Default = $null) {
+    return Get-JsonProperty $Row $Name $Default
 }
 
 function Has-ErrorProperty([object]$Object) {
@@ -170,7 +177,7 @@ $GateChecks = @(
     [ordered]@{ name = "all_matrix_scripts_exist"; status = if ($MissingScripts.Count -eq 0) { "passed" } else { "failed" }; detail = $MissingScripts },
     [ordered]@{ name = "all_matrix_results_present"; status = if ($MissingResults.Count -eq 0) { "passed" } else { "failed" }; detail = $MissingResults },
     [ordered]@{ name = "no_unknown_smoke_results"; status = if ($UnknownResults.Count -eq 0) { "passed" } else { "failed" }; detail = $UnknownResults },
-    [ordered]@{ name = "all_release_blocking_gates_passed"; status = if ((@($MatrixRows | Where-Object { $_.gate -eq "release-blocking" -and $_.status -ne "passed" })).Count -eq 0) { "passed" } else { "failed" }; detail = @($MatrixRows | Where-Object { $_.gate -eq "release-blocking" -and $_.status -ne "passed" } | Select-Object -ExpandProperty smoke_script) },
+    [ordered]@{ name = "all_release_blocking_gates_passed"; status = if ((@($MatrixRows | Where-Object { (Get-MatrixRowValue $_ "gate" "") -eq "release-blocking" -and (Get-MatrixRowValue $_ "status" "") -ne "passed" })).Count -eq 0) { "passed" } else { "failed" }; detail = @($MatrixRows | Where-Object { (Get-MatrixRowValue $_ "gate" "") -eq "release-blocking" -and (Get-MatrixRowValue $_ "status" "") -ne "passed" } | ForEach-Object { Get-MatrixRowValue $_ "smoke_script" "unknown" }) },
     [ordered]@{ name = "api_health_reachable"; status = if (Has-ErrorProperty $Health) { "failed" } else { "passed" }; detail = $Health },
     [ordered]@{ name = "api_readiness_reachable"; status = if (Has-ErrorProperty $Readiness) { "failed" } else { "passed" }; detail = $Readiness },
     [ordered]@{ name = "status_page_reachable"; status = if (Has-ErrorProperty $StatusPage) { "failed" } else { "passed" }; detail = $StatusPage }
@@ -182,7 +189,7 @@ $MatrixPayload = [ordered]@{
     version = $Step45Version
     generated_at = (Get-Date).ToUniversalTime().ToString("o")
     total_rows = $MatrixRows.Count
-    release_blocking_rows = (@($MatrixRows | Where-Object { $_.gate -eq "release-blocking" })).Count
+    release_blocking_rows = (@($MatrixRows | Where-Object { (Get-MatrixRowValue $_ "gate" "") -eq "release-blocking" })).Count
     domains = @($MatrixRows | Group-Object domain | ForEach-Object { [ordered]@{ domain = $_.Name; count = $_.Count } })
     strategic_assets = @($MatrixRows | Group-Object strategic_asset | ForEach-Object { [ordered]@{ asset = $_.Name; count = $_.Count } })
     rows = $MatrixRows

@@ -11,6 +11,12 @@ function Assert-Contains([string]$Text, [string]$Needle, [string]$Label) {
     if ($Text -notlike "*$Needle*") { Fail "Missing expected UX marker: $Label" }
     Ok "UX marker present: $Label"
 }
+function Assert-ContainsAny([string]$Text, [string[]]$Needles, [string]$Label) {
+    foreach ($Needle in $Needles) {
+        if ($Text -like "*$Needle*") { Ok "UX marker present: $Label"; return }
+    }
+    Fail "Missing expected UX marker: $Label"
+}
 function Assert-NotContains([string]$Text, [string]$Needle, [string]$Label) {
     if ($Text -like "*$Needle*") { Fail "Unexpected old UX marker still visible: $Label" }
     Ok "Old UX marker absent: $Label"
@@ -26,9 +32,9 @@ $index = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/index.html" -Use
 if ($index.StatusCode -ne 200) { Fail "Prototype index did not return HTTP 200." }
 $indexText = [string]$index.Content
 
-Assert-Contains $indexText "Repair my object" "primary guided repair nav"
-Assert-Contains $indexText "Photos & files" "plain-language evidence nav"
-Assert-Contains $indexText "Advanced consoles" "advanced console grouped entry"
+Assert-ContainsAny $indexText @("Repair my object", "Ripara il mio oggetto") "primary guided repair nav"
+Assert-ContainsAny $indexText @("Photos & files", "2. Foto") "plain-language evidence nav"
+Assert-ContainsAny $indexText @("Advanced consoles", "Console avanzate") "advanced console grouped entry"
 Assert-NotContains $indexText "AI Gov" "advanced AI Gov removed from primary nav"
 Assert-NotContains $indexText "Geometry</a>" "geometry removed from primary nav"
 Assert-NotContains $indexText "Marketplace revenue" "footer no longer exposes full admin list"

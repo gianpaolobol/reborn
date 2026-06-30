@@ -11,6 +11,12 @@ function Assert-Contains([string]$Text, [string]$Needle, [string]$Label) {
     if ($Text -notlike "*$Needle*") { Fail "Missing expected Step 44 marker: $Label" }
     Ok "Step 44 marker present: $Label"
 }
+function Assert-ContainsAny([string]$Text, [string[]]$Needles, [string]$Label) {
+    foreach ($Needle in $Needles) {
+        if ($Text -like "*$Needle*") { Ok "Step 44 marker present: $Label"; return }
+    }
+    Fail "Missing expected Step 44 marker: $Label"
+}
 function Assert-NotContains([string]$Text, [string]$Needle, [string]$Label) {
     if ($Text -like "*$Needle*") { Fail "Unexpected confusing marker still visible: $Label" }
     Ok "Confusing marker absent: $Label"
@@ -32,12 +38,12 @@ $index = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/index.html" -Use
 if ($index.StatusCode -ne 200) { Fail "Prototype index did not return HTTP 200." }
 $indexText = [string]$index.Content
 
-Assert-Contains $indexText "Repair my object" "plain primary journey entry"
-Assert-Contains $indexText "1. Problem" "four-step problem nav"
-Assert-Contains $indexText "2. Photos & files" "four-step evidence nav"
-Assert-Contains $indexText "3. Generate part" "replacement generation nav"
-Assert-Contains $indexText "4. Quote" "quote nav"
-Assert-Contains $indexText "Advanced consoles" "advanced tools remain grouped"
+Assert-ContainsAny $indexText @("Repair my object", "Ripara il mio oggetto") "plain primary journey entry"
+Assert-ContainsAny $indexText @("1. Problem", "1. Problema") "four-step problem nav"
+Assert-ContainsAny $indexText @("2. Photos & files", "2. Foto") "four-step evidence nav"
+Assert-ContainsAny $indexText @("3. Generate part", "3. Genera ricambio") "replacement generation nav"
+Assert-ContainsAny $indexText @("4. Quote", "4. Preventivo") "quote nav"
+Assert-ContainsAny $indexText @("Advanced consoles", "Console avanzate") "advanced tools remain grouped"
 Assert-NotContains $indexText "AI Gov" "technical AI governance absent from primary nav"
 Assert-NotContains $indexText "Geometry</a>" "technical geometry console absent from primary nav"
 
