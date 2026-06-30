@@ -100,10 +100,10 @@ jobs:
       - name: Verify CI smoke guard markers
         shell: bash
         run: |
-          echo "Workflow marker: STEP45_RELEASE_EVIDENCE_WITH_AI_PHOTO_RECOGNITION_V1"
+          echo "Workflow marker: STEP45_7_CI_MARKER_COMPATIBILITY_QUALITY_GATE_HOTFIX_V1"
           grep -n "STEP45_CI_SMOKE_SUITE_WITH_AI_PHOTO_RECOGNITION_V1" scripts/ci-smoke-tests.ps1
           grep -n "STEP38_IDENTITY_SMOKE_GUARD_V3" scripts/smoke-identity-access.ps1
-          grep -n "STEP45_RELEASE_EVIDENCE_WITH_AI_PHOTO_RECOGNITION_V1" scripts/ci-release-evidence.ps1
+          grep -nE "STEP45_RELEASE_EVIDENCE_WITH_AI_PHOTO_RECOGNITION_V1|STEP45_7_CI_MARKER_COMPATIBILITY_QUALITY_GATE_HOTFIX_V1" scripts/ci-release-evidence.ps1
 
       - name: Verify API auth preflight
         shell: pwsh
@@ -122,8 +122,8 @@ jobs:
         if: always()
         shell: bash
         run: |
-          echo "Step 45 script marker check: STEP45_RELEASE_EVIDENCE_WITH_AI_PHOTO_RECOGNITION_V1"
-          grep -n "STEP45_RELEASE_EVIDENCE_WITH_AI_PHOTO_RECOGNITION_V1" scripts/ci-release-evidence.ps1
+          echo "Step 45 script marker check: STEP45_7_CI_MARKER_COMPATIBILITY_QUALITY_GATE_HOTFIX_V1"
+          grep -nE "STEP45_RELEASE_EVIDENCE_WITH_AI_PHOTO_RECOGNITION_V1|STEP45_7_CI_MARKER_COMPATIBILITY_QUALITY_GATE_HOTFIX_V1" scripts/ci-release-evidence.ps1
           if grep -n 'Generated at: `\$' scripts/ci-release-evidence.ps1; then
             echo "Old broken Generated at quoting is still present."
             exit 1

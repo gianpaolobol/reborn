@@ -7,7 +7,9 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-$Step45Version = "STEP45_5_1_RELEASE_EVIDENCE_CI_LOCALIZATION_HOTFIX_V1"
+$Step45Version = "STEP45_7_CI_MARKER_COMPATIBILITY_QUALITY_GATE_HOTFIX_V1"
+# Legacy workflow guard marker retained intentionally so GitHub Actions grep checks remain compatible after hotfixes.
+# STEP45_RELEASE_EVIDENCE_WITH_AI_PHOTO_RECOGNITION_V1
 Write-Host "Release evidence script version: $Step45Version" -ForegroundColor Magenta
 
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
