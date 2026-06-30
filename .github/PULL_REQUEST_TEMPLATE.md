@@ -23,3 +23,4 @@
 - [ ] La regression test matrix è aggiornata in `scripts/ci-release-evidence.ps1` e `docs/13-testing/REGRESSION_TEST_MATRIX.md`.
 - [ ] L’artifact CI `reborn-ci-release-evidence` è disponibile o il motivo dell’assenza è documentato.
 - [ ] Se la modifica impatta demo/investor walkthrough, i caveat mock/local/pilot sono espliciti.
+- [ ] Se la modifica impatta public pilot/intake, nessun impegno reale verso clienti/provider è implicato senza governance review.

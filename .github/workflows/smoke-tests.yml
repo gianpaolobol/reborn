@@ -42,7 +42,7 @@ jobs:
 
       - name: Verify PHP runtime
         run: |
-          echo "Workflow runtime marker: STEP41_RELEASE_EVIDENCE_WITH_PILOT_LAUNCH_V1"
+          echo "Workflow runtime marker: STEP42_RELEASE_EVIDENCE_WITH_PUBLIC_PILOT_V1"
           php -v
           php -m | grep -Ei 'PDO|pdo_sqlite|sqlite3|fileinfo|json'
           php scripts/ci-verify-runtime.php
@@ -100,10 +100,10 @@ jobs:
       - name: Verify CI smoke guard markers
         shell: bash
         run: |
-          echo "Workflow marker: STEP41_RELEASE_EVIDENCE_WITH_PILOT_LAUNCH_V1"
-          grep -n "STEP41_CI_SMOKE_SUITE_WITH_PILOT_LAUNCH_V1" scripts/ci-smoke-tests.ps1
+          echo "Workflow marker: STEP42_RELEASE_EVIDENCE_WITH_PUBLIC_PILOT_V1"
+          grep -n "STEP42_CI_SMOKE_SUITE_WITH_PUBLIC_PILOT_V1" scripts/ci-smoke-tests.ps1
           grep -n "STEP38_IDENTITY_SMOKE_GUARD_V3" scripts/smoke-identity-access.ps1
-          grep -n "STEP41_RELEASE_EVIDENCE_WITH_PILOT_LAUNCH_V1" scripts/ci-release-evidence.ps1
+          grep -n "STEP42_RELEASE_EVIDENCE_WITH_PUBLIC_PILOT_V1" scripts/ci-release-evidence.ps1
 
       - name: Verify API auth preflight
         shell: pwsh
@@ -118,12 +118,12 @@ jobs:
         shell: pwsh
         run: ./scripts/ci-smoke-tests.ps1 -BaseUrl http://127.0.0.1:8080
 
-      - name: Verify Step 41 release evidence script version
+      - name: Verify Step 42 release evidence script version
         if: always()
         shell: bash
         run: |
-          echo "Step 41 script marker check: STEP41_RELEASE_EVIDENCE_WITH_PILOT_LAUNCH_V1"
-          grep -n "STEP41_RELEASE_EVIDENCE_WITH_PILOT_LAUNCH_V1" scripts/ci-release-evidence.ps1
+          echo "Step 42 script marker check: STEP42_RELEASE_EVIDENCE_WITH_PUBLIC_PILOT_V1"
+          grep -n "STEP42_RELEASE_EVIDENCE_WITH_PUBLIC_PILOT_V1" scripts/ci-release-evidence.ps1
           if grep -n 'Generated at: `\$' scripts/ci-release-evidence.ps1; then
             echo "Old broken Generated at quoting is still present."
             exit 1

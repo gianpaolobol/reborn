@@ -7,8 +7,8 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-$Step41Version = "STEP41_RELEASE_EVIDENCE_WITH_PILOT_LAUNCH_V1"
-Write-Host "Release evidence script version: $Step41Version" -ForegroundColor Magenta
+$Step42Version = "STEP42_RELEASE_EVIDENCE_WITH_PUBLIC_PILOT_V1"
+Write-Host "Release evidence script version: $Step42Version" -ForegroundColor Magenta
 
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $ScriptsRoot = Join-Path $Root "scripts"
@@ -97,7 +97,8 @@ $RegressionMatrix = @(
     [ordered]@{ order = 29; step = 36; domain = "Sustainability"; capability = "Impact & Circularity Metrics"; script = "smoke-sustainability-impact-circularity.ps1"; gate = "critical"; asset = "Sustainability Impact" },
     [ordered]@{ order = 30; step = 37; domain = "Investor"; capability = "KPI & Board Reporting"; script = "smoke-investor-reporting-board-readiness.ps1"; gate = "critical"; asset = "Enterprise Value" },
     [ordered]@{ order = 31; step = 40; domain = "Demo"; capability = "Guided Repair Journey & Investor Walkthrough"; script = "smoke-demo-walkthrough-investor-journey.ps1"; gate = "release-blocking"; asset = "Enterprise Value" },
-    [ordered]@{ order = 32; step = 41; domain = "Pilot"; capability = "Demo Data Room, Pilot Launch Pack & Stakeholder Feedback Loop"; script = "smoke-demo-data-room-pilot-feedback-loop.ps1"; gate = "release-blocking"; asset = "Enterprise Value" }
+    [ordered]@{ order = 32; step = 41; domain = "Pilot"; capability = "Demo Data Room, Pilot Launch Pack & Stakeholder Feedback Loop"; script = "smoke-demo-data-room-pilot-feedback-loop.ps1"; gate = "release-blocking"; asset = "Enterprise Value" },
+    [ordered]@{ order = 33; step = 42; domain = "Pilot"; capability = "Public Pilot Demo, Partner Intake & Real-World Validation"; script = "smoke-public-pilot-real-world-validation.ps1"; gate = "release-blocking"; asset = "Real-World Validation" }
 )
 
 $SmokeSummary = $null
@@ -175,7 +176,7 @@ $GateChecks = @(
 $GateStatus = if ((@($GateChecks | Where-Object { $_.status -ne "passed" })).Count -eq 0) { "passed" } else { "failed" }
 
 $MatrixPayload = [ordered]@{
-    version = $Step41Version
+    version = $Step42Version
     generated_at = (Get-Date).ToUniversalTime().ToString("o")
     total_rows = $MatrixRows.Count
     release_blocking_rows = (@($MatrixRows | Where-Object { $_.gate -eq "release-blocking" })).Count
@@ -186,7 +187,7 @@ $MatrixPayload = [ordered]@{
 $MatrixPayload | ConvertTo-Json -Depth 16 | Out-File -Encoding UTF8 $MatrixPath
 
 $Evidence = [ordered]@{
-    version = $Step41Version
+    version = $Step42Version
     generated_at = (Get-Date).ToUniversalTime().ToString("o")
     repository = $env:GITHUB_REPOSITORY
     workflow = $env:GITHUB_WORKFLOW
@@ -214,7 +215,7 @@ $Evidence = [ordered]@{
 $Evidence | ConvertTo-Json -Depth 18 | Out-File -Encoding UTF8 $EvidencePath
 
 $QualityGate = [ordered]@{
-    version = $Step41Version
+    version = $Step42Version
     status = $GateStatus
     generated_at = $Evidence.generated_at
     total_checks = $GateChecks.Count
@@ -227,7 +228,7 @@ $QualityGate | ConvertTo-Json -Depth 18 | Out-File -Encoding UTF8 $QualityGatePa
 $markdown = @()
 $markdown += "# Re-born CI Release Evidence"
 $markdown += ""
-$markdown += ("Version: {0}" -f $Step41Version)
+$markdown += ("Version: {0}" -f $Step42Version)
 $GeneratedAtForMarkdown = [string]$Evidence.generated_at
 $markdown += ("Generated at: {0}" -f $GeneratedAtForMarkdown)
 $markdown += "Quality gate: **$GateStatus**"
@@ -252,7 +253,7 @@ $markdown -join "`n" | Out-File -Encoding UTF8 $MarkdownSummaryPath
 
 if ($env:GITHUB_STEP_SUMMARY) {
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
-    Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Step 41 release quality gate"
+    Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Step 42 release quality gate"
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Quality gate: **$GateStatus**"
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
@@ -262,13 +263,13 @@ if ($env:GITHUB_STEP_SUMMARY) {
 }
 
 if ($GateStatus -eq "passed") {
-    Write-CiNotice "Release quality gate passed" "Step 41 release evidence generated and quality gate passed."
-    Write-Host "Step 41 release evidence generated. Quality gate passed." -ForegroundColor Green
+    Write-CiNotice "Release quality gate passed" "Step 42 release evidence generated and quality gate passed."
+    Write-Host "Step 42 release evidence generated. Quality gate passed." -ForegroundColor Green
     exit 0
 }
 
-Write-CiError "Release quality gate failed" "Step 41 quality gate failed. See storage/logs/ci-quality-gate.json."
-Write-Host "Step 41 release evidence generated. Quality gate failed." -ForegroundColor Red
+Write-CiError "Release quality gate failed" "Step 42 quality gate failed. See storage/logs/ci-quality-gate.json."
+Write-Host "Step 42 release evidence generated. Quality gate failed." -ForegroundColor Red
 if ($AllowFailedSuite) {
     exit 0
 }

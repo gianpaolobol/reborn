@@ -26,6 +26,7 @@ use Reborn\Platform\Application\SustainabilityImpactService;
 use Reborn\Platform\Application\InvestorReportingService;
 use Reborn\Platform\Application\DemoWalkthroughService;
 use Reborn\Platform\Application\PilotLaunchService;
+use Reborn\Platform\Application\PublicPilotService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -54,6 +55,7 @@ final class PlatformController
         private readonly InvestorReportingService $investorReporting,
         private readonly DemoWalkthroughService $demoWalkthrough,
         private readonly PilotLaunchService $pilotLaunch,
+        private readonly PublicPilotService $publicPilot,
         private readonly AuthContext $auth,
     ) {
     }
@@ -1764,6 +1766,93 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['pilot_launch_audit_log' => $this->pilotLaunch->auditLog($limit)], $request->requestId());
+    }
+
+
+    public function publicPilotDemo(Request $request): JsonResponse
+    {
+        return JsonResponse::ok(['public_pilot_demo' => $this->publicPilot->publicDemo()], $request->requestId());
+    }
+
+    public function publicPilotIntake(Request $request): JsonResponse
+    {
+        return JsonResponse::created(['pilot_intake_submission' => $this->publicPilot->createIntakeSubmission($request->body())], $request->requestId());
+    }
+
+    public function publicPilotDashboard(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['public_pilot' => $this->publicPilot->dashboard()], $request->requestId());
+    }
+
+    public function publicPilotPages(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['public_pilot_pages' => $this->publicPilot->demoPages($status, $limit)], $request->requestId());
+    }
+
+    public function externalPilotIntakeSubmissions(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $stakeholderType = (string) $request->query('stakeholder_type', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['pilot_intake_submissions' => $this->publicPilot->intakeSubmissions($status, $stakeholderType, $limit)], $request->requestId());
+    }
+
+    public function reviewExternalPilotIntake(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['pilot_intake_submission' => $this->publicPilot->reviewIntakeSubmission((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function createValidationCaseFromIntake(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['real_world_validation_case' => $this->publicPilot->createValidationCaseFromSubmission((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function realWorldValidationCases(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['real_world_validation_cases' => $this->publicPilot->validationCases($status, $limit)], $request->requestId());
+    }
+
+    public function createRealWorldValidationCase(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['real_world_validation_case' => $this->publicPilot->createValidationCase($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function updateRealWorldValidationCase(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['real_world_validation_case' => $this->publicPilot->updateValidationCaseStatus((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function pilotStakeholderLeadScores(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $submissionId = trim((string) $request->query('submission_id', ''));
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['pilot_stakeholder_lead_scores' => $this->publicPilot->leadScores($submissionId, $limit)], $request->requestId());
+    }
+
+    public function evaluatePublicPilot(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['public_pilot_evaluation' => $this->publicPilot->evaluatePublicPilot()], $request->requestId());
+    }
+
+    public function publicPilotAuditLog(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['public_pilot_audit_log' => $this->publicPilot->auditLog($limit)], $request->requestId());
     }
 
 }

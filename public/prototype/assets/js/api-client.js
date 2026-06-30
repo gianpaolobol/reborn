@@ -1555,6 +1555,61 @@
       return this.request(`/api/v1/platform/pilot-launch-audit-log?limit=${encodeURIComponent(limit)}`);
     }
 
+
+
+    async getPublicPilotDemo() {
+      return this.request('/api/v1/public-pilot-demo');
+    }
+
+    async submitPublicPilotIntake(payload = {}) {
+      return this.request('/api/v1/public-pilot-intake', { method: 'POST', body: payload });
+    }
+
+    async getPublicPilot() {
+      return this.request('/api/v1/platform/public-pilot');
+    }
+
+    async getPublicPilotPages(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/public-pilot-pages?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getPilotIntakeSubmissions(status = 'all', stakeholderType = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/pilot-intake-submissions?status=${encodeURIComponent(status)}&stakeholder_type=${encodeURIComponent(stakeholderType)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async reviewPilotIntakeSubmission(id, payload = {}) {
+      return this.request(`/api/v1/platform/pilot-intake-submissions/${encodeURIComponent(id)}/review`, { method: 'POST', body: payload });
+    }
+
+    async createValidationCaseFromIntake(id, payload = {}) {
+      return this.request(`/api/v1/platform/pilot-intake-submissions/${encodeURIComponent(id)}/validation-case`, { method: 'POST', body: payload });
+    }
+
+    async getRealWorldValidationCases(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/real-world-validation-cases?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createRealWorldValidationCase(payload = {}) {
+      return this.request('/api/v1/platform/real-world-validation-cases', { method: 'POST', body: payload });
+    }
+
+    async updateRealWorldValidationCase(id, payload = {}) {
+      return this.request(`/api/v1/platform/real-world-validation-cases/${encodeURIComponent(id)}/status`, { method: 'POST', body: payload });
+    }
+
+    async getPilotStakeholderLeadScores(submissionId = '', limit = 50) {
+      const query = submissionId ? `submission_id=${encodeURIComponent(submissionId)}&limit=${encodeURIComponent(limit)}` : `limit=${encodeURIComponent(limit)}`;
+      return this.request(`/api/v1/platform/pilot-stakeholder-lead-scores?${query}`);
+    }
+
+    async evaluatePublicPilot(payload = {}) {
+      return this.request('/api/v1/platform/public-pilot/evaluate', { method: 'POST', body: payload });
+    }
+
+    async getPublicPilotAuditLog(limit = 50) {
+      return this.request(`/api/v1/platform/public-pilot-audit-log?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -1744,7 +1799,15 @@
           post_repair_support_tickets: [],
           customer_feedback_records: [],
           post_repair_review_items: [],
-          post_repair_audit_log: []
+          post_repair_audit_log: [],
+          public_pilot_demo: null,
+          public_pilot: null,
+          public_pilot_pages: [],
+          pilot_intake_submissions: [],
+          real_world_validation_cases: [],
+          pilot_stakeholder_lead_scores: [],
+          public_pilot_evaluation: null,
+          public_pilot_audit_log: []
         };
       }
 
@@ -1900,6 +1963,14 @@
       let postDemoReports = { post_demo_reports: [] };
       let pilotGoNoGoDecisions = { pilot_go_no_go_decisions: [] };
       let pilotLaunchAuditLog = { pilot_launch_audit_log: [] };
+      let publicPilotDemo = { public_pilot_demo: null };
+      let publicPilot = { public_pilot: null };
+      let publicPilotPages = { public_pilot_pages: [] };
+      let pilotIntakeSubmissions = { pilot_intake_submissions: [] };
+      let realWorldValidationCases = { real_world_validation_cases: [] };
+      let pilotStakeholderLeadScores = { pilot_stakeholder_lead_scores: [] };
+      let publicPilotEvaluation = { public_pilot_evaluation: null };
+      let publicPilotAuditLog = { public_pilot_audit_log: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -1914,6 +1985,12 @@
         statusPage = await this.getStatusPage();
       } catch (_error) {
         statusPage = { status_page: null };
+      }
+
+      try {
+        publicPilotDemo = await this.getPublicPilotDemo();
+      } catch (_error) {
+        publicPilotDemo = { public_pilot_demo: null };
       }
 
       if (this.getToken()) {
@@ -2705,6 +2782,41 @@
         } catch (_error) {
           pilotLaunchAuditLog = { pilot_launch_audit_log: [] };
         }
+        try {
+          publicPilot = await this.getPublicPilot();
+        } catch (_error) {
+          publicPilot = { public_pilot: null };
+        }
+        try {
+          publicPilotPages = await this.getPublicPilotPages('all', 30);
+        } catch (_error) {
+          publicPilotPages = { public_pilot_pages: [] };
+        }
+        try {
+          pilotIntakeSubmissions = await this.getPilotIntakeSubmissions('all', 'all', 30);
+        } catch (_error) {
+          pilotIntakeSubmissions = { pilot_intake_submissions: [] };
+        }
+        try {
+          realWorldValidationCases = await this.getRealWorldValidationCases('all', 30);
+        } catch (_error) {
+          realWorldValidationCases = { real_world_validation_cases: [] };
+        }
+        try {
+          pilotStakeholderLeadScores = await this.getPilotStakeholderLeadScores('', 30);
+        } catch (_error) {
+          pilotStakeholderLeadScores = { pilot_stakeholder_lead_scores: [] };
+        }
+        try {
+          publicPilotEvaluation = await this.evaluatePublicPilot();
+        } catch (_error) {
+          publicPilotEvaluation = { public_pilot_evaluation: null };
+        }
+        try {
+          publicPilotAuditLog = await this.getPublicPilotAuditLog(30);
+        } catch (_error) {
+          publicPilotAuditLog = { public_pilot_audit_log: [] };
+        }
 
       }
 
@@ -2967,7 +3079,15 @@
         stakeholder_feedback: stakeholderFeedback.stakeholder_feedback || [],
         post_demo_reports: postDemoReports.post_demo_reports || [],
         pilot_go_no_go_decisions: pilotGoNoGoDecisions.pilot_go_no_go_decisions || [],
-        pilot_launch_audit_log: pilotLaunchAuditLog.pilot_launch_audit_log || []
+        pilot_launch_audit_log: pilotLaunchAuditLog.pilot_launch_audit_log || [],
+        public_pilot_demo: publicPilotDemo.public_pilot_demo || null,
+        public_pilot: publicPilot.public_pilot || null,
+        public_pilot_pages: publicPilotPages.public_pilot_pages || [],
+        pilot_intake_submissions: pilotIntakeSubmissions.pilot_intake_submissions || [],
+        real_world_validation_cases: realWorldValidationCases.real_world_validation_cases || [],
+        pilot_stakeholder_lead_scores: pilotStakeholderLeadScores.pilot_stakeholder_lead_scores || [],
+        public_pilot_evaluation: publicPilotEvaluation.public_pilot_evaluation || null,
+        public_pilot_audit_log: publicPilotAuditLog.public_pilot_audit_log || []
       };
     }
   }

@@ -113,7 +113,9 @@ function stepper(active) {
     ['customer-care', '26', 'Care'],
     ['sustainability-impact', '27', 'Impact'],
     ['investor-reporting', '28', 'Investor'],
-    ['demo-walkthrough', '29', 'Demo']
+    ['demo-walkthrough', '29', 'Demo'],
+    ['pilot-launch', '30', 'Pilot'],
+    ['public-pilot', '31', 'Public']
   ];
   const activeIndex = steps.findIndex(s => s[0] === active);
   return html`<div class="stepper" aria-label="Repair journey progress">
@@ -3428,6 +3430,92 @@ async function evaluatePilotLaunch() {
 }
 
 
+
+function publicPilotDashboard() {
+  setActiveNav('public-pilot');
+  const publicDemo = S.api.publicPilotDemo || {};
+  const adminDashboard = S.api.publicPilot || {};
+  const summary = adminDashboard.summary || {};
+  const pages = S.api.publicPilotPages || publicDemo.pages || [];
+  const submissions = S.api.pilotIntakeSubmissions || adminDashboard.intake_submissions || [];
+  const validationCases = S.api.realWorldValidationCases || adminDashboard.validation_cases || [];
+  const leadScores = S.api.pilotStakeholderLeadScores || adminDashboard.lead_scores || [];
+  const evaluation = S.api.publicPilotEvaluation || null;
+  const audit = S.api.publicPilotAuditLog || [];
+
+  const pageRows = pages.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.audience)}</td><td>${safe(item.title)}</td><td>${safe(item.slug)}</td></tr>`).join('') || '<tr><td colspan="4">No public pilot pages yet.</td></tr>';
+  const submissionRows = submissions.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'accepted' || item.status === 'shortlisted' ? 'green' : item.status === 'new' ? 'blue' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.stakeholder_type)}</td><td>${safe(item.organization_name || item.contact_name)}</td><td>${safe(item.pilot_fit_score)}</td><td><button class="mini-button" onclick="reviewPilotIntake('${safe(item.id)}')" ${S.busy || S.auth.user?.role !== 'admin' ? 'disabled' : ''}>Triage</button></td></tr>`).join('') || '<tr><td colspan="5">No intake submissions yet.</td></tr>';
+  const caseRows = validationCases.slice(0, 10).map(item => `<tr><td><span class="badge ${['approved','in_pilot','validated'].includes(item.status) ? 'green' : item.status === 'blocked' || item.status === 'rejected' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.repair_category)}</td><td>${safe(item.object_name)}</td><td>${safe(item.pilot_fit_score)}</td><td><button class="mini-button" onclick="advanceValidationCase('${safe(item.id)}')" ${S.busy || S.auth.user?.role !== 'admin' ? 'disabled' : ''}>Approve</button></td></tr>`).join('') || '<tr><td colspan="5">No validation cases yet.</td></tr>';
+  const leadRows = leadScores.slice(0, 8).map(item => `<li><strong>${safe(item.score_band)}</strong> · ${safe(item.score)}/100 · ${safe(item.stakeholder_type)} — ${safe(item.notes)}</li>`).join('') || '<li>No lead scores yet.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No public pilot audit entries yet.</li>';
+  const caveats = (publicDemo.non_promises || []).slice(0, 4).map(item => `<li>${safe(item)}</li>`).join('') || '<li>Public pilot remains controlled and caveated.</li>';
+
+  return layout('Public Pilot', `
+    <section class="section-head"><div><p class="eyebrow">Step 42 · Public Pilot Demo, Partner Intake & Real-World Validation</p><h2>Open a controlled external surface for providers, makers, partners and early repair cases without pretending the platform is production-ready.</h2></div><p class="muted">${safe(publicDemo.positioning || 'Controlled public pilot surface with admin triage and real-world validation governance.')}</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.active_public_pages || pages.length || 0)}</strong><span>Public pages</span></div><div class="metric"><strong>${safe(summary.new_intake_submissions || 0)}</strong><span>New intakes</span></div><div class="metric"><strong>${safe(summary.active_validation_cases || validationCases.length || 0)}</strong><span>Validation cases</span></div><div class="metric"><strong>${safe(evaluation?.score || summary.average_fit_score || 0)}</strong><span>Pilot score</span></div></section>
+    <section class="section panel stack"><h3>Public pilot actions</h3><div class="actions"><button class="btn green" onclick="submitSamplePublicPilotIntake()" ${S.busy ? 'disabled' : ''}>Submit sample intake</button><button class="btn secondary" onclick="createRealWorldValidationCase()" ${S.busy || S.auth.user?.role !== 'admin' ? 'disabled' : ''}>Create validation case</button><button class="btn secondary" onclick="evaluatePublicPilot()" ${S.busy || S.auth.user?.role !== 'admin' ? 'disabled' : ''}>Evaluate public pilot</button><a class="btn secondary" href="#/pilot-launch">Pilot launch pack</a></div><p class="muted small">This surface is safe for controlled outreach only: intake creates triage evidence, not commercial acceptance.</p></section>
+    <section class="section grid two"><div class="panel stack"><h3>Public demo pages</h3><table class="table"><tr><th>Status</th><th>Audience</th><th>Title</th><th>Slug</th></tr>${pageRows}</table></div><div class="panel stack"><h3>Non-promises</h3><ul class="muted small">${caveats}</ul></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>External intake submissions</h3><table class="table"><tr><th>Status</th><th>Type</th><th>Lead</th><th>Fit</th><th>Action</th></tr>${submissionRows}</table></div><div class="panel stack"><h3>Real-world validation cases</h3><table class="table"><tr><th>Status</th><th>Category</th><th>Object</th><th>Fit</th><th>Action</th></tr>${caseRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Lead scoring</h3><ul class="muted small">${leadRows}</ul></div><div class="panel stack"><h3>Public pilot evaluation</h3><p><strong>${safe(evaluation?.recommendation || 'not evaluated')}</strong></p><p class="muted small">${safe((evaluation?.conditions || ['Run admin evaluation after intake and validation cases are present.']).join(' · '))}</p></div></section>
+    <section class="section panel stack"><h3>Public pilot audit</h3><ul class="muted small">${auditRows}</ul></section>
+  `, { currentStep: 'public-pilot' });
+}
+
+async function submitSamplePublicPilotIntake() {
+  setBusy(true);
+  try {
+    await window.REBORN_API.submitPublicPilotIntake({ stakeholder_type: 'provider', organization_name: 'Sample Public Pilot Provider', contact_name: 'Pilot Contact', email: `pilot-${Date.now()}@example.test`, country: 'Italy', city: 'Bologna', capabilities: ['fdm_printing', 'petg', 'local_pickup', 'proof_of_repair'], repair_categories: ['small_appliances', 'plastic_components'], motivation: 'We want to participate in a controlled pilot to validate local repair fulfilment, proof-of-repair, routing governance and provider quality scoring before any public launch.' });
+    toast('Public pilot intake submitted.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Public pilot intake failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function reviewPilotIntake(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to review pilot intake.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.reviewPilotIntakeSubmission(id, { status: 'shortlisted', triage_notes: 'Shortlisted from Step 42 prototype console for controlled real-world validation.' });
+    await window.REBORN_API.createValidationCaseFromIntake(id, { object_name: 'Shortlisted pilot repair object', problem_statement: 'Validate repair journey, provider routing and proof-of-repair workflow from shortlisted external intake.' });
+    toast('Pilot intake triaged and validation case created.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Pilot intake review failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function createRealWorldValidationCase() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create validation cases.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.createRealWorldValidationCase({ repair_category: 'consumer_parts', object_name: 'Prototype drawer runner clip', problem_statement: 'A small plastic clip is broken and needs a governed repair path from diagnosis to proof-of-repair.', success_criteria: ['Replacement restores sliding function', 'Provider route is reviewable', 'Customer acceptance evidence is captured'], evidence: ['prototype_console_created'], pilot_fit_score: 76, governance_risk: 'medium' });
+    toast('Real-world validation case created.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Validation case failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function advanceValidationCase(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to update validation cases.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.updateRealWorldValidationCase(id, { status: 'approved' });
+    toast('Validation case approved for controlled pilot.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Validation case update failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function evaluatePublicPilot() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate public pilot.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.evaluatePublicPilot();
+    toast('Public pilot evaluated.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Public pilot evaluation failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
 function investorReportingDashboard() {
   setActiveNav('investor-reporting');
   if (!S.auth.user) {
@@ -3571,6 +3659,7 @@ const routes = {
   '/investor-reporting': investorReportingDashboard,
   '/demo-walkthrough': demoWalkthroughDashboard,
   '/pilot-launch': pilotLaunchDashboard,
+  '/public-pilot': publicPilotDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -3803,6 +3892,14 @@ async function refreshApiData(options = {}) {
       postDemoReports: bootstrap.post_demo_reports || S.api.postDemoReports || [],
       pilotGoNoGoDecisions: bootstrap.pilot_go_no_go_decisions || S.api.pilotGoNoGoDecisions || [],
       pilotLaunchAuditLog: bootstrap.pilot_launch_audit_log || S.api.pilotLaunchAuditLog || [],
+      publicPilotDemo: bootstrap.public_pilot_demo || S.api.publicPilotDemo || null,
+      publicPilot: bootstrap.public_pilot || S.api.publicPilot || null,
+      publicPilotPages: bootstrap.public_pilot_pages || S.api.publicPilotPages || [],
+      pilotIntakeSubmissions: bootstrap.pilot_intake_submissions || S.api.pilotIntakeSubmissions || [],
+      realWorldValidationCases: bootstrap.real_world_validation_cases || S.api.realWorldValidationCases || [],
+      pilotStakeholderLeadScores: bootstrap.pilot_stakeholder_lead_scores || S.api.pilotStakeholderLeadScores || [],
+      publicPilotEvaluation: bootstrap.public_pilot_evaluation || S.api.publicPilotEvaluation || null,
+      publicPilotAuditLog: bootstrap.public_pilot_audit_log || S.api.publicPilotAuditLog || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {

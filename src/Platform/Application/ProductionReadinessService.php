@@ -50,6 +50,7 @@ final class ProductionReadinessService
             'investor_reporting' => $this->investorReportingCheck(),
             'demo_walkthrough' => $this->demoWalkthroughCheck(),
             'pilot_launch' => $this->pilotLaunchCheck(),
+            'public_pilot' => $this->publicPilotCheck(),
         ];
 
         $status = 'ready';
@@ -101,7 +102,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v20_step41',
+            'checklist_version' => 'production_readiness_v20_step42',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -125,6 +126,7 @@ final class ProductionReadinessService
                 'investor demo KPIs, board report narrative and caveats are reviewed before external fundraising use',
                 'guided demo walkthrough script, feedback capture and readiness caveats are reviewed before partner/investor presentations',
                 'demo data room, pilot launch checklist, stakeholder feedback and go/no-go decision are reviewed before any private beta commitment',
+                'public pilot surfaces, external intake, lead scoring and real-world validation cases are reviewed before inviting external stakeholders at scale',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
@@ -145,6 +147,7 @@ final class ProductionReadinessService
             'step_37_status' => 'Investor demo KPI narrative and board reporting governance v1 implemented.',
             'step_40_status' => 'Demo mode, guided repair journey and investor walkthrough governance v1 implemented.',
             'step_41_status' => 'Demo data room, pilot launch pack and stakeholder feedback loop v1 implemented.',
+            'step_42_status' => 'Public pilot demo, partner/provider/maker intake and real-world validation pack v1 implemented.',
         ];
     }
 
@@ -215,10 +218,10 @@ final class ProductionReadinessService
             $count = (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn();
             $latest = $this->pdo->query('SELECT filename FROM migrations ORDER BY executed_at DESC, id DESC LIMIT 1')->fetchColumn();
             return [
-                'status' => $count >= 33 ? 'ok' : 'warn',
+                'status' => $count >= 34 ? 'ok' : 'warn',
                 'executed_count' => $count,
                 'latest' => $latest ?: null,
-                'message' => $count >= 33 ? 'All MVP hardening, governance, marketplace, maker economy, AI governance, geometry, routing, dispatch, customer care, sustainability, investor, demo and pilot launch migrations are present.' : 'Some migrations may still need to run.',
+                'message' => $count >= 34 ? 'All MVP hardening, governance, marketplace, maker economy, AI governance, geometry, routing, dispatch, customer care, sustainability, investor, demo, pilot launch and public pilot migrations are present.' : 'Some migrations may still need to run.',
             ];
         } catch (Throwable $exception) {
             return ['status' => 'fail', 'message' => 'Migration metadata is unavailable.', 'error' => $exception->getMessage()];
@@ -1040,6 +1043,46 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Pilot launch checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function publicPilotCheck(): array
+    {
+        try {
+            $tables = ['platform_public_pilot_demo_pages', 'platform_external_pilot_intake_submissions', 'platform_real_world_validation_cases', 'platform_pilot_stakeholder_lead_scores', 'platform_public_pilot_audit_log'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $pages = 0;
+            $submissions = 0;
+            $validationCases = 0;
+            $leadScores = 0;
+            if ($missing === []) {
+                $pages = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_public_pilot_demo_pages WHERE status = 'active'")->fetchColumn();
+                $submissions = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_external_pilot_intake_submissions')->fetchColumn();
+                $validationCases = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_real_world_validation_cases')->fetchColumn();
+                $leadScores = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_pilot_stakeholder_lead_scores')->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? ($pages >= 2 && $submissions >= 1 && $validationCases >= 1 && $leadScores >= 1 ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Public pilot demo, external stakeholder intake, lead scoring and real-world validation case tables are available. Public pilot remains controlled and caveated until legal, provider, payments, fulfilment and production readiness are validated.' : 'Public pilot tables are not fully migrated yet.',
+                'active_public_pages' => $pages,
+                'intake_submissions' => $submissions,
+                'validation_cases' => $validationCases,
+                'lead_scores' => $leadScores,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Public pilot checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 

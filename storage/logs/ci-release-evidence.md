@@ -1,10 +1,10 @@
 ﻿# Re-born CI Release Evidence
 
-Version: STEP41_RELEASE_EVIDENCE_WITH_PILOT_LAUNCH_V1
-Generated at: 2026-06-30T13:46:28.2901454Z
+Version: STEP42_RELEASE_EVIDENCE_WITH_PUBLIC_PILOT_V1
+Generated at: 2026-06-30T15:07:46.8945433Z
 Quality gate: **passed**
 Smoke suite: **passed**
-Matrix rows: **32**
+Matrix rows: **33**
 
 ## Failed checks
 No failed checks.

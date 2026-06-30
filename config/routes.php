@@ -163,6 +163,12 @@ return static function (Router $router, RepairController $repairController, Auth
                 'stakeholder_feedback_loop',
                 'post_demo_reports',
                 'pilot_go_no_go_decisions',
+                'public_pilot_demo',
+                'partner_provider_maker_intake',
+                'external_pilot_intake',
+                'real_world_validation_cases',
+                'stakeholder_lead_scoring',
+                'public_pilot_audit',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -441,6 +447,21 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->post('/api/v1/platform/post-demo-reports', [$platformController, 'createPostDemoReport']);
     $router->get('/api/v1/platform/pilot-go-no-go-decisions', [$platformController, 'pilotGoNoGoDecisions']);
     $router->get('/api/v1/platform/pilot-launch-audit-log', [$platformController, 'pilotLaunchAuditLog']);
+
+
+    $router->get('/api/v1/public-pilot-demo', [$platformController, 'publicPilotDemo']);
+    $router->post('/api/v1/public-pilot-intake', [$platformController, 'publicPilotIntake']);
+    $router->get('/api/v1/platform/public-pilot', [$platformController, 'publicPilotDashboard']);
+    $router->get('/api/v1/platform/public-pilot-pages', [$platformController, 'publicPilotPages']);
+    $router->get('/api/v1/platform/pilot-intake-submissions', [$platformController, 'externalPilotIntakeSubmissions']);
+    $router->post('/api/v1/platform/pilot-intake-submissions/{id}/review', [$platformController, 'reviewExternalPilotIntake']);
+    $router->post('/api/v1/platform/pilot-intake-submissions/{id}/validation-case', [$platformController, 'createValidationCaseFromIntake']);
+    $router->get('/api/v1/platform/real-world-validation-cases', [$platformController, 'realWorldValidationCases']);
+    $router->post('/api/v1/platform/real-world-validation-cases', [$platformController, 'createRealWorldValidationCase']);
+    $router->post('/api/v1/platform/real-world-validation-cases/{id}/status', [$platformController, 'updateRealWorldValidationCase']);
+    $router->get('/api/v1/platform/pilot-stakeholder-lead-scores', [$platformController, 'pilotStakeholderLeadScores']);
+    $router->post('/api/v1/platform/public-pilot/evaluate', [$platformController, 'evaluatePublicPilot']);
+    $router->get('/api/v1/platform/public-pilot-audit-log', [$platformController, 'publicPilotAuditLog']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

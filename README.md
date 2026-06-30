@@ -47,7 +47,7 @@ storage/logs/ci-quality-gate.json
 storage/logs/ci-release-evidence.md
 ```
 
-GitHub Actions uploads them as the `reborn-ci-release-evidence` artifact. The matrix maps the 32 smoke tests to steps, bounded contexts, strategic assets and release gates.
+GitHub Actions uploads them as the `reborn-ci-release-evidence` artifact. The matrix maps the 33 smoke tests to steps, bounded contexts, strategic assets and release gates.
 
 Local command after the server and smoke suite are running:
 
@@ -787,3 +787,15 @@ powershell -ExecutionPolicy Bypass -File .\scripts\smoke-demo-data-room-pilot-fe
 ```
 
 The full CI suite now runs 32 smoke tests and the release evidence matrix includes Step 41 as a release-blocking pilot governance gate. This step does not approve production launch, real payments, real fulfilment, legal warranty terms, or public sustainability claims. It prepares controlled stakeholder demos and private-pilot decision evidence.
+
+## Step 42 — Public Pilot Demo, Partner Intake & Real-World Validation Pack v1
+
+Step 42 turns the Step 41 internal pilot launch pack into a controlled external-pilot surface. It adds public pilot demo pages, a no-auth external pilot intake endpoint, admin triage for partner/provider/maker/repair-user leads, stakeholder lead scoring, real-world validation cases, public pilot evaluation and audit logging. The prototype console is available at `#/public-pilot` and the safe public endpoint is available at `/api/v1/public-pilot-demo`.
+
+Smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-public-pilot-real-world-validation.ps1
+```
+
+The full CI suite now runs 33 smoke tests and the release evidence matrix includes Step 42 as a release-blocking real-world validation gate. This step does not approve production launch, provider activation, real payments, payouts, logistics, warranty terms or public success/sustainability claims. It collects external interest and converts it into governed pilot evidence.
