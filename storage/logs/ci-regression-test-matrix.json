@@ -1,18 +1,18 @@
 ﻿{
-    "version":  "STEP44_RELEASE_EVIDENCE_WITH_REPAIR_FIRST_OFFER_ARCHITECTURE_V1",
-    "generated_at":  "2026-06-30T15:53:01.4709872Z",
-    "total_rows":  35,
-    "release_blocking_rows":  13,
+    "version":  "STEP47_AI_VISION_QUALITY_PROFILE_GATE_V1",
+    "generated_at":  "2026-06-30T21:44:38.2445931Z",
+    "total_rows":  39,
+    "release_blocking_rows":  17,
     "domains":  [
                     {
                         "domain":  "",
-                        "count":  35
+                        "count":  39
                     }
                 ],
     "strategic_assets":  [
                              {
                                  "asset":  "",
-                                 "count":  35
+                                 "count":  39
                              }
                          ],
     "rows":  [
@@ -26,7 +26,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  0.87,
+                     "duration_seconds":  0.8,
                      "error":  null
                  },
                  {
@@ -39,7 +39,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.33,
+                     "duration_seconds":  1.44,
                      "error":  null
                  },
                  {
@@ -52,7 +52,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  2.08,
+                     "duration_seconds":  2.4,
                      "error":  null
                  },
                  {
@@ -65,7 +65,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.25,
+                     "duration_seconds":  1.23,
                      "error":  null
                  },
                  {
@@ -78,7 +78,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.33,
+                     "duration_seconds":  1.32,
                      "error":  null
                  },
                  {
@@ -91,7 +91,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.72,
+                     "duration_seconds":  1.67,
                      "error":  null
                  },
                  {
@@ -104,7 +104,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.58,
+                     "duration_seconds":  1.68,
                      "error":  null
                  },
                  {
@@ -117,7 +117,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.94,
+                     "duration_seconds":  2.35,
                      "error":  null
                  },
                  {
@@ -130,7 +130,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  2.4,
+                     "duration_seconds":  2.55,
                      "error":  null
                  },
                  {
@@ -143,7 +143,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  2.48,
+                     "duration_seconds":  2.75,
                      "error":  null
                  },
                  {
@@ -156,7 +156,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.36,
+                     "duration_seconds":  1.82,
                      "error":  null
                  },
                  {
@@ -169,7 +169,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.7,
+                     "duration_seconds":  1.72,
                      "error":  null
                  },
                  {
@@ -182,7 +182,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  0.97,
+                     "duration_seconds":  1.37,
                      "error":  null
                  },
                  {
@@ -195,7 +195,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.35,
+                     "duration_seconds":  1.58,
                      "error":  null
                  },
                  {
@@ -208,7 +208,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.58,
+                     "duration_seconds":  2.01,
                      "error":  null
                  },
                  {
@@ -221,7 +221,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.48,
+                     "duration_seconds":  1.6,
                      "error":  null
                  },
                  {
@@ -234,7 +234,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.43,
+                     "duration_seconds":  1.6,
                      "error":  null
                  },
                  {
@@ -247,7 +247,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.72,
+                     "duration_seconds":  1.96,
                      "error":  null
                  },
                  {
@@ -260,7 +260,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  2.4,
+                     "duration_seconds":  2.24,
                      "error":  null
                  },
                  {
@@ -273,7 +273,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.94,
+                     "duration_seconds":  2.01,
                      "error":  null
                  },
                  {
@@ -286,7 +286,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.63,
+                     "duration_seconds":  1.72,
                      "error":  null
                  },
                  {
@@ -299,7 +299,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.74,
+                     "duration_seconds":  1.84,
                      "error":  null
                  },
                  {
@@ -312,7 +312,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.28,
+                     "duration_seconds":  1.35,
                      "error":  null
                  },
                  {
@@ -325,7 +325,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.42,
+                     "duration_seconds":  2.95,
                      "error":  null
                  },
                  {
@@ -338,7 +338,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.52,
+                     "duration_seconds":  2.47,
                      "error":  null
                  },
                  {
@@ -351,7 +351,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.51,
+                     "duration_seconds":  2.6,
                      "error":  null
                  },
                  {
@@ -364,7 +364,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.59,
+                     "duration_seconds":  3.13,
                      "error":  null
                  },
                  {
@@ -377,7 +377,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.77,
+                     "duration_seconds":  3.09,
                      "error":  null
                  },
                  {
@@ -390,7 +390,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.68,
+                     "duration_seconds":  2.97,
                      "error":  null
                  },
                  {
@@ -403,7 +403,7 @@
                      "gate":  "critical",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.83,
+                     "duration_seconds":  4.75,
                      "error":  null
                  },
                  {
@@ -416,7 +416,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.64,
+                     "duration_seconds":  9.74,
                      "error":  null
                  },
                  {
@@ -429,7 +429,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.74,
+                     "duration_seconds":  3.04,
                      "error":  null
                  },
                  {
@@ -442,7 +442,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  1.68,
+                     "duration_seconds":  2.82,
                      "error":  null
                  },
                  {
@@ -455,7 +455,7 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  0.53,
+                     "duration_seconds":  0.74,
                      "error":  null
                  },
                  {
@@ -468,7 +468,59 @@
                      "gate":  "release-blocking",
                      "script_exists":  true,
                      "status":  "passed",
-                     "duration_seconds":  0.54,
+                     "duration_seconds":  0.91,
+                     "error":  null
+                 },
+                 {
+                     "order":  36,
+                     "step":  45,
+                     "domain":  "AI / UX",
+                     "capability":  "AI Photo Recognition \u0026 Replacement-Part Brief",
+                     "strategic_asset":  "AI Learning",
+                     "smoke_script":  "smoke-ai-photo-recognition-replacement-brief.ps1",
+                     "gate":  "release-blocking",
+                     "script_exists":  true,
+                     "status":  "passed",
+                     "duration_seconds":  1.75,
+                     "error":  null
+                 },
+                 {
+                     "order":  37,
+                     "step":  46,
+                     "domain":  "UX",
+                     "capability":  "User Repair Wizard Simplification",
+                     "strategic_asset":  "User Activation",
+                     "smoke_script":  "smoke-user-repair-wizard-simplification.ps1",
+                     "gate":  "release-blocking",
+                     "script_exists":  true,
+                     "status":  "passed",
+                     "duration_seconds":  0.38,
+                     "error":  null
+                 },
+                 {
+                     "order":  38,
+                     "step":  47,
+                     "domain":  "AI / UX",
+                     "capability":  "Maximum Vision Recognition Quality Profile",
+                     "strategic_asset":  "AI Learning",
+                     "smoke_script":  "smoke-ai-vision-quality-profile.ps1",
+                     "gate":  "release-blocking",
+                     "script_exists":  true,
+                     "status":  "passed",
+                     "duration_seconds":  0.8,
+                     "error":  null
+                 },
+                 {
+                     "order":  39,
+                     "step":  48,
+                     "domain":  "AI / Vision",
+                     "capability":  "Gemini-only Vision Provider Router + HTTP-0 Body Acceptance",
+                     "strategic_asset":  "AI Provider Router",
+                     "smoke_script":  "smoke-gemini-vision-provider.ps1",
+                     "gate":  "release-blocking",
+                     "script_exists":  true,
+                     "status":  "passed",
+                     "duration_seconds":  0.74,
                      "error":  null
                  }
              ]

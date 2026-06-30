@@ -1,10 +1,10 @@
 ﻿# Re-born CI Release Evidence
 
-Version: STEP44_RELEASE_EVIDENCE_WITH_REPAIR_FIRST_OFFER_ARCHITECTURE_V1
-Generated at: 2026-06-30T15:53:01.5052419Z
+Version: STEP47_AI_VISION_QUALITY_PROFILE_GATE_V1
+Generated at: 2026-06-30T21:44:38.2834774Z
 Quality gate: **passed**
 Smoke suite: **passed**
-Matrix rows: **35**
+Matrix rows: **39**
 
 ## Failed checks
 No failed checks.
