@@ -158,6 +158,11 @@ return static function (Router $router, RepairController $repairController, Auth
                 'demo_sessions',
                 'demo_feedback',
                 'demo_readiness_reviews',
+                'demo_data_room',
+                'pilot_launch_checklist',
+                'stakeholder_feedback_loop',
+                'post_demo_reports',
+                'pilot_go_no_go_decisions',
                 'domain_events',
             ],
         ], $request->requestId());
@@ -420,6 +425,22 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->post('/api/v1/platform/demo-readiness/evaluate', [$platformController, 'evaluateDemoReadiness']);
     $router->post('/api/v1/platform/demo-readiness-reviews/{id}/review', [$platformController, 'reviewDemoReadiness']);
     $router->get('/api/v1/platform/demo-walkthrough-audit-log', [$platformController, 'demoWalkthroughAuditLog']);
+
+
+    $router->get('/api/v1/platform/pilot-launch', [$platformController, 'pilotLaunch']);
+    $router->get('/api/v1/platform/data-room-assets', [$platformController, 'dataRoomAssets']);
+    $router->post('/api/v1/platform/data-room-assets', [$platformController, 'createDataRoomAsset']);
+    $router->get('/api/v1/platform/pilot-checklist-items', [$platformController, 'pilotChecklist']);
+    $router->post('/api/v1/platform/pilot-checklist-items/{id}/status', [$platformController, 'updatePilotChecklistStatus']);
+    $router->post('/api/v1/platform/pilot-launch/evaluate', [$platformController, 'evaluatePilotLaunch']);
+    $router->get('/api/v1/platform/stakeholder-feedback-loops', [$platformController, 'stakeholderFeedbackLoops']);
+    $router->post('/api/v1/platform/stakeholder-feedback-loops', [$platformController, 'createStakeholderFeedbackLoop']);
+    $router->get('/api/v1/platform/stakeholder-feedback', [$platformController, 'stakeholderFeedback']);
+    $router->post('/api/v1/platform/stakeholder-feedback', [$platformController, 'recordStakeholderFeedback']);
+    $router->get('/api/v1/platform/post-demo-reports', [$platformController, 'postDemoReports']);
+    $router->post('/api/v1/platform/post-demo-reports', [$platformController, 'createPostDemoReport']);
+    $router->get('/api/v1/platform/pilot-go-no-go-decisions', [$platformController, 'pilotGoNoGoDecisions']);
+    $router->get('/api/v1/platform/pilot-launch-audit-log', [$platformController, 'pilotLaunchAuditLog']);
 
     $router->post('/api/v1/auth/register', [$authController, 'register']);
     $router->post('/api/v1/auth/login', [$authController, 'login']);

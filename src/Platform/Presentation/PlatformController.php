@@ -25,6 +25,7 @@ use Reborn\Platform\Application\CustomerCareGovernanceService;
 use Reborn\Platform\Application\SustainabilityImpactService;
 use Reborn\Platform\Application\InvestorReportingService;
 use Reborn\Platform\Application\DemoWalkthroughService;
+use Reborn\Platform\Application\PilotLaunchService;
 use Reborn\Platform\Application\ProductionReadinessService;
 use Reborn\Shared\Http\JsonResponse;
 use Reborn\Shared\Http\Request;
@@ -52,6 +53,7 @@ final class PlatformController
         private readonly SustainabilityImpactService $sustainability,
         private readonly InvestorReportingService $investorReporting,
         private readonly DemoWalkthroughService $demoWalkthrough,
+        private readonly PilotLaunchService $pilotLaunch,
         private readonly AuthContext $auth,
     ) {
     }
@@ -1663,6 +1665,105 @@ final class PlatformController
         $this->auth->requireRole($request, [User::ROLE_ADMIN]);
         $limit = max(1, min(200, (int) $request->query('limit', 50)));
         return JsonResponse::ok(['demo_walkthrough_audit_log' => $this->demoWalkthrough->auditLog($limit)], $request->requestId());
+    }
+
+
+
+    public function pilotLaunch(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['pilot_launch' => $this->pilotLaunch->dashboard()], $request->requestId());
+    }
+
+    public function dataRoomAssets(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['data_room_assets' => $this->pilotLaunch->dataRoomAssets($status, $limit)], $request->requestId());
+    }
+
+    public function createDataRoomAsset(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['data_room_asset' => $this->pilotLaunch->createDataRoomAsset($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function pilotChecklist(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['pilot_checklist_items' => $this->pilotLaunch->pilotChecklist($status, $limit)], $request->requestId());
+    }
+
+    public function updatePilotChecklistStatus(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::ok(['pilot_checklist_item' => $this->pilotLaunch->updateChecklistStatus((string) $request->param('id'), $request->body(), $user->id)], $request->requestId());
+    }
+
+    public function evaluatePilotLaunch(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['pilot_go_no_go_decision' => $this->pilotLaunch->evaluatePilotLaunch($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function stakeholderFeedbackLoops(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['stakeholder_feedback_loops' => $this->pilotLaunch->feedbackLoops($status, $limit)], $request->requestId());
+    }
+
+    public function createStakeholderFeedbackLoop(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['stakeholder_feedback_loop' => $this->pilotLaunch->createFeedbackLoop($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function stakeholderFeedback(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $loopId = trim((string) $request->query('loop_id', ''));
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['stakeholder_feedback' => $this->pilotLaunch->stakeholderFeedback($loopId, $limit)], $request->requestId());
+    }
+
+    public function recordStakeholderFeedback(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['stakeholder_feedback_item' => $this->pilotLaunch->recordStakeholderFeedback($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function postDemoReports(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['post_demo_reports' => $this->pilotLaunch->postDemoReports($status, $limit)], $request->requestId());
+    }
+
+    public function createPostDemoReport(Request $request): JsonResponse
+    {
+        $user = $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        return JsonResponse::created(['post_demo_report' => $this->pilotLaunch->createPostDemoReport($request->body(), $user->id)], $request->requestId());
+    }
+
+    public function pilotGoNoGoDecisions(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $status = (string) $request->query('status', 'all');
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['pilot_go_no_go_decisions' => $this->pilotLaunch->goNoGoDecisions($status, $limit)], $request->requestId());
+    }
+
+    public function pilotLaunchAuditLog(Request $request): JsonResponse
+    {
+        $this->auth->requireRole($request, [User::ROLE_ADMIN]);
+        $limit = max(1, min(200, (int) $request->query('limit', 50)));
+        return JsonResponse::ok(['pilot_launch_audit_log' => $this->pilotLaunch->auditLog($limit)], $request->requestId());
     }
 
 }

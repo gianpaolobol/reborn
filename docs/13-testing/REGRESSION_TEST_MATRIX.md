@@ -64,6 +64,8 @@ This file is uploaded by GitHub Actions as part of the `reborn-ci-release-eviden
 | 28 | 35 | Customer Care | Acceptance, Warranty & Support | `smoke-customer-care-warranty-support.ps1` | critical |
 | 29 | 36 | Sustainability | Impact & Circularity Metrics | `smoke-sustainability-impact-circularity.ps1` | critical |
 | 30 | 37 | Investor | KPI & Board Reporting | `smoke-investor-reporting-board-readiness.ps1` | critical |
+| 31 | 40 | Demo | Guided Repair Journey & Investor Walkthrough | `smoke-demo-walkthrough-investor-journey.ps1` | release-blocking |
+| 32 | 41 | Pilot | Demo Data Room, Pilot Launch Pack & Stakeholder Feedback Loop | `smoke-demo-data-room-pilot-feedback-loop.ps1` | release-blocking |
 
 ## Gate levels
 
@@ -87,5 +89,3 @@ docs/13-testing/REGRESSION_TEST_MATRIX.md
 
 The Pull Request checklist requires this update.
 
-
-| 31 | 40 | Demo | Guided Repair Journey & Investor Walkthrough | `smoke-demo-walkthrough-investor-journey.ps1` | release-blocking | Enterprise Value |

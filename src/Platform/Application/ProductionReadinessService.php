@@ -49,6 +49,7 @@ final class ProductionReadinessService
             'sustainability_impact' => $this->sustainabilityImpactCheck(),
             'investor_reporting' => $this->investorReportingCheck(),
             'demo_walkthrough' => $this->demoWalkthroughCheck(),
+            'pilot_launch' => $this->pilotLaunchCheck(),
         ];
 
         $status = 'ready';
@@ -100,7 +101,7 @@ final class ProductionReadinessService
     public function deployChecklist(): array
     {
         return [
-            'checklist_version' => 'production_readiness_v18_step37',
+            'checklist_version' => 'production_readiness_v20_step41',
             'items' => $this->securityConfig['production_checklist'] ?? [],
             'blocked_until' => [
                 'APP_DEBUG=false is verified in the target environment',
@@ -123,6 +124,7 @@ final class ProductionReadinessService
                 'sustainability impact, circularity factors and repair outcome intelligence are reviewed before external environmental claims',
                 'investor demo KPIs, board report narrative and caveats are reviewed before external fundraising use',
                 'guided demo walkthrough script, feedback capture and readiness caveats are reviewed before partner/investor presentations',
+                'demo data room, pilot launch checklist, stakeholder feedback and go/no-go decision are reviewed before any private beta commitment',
             ],
             'step_21_status' => 'Observability dashboard, backup automation and deployment runbook v1 implemented.',
             'step_22_status' => 'Incident response, alert evaluation, maintenance windows and status page v1 implemented.',
@@ -142,6 +144,7 @@ final class ProductionReadinessService
             'step_36_status' => 'Sustainability impact, circularity metrics and repair outcome intelligence v1 implemented.',
             'step_37_status' => 'Investor demo KPI narrative and board reporting governance v1 implemented.',
             'step_40_status' => 'Demo mode, guided repair journey and investor walkthrough governance v1 implemented.',
+            'step_41_status' => 'Demo data room, pilot launch pack and stakeholder feedback loop v1 implemented.',
         ];
     }
 
@@ -212,10 +215,10 @@ final class ProductionReadinessService
             $count = (int) $this->pdo->query('SELECT COUNT(*) FROM migrations')->fetchColumn();
             $latest = $this->pdo->query('SELECT filename FROM migrations ORDER BY executed_at DESC, id DESC LIMIT 1')->fetchColumn();
             return [
-                'status' => $count >= 29 ? 'ok' : 'warn',
+                'status' => $count >= 33 ? 'ok' : 'warn',
                 'executed_count' => $count,
                 'latest' => $latest ?: null,
-                'message' => $count >= 29 ? 'All MVP hardening, governance, marketplace, maker economy, AI governance, geometry, routing, dispatch and post-repair customer care migrations are present.' : 'Some migrations may still need to run.',
+                'message' => $count >= 33 ? 'All MVP hardening, governance, marketplace, maker economy, AI governance, geometry, routing, dispatch, customer care, sustainability, investor, demo and pilot launch migrations are present.' : 'Some migrations may still need to run.',
             ];
         } catch (Throwable $exception) {
             return ['status' => 'fail', 'message' => 'Migration metadata is unavailable.', 'error' => $exception->getMessage()];
@@ -997,6 +1000,46 @@ final class ProductionReadinessService
             ];
         } catch (Throwable $exception) {
             return ['status' => 'warn', 'message' => 'Demo walkthrough checks are not readable yet.', 'error' => $exception->getMessage()];
+        }
+    }
+
+
+    /** @return array<string, mixed> */
+    private function pilotLaunchCheck(): array
+    {
+        try {
+            $tables = ['platform_demo_data_room_assets', 'platform_pilot_launch_checklist_items', 'platform_stakeholder_feedback_loops', 'platform_stakeholder_feedback_items', 'platform_post_demo_reports', 'platform_pilot_go_no_go_decisions', 'platform_pilot_launch_audit_log'];
+            $missing = [];
+            foreach ($tables as $tableName) {
+                $stmt = $this->pdo->prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name");
+                $stmt->execute(['name' => $tableName]);
+                if (!$stmt->fetchColumn()) {
+                    $missing[] = $tableName;
+                }
+            }
+
+            $assets = 0;
+            $checklist = 0;
+            $feedbackLoops = 0;
+            $decisions = 0;
+            if ($missing === []) {
+                $assets = (int) $this->pdo->query("SELECT COUNT(*) FROM platform_demo_data_room_assets WHERE status = 'ready'")->fetchColumn();
+                $checklist = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_pilot_launch_checklist_items')->fetchColumn();
+                $feedbackLoops = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_stakeholder_feedback_loops')->fetchColumn();
+                $decisions = (int) $this->pdo->query('SELECT COUNT(*) FROM platform_pilot_go_no_go_decisions')->fetchColumn();
+            }
+
+            return [
+                'status' => $missing === [] ? ($assets >= 3 && $checklist >= 4 && $feedbackLoops >= 1 ? 'ok' : 'warn') : 'warn',
+                'message' => $missing === [] ? 'Demo data room, pilot launch checklist and stakeholder feedback loop tables are available. Pilot launch remains conditional until legal, provider, fulfilment and production readiness are validated.' : 'Pilot launch tables are not fully migrated yet.',
+                'ready_data_room_assets' => $assets,
+                'checklist_items' => $checklist,
+                'feedback_loops' => $feedbackLoops,
+                'go_no_go_decisions' => $decisions,
+                'missing_tables' => $missing,
+            ];
+        } catch (Throwable $exception) {
+            return ['status' => 'warn', 'message' => 'Pilot launch checks are not readable yet.', 'error' => $exception->getMessage()];
         }
     }
 

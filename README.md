@@ -47,7 +47,7 @@ storage/logs/ci-quality-gate.json
 storage/logs/ci-release-evidence.md
 ```
 
-GitHub Actions uploads them as the `reborn-ci-release-evidence` artifact. The matrix maps the 30 smoke tests to steps, bounded contexts, strategic assets and release gates.
+GitHub Actions uploads them as the `reborn-ci-release-evidence` artifact. The matrix maps the 32 smoke tests to steps, bounded contexts, strategic assets and release gates.
 
 Local command after the server and smoke suite are running:
 
@@ -777,3 +777,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\smoke-demo-walkthrough-invest
 ```
 
 The full CI suite now runs 31 smoke tests and the release evidence matrix includes Step 40 as a release-blocking demo governance gate.
+
+## Step 41 — Demo Data Room, Pilot Launch Pack & Stakeholder Feedback Loop v1
+
+Step 41 turns the guided demo into an external-stakeholder preparation layer. It adds a demo data room asset registry, pilot launch checklist, stakeholder feedback loops, post-demo reports, pilot go/no-go decisions, pilot launch audit logging, a prototype console at `#/pilot-launch`, and a CI smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-demo-data-room-pilot-feedback-loop.ps1
+```
+
+The full CI suite now runs 32 smoke tests and the release evidence matrix includes Step 41 as a release-blocking pilot governance gate. This step does not approve production launch, real payments, real fulfilment, legal warranty terms, or public sustainability claims. It prepares controlled stakeholder demos and private-pilot decision evidence.

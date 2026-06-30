@@ -1496,6 +1496,65 @@
       return this.request(`/api/v1/platform/demo-walkthrough-audit-log?limit=${encodeURIComponent(limit)}`);
     }
 
+
+
+    async getPilotLaunch() {
+      return this.request('/api/v1/platform/pilot-launch');
+    }
+
+    async getDataRoomAssets(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/data-room-assets?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createDataRoomAsset(payload = {}) {
+      return this.request('/api/v1/platform/data-room-assets', { method: 'POST', body: payload });
+    }
+
+    async getPilotChecklistItems(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/pilot-checklist-items?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async updatePilotChecklistStatus(id, payload = {}) {
+      return this.request(`/api/v1/platform/pilot-checklist-items/${encodeURIComponent(id)}/status`, { method: 'POST', body: payload });
+    }
+
+    async evaluatePilotLaunch(payload = {}) {
+      return this.request('/api/v1/platform/pilot-launch/evaluate', { method: 'POST', body: payload });
+    }
+
+    async getStakeholderFeedbackLoops(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/stakeholder-feedback-loops?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createStakeholderFeedbackLoop(payload = {}) {
+      return this.request('/api/v1/platform/stakeholder-feedback-loops', { method: 'POST', body: payload });
+    }
+
+    async getStakeholderFeedback(loopId = '', limit = 50) {
+      const query = loopId ? `loop_id=${encodeURIComponent(loopId)}&limit=${encodeURIComponent(limit)}` : `limit=${encodeURIComponent(limit)}`;
+      return this.request(`/api/v1/platform/stakeholder-feedback?${query}`);
+    }
+
+    async recordStakeholderFeedback(payload = {}) {
+      return this.request('/api/v1/platform/stakeholder-feedback', { method: 'POST', body: payload });
+    }
+
+    async getPostDemoReports(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/post-demo-reports?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async createPostDemoReport(payload = {}) {
+      return this.request('/api/v1/platform/post-demo-reports', { method: 'POST', body: payload });
+    }
+
+    async getPilotGoNoGoDecisions(status = 'all', limit = 50) {
+      return this.request(`/api/v1/platform/pilot-go-no-go-decisions?status=${encodeURIComponent(status)}&limit=${encodeURIComponent(limit)}`);
+    }
+
+    async getPilotLaunchAuditLog(limit = 50) {
+      return this.request(`/api/v1/platform/pilot-launch-audit-log?limit=${encodeURIComponent(limit)}`);
+    }
+
     async getServiceGovernance() {
       return this.request('/api/v1/platform/service-governance');
     }
@@ -1833,6 +1892,14 @@
       let demoFeedback = { demo_feedback: [] };
       let demoReadinessReviews = { demo_readiness_reviews: [] };
       let demoWalkthroughAuditLog = { demo_walkthrough_audit_log: [] };
+      let pilotLaunch = { pilot_launch: null };
+      let dataRoomAssets = { data_room_assets: [] };
+      let pilotChecklistItems = { pilot_checklist_items: [] };
+      let stakeholderFeedbackLoops = { stakeholder_feedback_loops: [] };
+      let stakeholderFeedback = { stakeholder_feedback: [] };
+      let postDemoReports = { post_demo_reports: [] };
+      let pilotGoNoGoDecisions = { pilot_go_no_go_decisions: [] };
+      let pilotLaunchAuditLog = { pilot_launch_audit_log: [] };
       try {
         platformReadiness = await this.getPlatformReadiness();
       } catch (_error) {
@@ -2598,6 +2665,47 @@
           demoWalkthroughAuditLog = { demo_walkthrough_audit_log: [] };
         }
 
+        try {
+          pilotLaunch = await this.getPilotLaunch();
+        } catch (_error) {
+          pilotLaunch = { pilot_launch: null };
+        }
+        try {
+          dataRoomAssets = await this.getDataRoomAssets('all', 30);
+        } catch (_error) {
+          dataRoomAssets = { data_room_assets: [] };
+        }
+        try {
+          pilotChecklistItems = await this.getPilotChecklistItems('all', 30);
+        } catch (_error) {
+          pilotChecklistItems = { pilot_checklist_items: [] };
+        }
+        try {
+          stakeholderFeedbackLoops = await this.getStakeholderFeedbackLoops('all', 30);
+        } catch (_error) {
+          stakeholderFeedbackLoops = { stakeholder_feedback_loops: [] };
+        }
+        try {
+          stakeholderFeedback = await this.getStakeholderFeedback('', 30);
+        } catch (_error) {
+          stakeholderFeedback = { stakeholder_feedback: [] };
+        }
+        try {
+          postDemoReports = await this.getPostDemoReports('all', 30);
+        } catch (_error) {
+          postDemoReports = { post_demo_reports: [] };
+        }
+        try {
+          pilotGoNoGoDecisions = await this.getPilotGoNoGoDecisions('all', 30);
+        } catch (_error) {
+          pilotGoNoGoDecisions = { pilot_go_no_go_decisions: [] };
+        }
+        try {
+          pilotLaunchAuditLog = await this.getPilotLaunchAuditLog(30);
+        } catch (_error) {
+          pilotLaunchAuditLog = { pilot_launch_audit_log: [] };
+        }
+
       }
 
       if (latestCase && this.getToken()) {
@@ -2851,7 +2959,15 @@
         demo_session_events: demoSessionEvents.demo_session_events || [],
         demo_feedback: demoFeedback.demo_feedback || [],
         demo_readiness_reviews: demoReadinessReviews.demo_readiness_reviews || [],
-        demo_walkthrough_audit_log: demoWalkthroughAuditLog.demo_walkthrough_audit_log || []
+        demo_walkthrough_audit_log: demoWalkthroughAuditLog.demo_walkthrough_audit_log || [],
+        pilot_launch: pilotLaunch.pilot_launch || null,
+        data_room_assets: dataRoomAssets.data_room_assets || [],
+        pilot_checklist_items: pilotChecklistItems.pilot_checklist_items || [],
+        stakeholder_feedback_loops: stakeholderFeedbackLoops.stakeholder_feedback_loops || [],
+        stakeholder_feedback: stakeholderFeedback.stakeholder_feedback || [],
+        post_demo_reports: postDemoReports.post_demo_reports || [],
+        pilot_go_no_go_decisions: pilotGoNoGoDecisions.pilot_go_no_go_decisions || [],
+        pilot_launch_audit_log: pilotLaunchAuditLog.pilot_launch_audit_log || []
       };
     }
   }

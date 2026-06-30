@@ -3335,6 +3335,99 @@ async function reviewDemoReadiness(id) {
 }
 
 
+function pilotLaunchDashboard() {
+  setActiveNav('pilot-launch');
+  if (!S.auth.user) {
+    return layout('Pilot Launch', authRequiredPanel('the Step 41 data room and pilot launch console'), { currentStep: 'pilot-launch' });
+  }
+
+  const dashboard = S.api.pilotLaunch || {};
+  const summary = dashboard.summary || {};
+  const assets = S.api.dataRoomAssets || dashboard.data_room_assets || [];
+  const checklist = S.api.pilotChecklistItems || dashboard.pilot_checklist || [];
+  const loops = S.api.stakeholderFeedbackLoops || dashboard.feedback_loops || [];
+  const feedback = S.api.stakeholderFeedback || dashboard.feedback_items || [];
+  const reports = S.api.postDemoReports || dashboard.post_demo_reports || [];
+  const decisions = S.api.pilotGoNoGoDecisions || dashboard.go_no_go_decisions || [];
+  const audit = S.api.pilotLaunchAuditLog || [];
+
+  const assetRows = assets.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'ready' ? 'green' : item.status === 'needs_review' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.category)}</td><td>${safe(item.title)}</td><td>${safe(item.route_hint || item.source_endpoint)}</td></tr>`).join('') || '<tr><td colspan="4">No data room assets yet.</td></tr>';
+  const checklistRows = checklist.slice(0, 10).map(item => `<tr><td><span class="badge ${['ready','done','approved'].includes(item.status) ? 'green' : item.status === 'blocked' || item.status === 'needs_work' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.priority)}</td><td>${safe(item.title)}</td><td><button class="mini-button" onclick="markPilotChecklistReady('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Ready</button></td></tr>`).join('') || '<tr><td colspan="4">No pilot checklist items yet.</td></tr>';
+  const loopRows = loops.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'open' ? 'blue' : 'green'}">${safe(item.status)}</span></td><td>${safe(item.loop_code)}</td><td>${safe(item.audience_type)}</td><td>${safe(item.objective)}</td></tr>`).join('') || '<tr><td colspan="4">No feedback loops yet.</td></tr>';
+  const feedbackRows = feedback.slice(0, 8).map(item => `<li><strong>${safe(item.signal)}</strong> · ${safe(item.rating)}/10 · ${safe(item.topic)} — ${safe(item.notes)}</li>`).join('') || '<li>No stakeholder feedback yet.</li>';
+  const reportRows = reports.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'published' ? 'green' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.report_code)}</td><td>${safe(item.executive_summary)}</td></tr>`).join('') || '<tr><td colspan="3">No post-demo reports yet.</td></tr>';
+  const decisionRows = decisions.slice(0, 6).map(item => `<tr><td><span class="badge ${item.decision === 'go' ? 'green' : item.decision === 'conditional_go' ? 'blue' : 'orange'}">${safe(item.decision)}</span></td><td>${safe(item.score)}</td><td>${safe((item.blockers || []).slice(0, 2).join('; ') || 'No blockers captured')}</td></tr>`).join('') || '<tr><td colspan="3">No go/no-go decisions yet.</td></tr>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No pilot launch audit entries yet.</li>';
+
+  return layout('Pilot Launch', `
+    <section class="section-head"><div><p class="eyebrow">Step 41 · Demo Data Room, Pilot Launch Pack & Stakeholder Feedback Loop</p><h2>Convert the guided demo into a controlled stakeholder workflow with data room assets, launch checklist, feedback and go/no-go evidence.</h2></div><p class="muted">Step 41 is a pilot-readiness governance layer. It does not approve production launch or real customer commitments.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.ready_data_room_assets || 0)}</strong><span>Ready assets</span></div><div class="metric"><strong>${safe(summary.open_checklist_items || 0)}</strong><span>Open checklist</span></div><div class="metric"><strong>${safe(summary.open_feedback_items || 0)}</strong><span>Open feedback</span></div><div class="metric"><strong>${safe(summary.latest_decision_score || 0)}</strong><span>Gate score</span></div></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createStakeholderFeedbackLoop()" ${S.busy ? 'disabled' : ''}>Create feedback loop</button><button class="btn secondary" onclick="recordStakeholderFeedback()" ${S.busy ? 'disabled' : ''}>Record feedback</button><button class="btn secondary" onclick="createPostDemoReport()" ${S.busy ? 'disabled' : ''}>Create post-demo report</button><button class="btn secondary" onclick="evaluatePilotLaunch()" ${S.busy ? 'disabled' : ''}>Evaluate go/no-go</button><a class="btn secondary" href="#/demo-walkthrough">Guided demo</a></div><p class="muted small">Pilot launch remains conditional until Step 40/41 CI, provider shortlist, legal/privacy, fulfilment and support workflows are reviewed.</p></section>
+    <section class="section grid two"><div class="panel stack"><h3>Data room assets</h3><table class="table"><tr><th>Status</th><th>Category</th><th>Title</th><th>Source</th></tr>${assetRows}</table></div><div class="panel stack"><h3>Pilot checklist</h3><table class="table"><tr><th>Status</th><th>Priority</th><th>Item</th><th>Action</th></tr>${checklistRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Stakeholder feedback loops</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Audience</th><th>Objective</th></tr>${loopRows}</table></div><div class="panel stack"><h3>Feedback items</h3><ul class="muted small">${feedbackRows}</ul></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Post-demo reports</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Summary</th></tr>${reportRows}</table></div><div class="panel stack"><h3>Go/no-go decisions</h3><table class="table"><tr><th>Decision</th><th>Score</th><th>Blockers</th></tr>${decisionRows}</table></div></section>
+    <section class="section panel stack"><h3>Pilot launch audit</h3><ul class="muted small">${auditRows}</ul></section>
+  `, { currentStep: 'pilot-launch' });
+}
+
+async function markPilotChecklistReady(id) {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to update pilot checklist.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.updatePilotChecklistStatus(id, { status: 'ready', notes: 'Marked ready from Step 41 prototype console.' });
+    toast('Pilot checklist item marked ready.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Checklist update failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function createStakeholderFeedbackLoop() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create feedback loops.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.createStakeholderFeedbackLoop({ audience_type: 'investor', stakeholder_name: 'Prototype stakeholder', objective: 'Validate Step 41 pilot launch narrative and next actions.' });
+    toast('Stakeholder feedback loop created.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Feedback loop failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function recordStakeholderFeedback() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to record stakeholder feedback.');
+  setBusy(true);
+  try {
+    const loops = S.api.stakeholderFeedbackLoops || [];
+    await window.REBORN_API.recordStakeholderFeedback({ loop_id: loops[0]?.id, audience_type: 'investor', signal: 'positive', rating: 8, topic: 'pilot_launch', notes: 'Guided demo and pilot pack are clear with caveats.', requested_action: 'Prepare provider/legal shortlist before beta.' });
+    toast('Stakeholder feedback recorded.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Feedback failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function createPostDemoReport() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to create post-demo reports.');
+  setBusy(true);
+  try {
+    const loops = S.api.stakeholderFeedbackLoops || [];
+    await window.REBORN_API.createPostDemoReport({ loop_id: loops[0]?.id, executive_summary: 'Generated from Step 41 prototype console after controlled stakeholder demo.' });
+    toast('Post-demo report created.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Post-demo report failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+async function evaluatePilotLaunch() {
+  if (S.auth.user?.role !== 'admin') return toast('Admin login required to evaluate pilot launch.');
+  setBusy(true);
+  try {
+    await window.REBORN_API.evaluatePilotLaunch({ rationale: 'Evaluated from Step 41 prototype console with pilot caveats.' });
+    toast('Pilot go/no-go decision generated.');
+    await refreshApiData({ silent: true });
+  } catch (error) { toast(`Pilot evaluation failed: ${error.message}`); }
+  finally { setBusy(false); render(); }
+}
+
+
 function investorReportingDashboard() {
   setActiveNav('investor-reporting');
   if (!S.auth.user) {
@@ -3477,6 +3570,7 @@ const routes = {
   '/sustainability-impact': sustainabilityImpactDashboard,
   '/investor-reporting': investorReportingDashboard,
   '/demo-walkthrough': demoWalkthroughDashboard,
+  '/pilot-launch': pilotLaunchDashboard,
   '/admin-ops': opsConsole,
   '/ai-generation': aiGeneration,
   '/login': login,
@@ -3701,6 +3795,14 @@ async function refreshApiData(options = {}) {
       demoFeedback: bootstrap.demo_feedback || S.api.demoFeedback || [],
       demoReadinessReviews: bootstrap.demo_readiness_reviews || S.api.demoReadinessReviews || [],
       demoWalkthroughAuditLog: bootstrap.demo_walkthrough_audit_log || S.api.demoWalkthroughAuditLog || [],
+      pilotLaunch: bootstrap.pilot_launch || S.api.pilotLaunch || null,
+      dataRoomAssets: bootstrap.data_room_assets || S.api.dataRoomAssets || [],
+      pilotChecklistItems: bootstrap.pilot_checklist_items || S.api.pilotChecklistItems || [],
+      stakeholderFeedbackLoops: bootstrap.stakeholder_feedback_loops || S.api.stakeholderFeedbackLoops || [],
+      stakeholderFeedback: bootstrap.stakeholder_feedback || S.api.stakeholderFeedback || [],
+      postDemoReports: bootstrap.post_demo_reports || S.api.postDemoReports || [],
+      pilotGoNoGoDecisions: bootstrap.pilot_go_no_go_decisions || S.api.pilotGoNoGoDecisions || [],
+      pilotLaunchAuditLog: bootstrap.pilot_launch_audit_log || S.api.pilotLaunchAuditLog || [],
       lastSyncAt: new Date().toISOString()
     });
   } catch (error) {
