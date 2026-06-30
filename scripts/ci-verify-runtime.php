@@ -35,7 +35,7 @@ try {
 
 $payload = [
     'success' => true,
-    'marker' => 'STEP38_RUNTIME_SCRIPT_VERIFY_V4',
+    'marker' => 'STEP38_RUNTIME_SCRIPT_VERIFY_V5',
     'php_version' => PHP_VERSION,
     'extensions' => array_values(array_filter($required, static fn (string $extension): bool => extension_loaded($extension))),
     'sqlite_pdo_memory' => 'ok',
