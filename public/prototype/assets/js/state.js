@@ -23,6 +23,7 @@ window.REBORN_STATE = {
     repairAttachments: [],
     recognitionJobs: [],
     recognitionJob: null,
+    photoRecognitionProvider: null,
     repairPathDecisions: [],
     repairPathDecision: null,
     providerMatches: [],

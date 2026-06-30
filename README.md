@@ -851,3 +851,73 @@ scripts/smoke-repair-first-offer-architecture.ps1
 ```
 
 The full CI suite now runs 35 smoke tests and the release evidence matrix includes Step 44 as a release-blocking user activation and differentiation gate. This step does not add real AI/CAD generation yet; it makes the offer, navigation and demo flow understandable for non-expert users before deeper integrations are activated.
+
+## Step 45 — AI Photo Recognition, Replacement-Part Brief & Guided Missing Inputs v1
+
+Step 45 connects the Step 44 photo/file moment to a configurable AI photo-recognition provider. After the Step 45.3 UX hotfix, the user sees one primary action: **Carica foto e identifica il pezzo**. Selecting a photo automatically uploads it and starts AI recognition. The result is intentionally simple: either the probable replacement part is recognized, or Re-born asks for the minimum additional images needed to identify it.
+
+The first provider integration is OpenAI Vision through the Responses API, with deterministic fallback when no API key is configured. This keeps local development and CI stable while allowing live AI recognition in an environment where `OPENAI_API_KEY` is set.
+
+Configuration:
+
+```env
+AI_PHOTO_RECOGNITION_PROVIDER=openai
+AI_PHOTO_RECOGNITION_ENABLED=true
+OPENAI_API_KEY=
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_VISION_MODEL=gpt-5.4-mini
+OPENAI_TIMEOUT_SECONDS=60
+OPENAI_VISION_MAX_IMAGES=3
+OPENAI_VISION_MAX_IMAGE_BYTES=5242880
+```
+
+New status endpoint:
+
+```text
+GET /api/v1/ai/photo-recognition/status
+```
+
+New smoke test:
+
+```text
+scripts/smoke-ai-photo-recognition-replacement-brief.ps1
+```
+
+The full CI suite now runs 36 smoke tests and the release evidence matrix includes Step 45 as a release-blocking AI/user-activation gate. This step does not approve automatic manufacturing: AI recognition remains preliminary and every generated replacement still requires dimensional, material and human/provider validation before production.
+
+
+### Step 45.3 — One-Button AI Recognition UX Hotfix
+
+Step 45.3 simplifies the Step 2 user experience for beginners. The previous separate upload and recognition buttons are replaced by a one-button flow: **Carica foto e identifica il pezzo**. The file picker is hidden behind that CTA, and image selection automatically triggers upload plus AI recognition. The result panel now shows only two user-facing outcomes: **pezzo riconosciuto** or **servono altre immagini**.
+
+### Step 45.4 — Adaptive One-Button Recognition & Italian-First Bilingual UX Hotfix
+
+Step 45.4 refines the Step 2 beginner flow after real UI testing. The user still sees one primary action only. When no recognition has been attempted, the button says **Carica foto e identifica il pezzo**. If the AI cannot identify the part with enough confidence, the same button changes to **Carica altre immagini**. No additional “retry” or “upload more” button is shown inside the result panel.
+
+The default interface language is now Italian. A compact IT/EN selector is available in the prototype API banner, with Italian as the default and English as the optional alternative. The user-facing Step 2 copy, recognition outcomes, CTA states and main navigation are localized through a lightweight `REBORN_I18N` dictionary.
+
+User-facing Step 2 outcomes remain intentionally simple:
+
+- **Primo sguardo AI · pezzo riconosciuto** — Re-born shows the probable part, function, manufacturability and next action.
+- **Primo sguardo AI · servono altre immagini** — Re-born explains which views are missing and the same main CTA becomes **Carica altre immagini**.
+
+The goal is to keep the repair journey understandable for a non-expert user: one button, one AI answer, one next action.
+
+### Step 45.5 — Reference Image OCR Recognition Hotfix
+
+Step 45.5 fixes a real recognition issue found with product-detail images such as dishwasher rack wheel listings. The AI prompt now treats reference/product images, dimension diagrams and visible text as valid recognition evidence, not as insufficient photos. If a picture contains a part name, part number or dimensions, Re-born extracts them and can mark the part as recognized while still asking for extra images only for manufacturing fit validation.
+
+The recognition JSON now includes:
+
+- `identification.status` — `recognized`, `needs_more_images` or `unclear`;
+- `identification.source_image_type` — real broken part, product reference image, dimension diagram or mixed reference images;
+- `identification.visible_text` and `identification.part_number`;
+- `part_spec.name_it`, `part_spec.known_dimensions` and `part_spec.key_features`.
+
+The UI now shows Italian output such as **Codice pezzo**, **Testo letto nell’immagine**, **Dimensioni lette** and **Caratteristiche visibili**. A product reference image with readable part information no longer forces the CTA into **Carica altre immagini** just because it is not a real broken-part photo.
+
+The debug script also accepts multiple image paths, for example:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\debug-ai-photo-recognition-live.ps1 -BaseUrl http://127.0.0.1:8080 -ImagePath "C:\foto\dettaglio.jpg","C:\foto\misure.jpg"
+```

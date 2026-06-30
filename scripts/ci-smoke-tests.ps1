@@ -6,7 +6,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-$CiSmokeSuiteVersion = "STEP44_CI_SMOKE_SUITE_WITH_REPAIR_FIRST_OFFER_ARCHITECTURE_V1"
+$CiSmokeSuiteVersion = "STEP45_CI_SMOKE_SUITE_WITH_AI_PHOTO_RECOGNITION_V1"
 Write-Host "CI smoke script version: $CiSmokeSuiteVersion" -ForegroundColor Magenta
 
 $env:REBORN_BASE_URL = $BaseUrl
@@ -54,7 +54,8 @@ $SmokeTests = @(
     "smoke-demo-data-room-pilot-feedback-loop.ps1",
     "smoke-public-pilot-real-world-validation.ps1",
     "smoke-guided-user-repair-experience.ps1",
-    "smoke-repair-first-offer-architecture.ps1"
+    "smoke-repair-first-offer-architecture.ps1",
+    "smoke-ai-photo-recognition-replacement-brief.ps1"
 )
 
 function Escape-GitHubCommandValue([string]$Value) {

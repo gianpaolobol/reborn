@@ -1,5 +1,7 @@
 (function () {
-  const API_TIMEOUT_MS = 4200;
+  const DEFAULT_API_TIMEOUT_MS = 8000;
+  const UPLOAD_API_TIMEOUT_MS = 45000;
+  const AI_RECOGNITION_TIMEOUT_MS = 90000;
 
   function isHttpRuntime() {
     return window.location.protocol === 'http:' || window.location.protocol === 'https:';
@@ -35,7 +37,8 @@
         throw new Error('Static file runtime: API calls are disabled.');
       }
 
-      const timeout = withTimeout(API_TIMEOUT_MS);
+      const timeoutMs = Number(options.timeoutMs || DEFAULT_API_TIMEOUT_MS);
+      const timeout = withTimeout(timeoutMs);
       try {
         const isFormData = options.formData instanceof FormData;
         const response = await fetch(`${this.baseUrl}${path}`, {
@@ -67,6 +70,11 @@
         }
 
         return payload;
+      } catch (error) {
+        if (error && error.name === 'AbortError') {
+          throw new Error(`API request timed out after ${Math.round(timeoutMs / 1000)} seconds. The server may still be processing the AI request; check logs or try again.`);
+        }
+        throw error;
       } finally {
         timeout.done();
       }
@@ -159,7 +167,8 @@
       formData.append('kind', kind);
       return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/attachments`, {
         method: 'POST',
-        formData
+        formData,
+        timeoutMs: UPLOAD_API_TIMEOUT_MS
       });
     }
 
@@ -167,10 +176,15 @@
       return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/attachments`);
     }
 
+    async getPhotoRecognitionStatus() {
+      return this.request('/api/v1/ai/photo-recognition/status', { timeoutMs: 15000 });
+    }
+
     async requestRecognition(caseId, attachmentIds) {
       return this.request(`/api/v1/repair-cases/${encodeURIComponent(caseId)}/recognition-jobs`, {
         method: 'POST',
-        body: { attachment_ids: attachmentIds }
+        body: { attachment_ids: attachmentIds },
+        timeoutMs: AI_RECOGNITION_TIMEOUT_MS
       });
     }
 

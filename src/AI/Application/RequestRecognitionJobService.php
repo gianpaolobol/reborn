@@ -22,6 +22,7 @@ final class RequestRecognitionJobService
         private readonly RepairAttachmentRepository $attachments,
         private readonly RecognitionJobRepository $recognitionJobs,
         private readonly EventBus $eventBus,
+        private readonly PhotoRecognitionGateway $photoRecognitionGateway,
     ) {
     }
 
@@ -65,7 +66,7 @@ final class RequestRecognitionJobService
 
         try {
             $this->recognitionJobs->markProcessing($job->id);
-            $result = $this->mockResult($case, $selectedAttachments);
+            $result = $this->photoRecognitionGateway->analyze($case, $selectedAttachments) ?? $this->mockResult($case, $selectedAttachments);
             $completed = $this->recognitionJobs->complete($job->id, $result);
             $this->eventBus->publish(new AIRecognitionCompleted(
                 $repairCaseId,
@@ -132,14 +133,45 @@ final class RequestRecognitionJobService
         };
 
         return [
+            'recognition_mode' => 'deterministic_fallback_no_openai_key',
+            'ai_provider' => [
+                'provider' => 'openai',
+                'status' => 'not_configured_fallback',
+                'mode' => 'mock_result',
+            ],
+            'identification' => [
+                'status' => str_contains($label, 'unknown') ? 'needs_more_images' : 'recognized',
+                'source_image_type' => 'unknown',
+                'visible_text' => [],
+                'part_number' => '',
+                'why' => 'Fallback locale basato su testo richiesta, nomi file e tipo allegati. Non sostituisce il riconoscimento vision live.',
+            ],
+            'part_spec' => [
+                'name_it' => $this->italianLabelFor($label),
+                'name_en' => $label,
+                'appliance_context' => str_contains($case->category, 'home_appliance') ? 'elettrodomestico' : 'oggetto da riparare',
+                'known_dimensions' => [],
+                'key_features' => [],
+            ],
             'object_guess' => [
-                'label' => $label,
+                'label' => $this->italianLabelFor($label),
                 'confidence' => round($confidence, 2),
+                'object_context' => 'Fallback ricavato da testo richiesta, nomi file e tipo allegati.',
             ],
             'damage_assessment' => [
                 'type' => $damageType,
                 'severity' => $confidence >= 0.78 ? 'medium' : 'high',
                 'repairability_score' => round($repairability, 2),
+            ],
+            'replacement_part_brief' => [
+                'plain_language_summary' => 'Re-born prepared a first replacement-part brief from the uploaded evidence. Add dimensions and a second angle before production.',
+                'probable_function' => $this->probableFunctionForLabel($label),
+                'part_family' => $label,
+                'manufacturing_candidate' => $path !== 'find_provider',
+                'material_hint' => 'PETG/ASA/TPU/nylon to be selected after load, heat, water and flexibility constraints are known.',
+                'critical_dimensions' => ['overall width', 'overall height', 'thickness', 'mounting hole or clip dimensions if present'],
+                'photo_requirements' => ['close-up of broken part', 'side view', 'full object context', 'photo with ruler or coin for scale'],
+                'user_questions' => ['What does the part do when the object works?', 'Is the part exposed to heat, water, load or repeated movement?'],
             ],
             'recommended_next_step' => [
                 'path' => $path,
@@ -151,9 +183,33 @@ final class RequestRecognitionJobService
                 'Upload any existing CAD or manual',
             ],
             'repair_notes' => [
-                'This is a preliminary AI diagnosis.',
-                'Final manufacturability must be verified before production.',
+                'Questa è una diagnosi AI preliminare.',
+                'La producibilità finale deve essere verificata prima della produzione.',
             ],
         ];
+    }
+
+    private function italianLabelFor(string $label): string
+    {
+        $value = strtolower($label);
+        return match (true) {
+            str_contains($value, 'hinge') || str_contains($value, 'joint') => 'cerniera / snodo plastico',
+            str_contains($value, 'knob') || str_contains($value, 'control') => 'pomello / comando elettrodomestico',
+            str_contains($value, 'wheel') || str_contains($value, 'rolling') => 'ruota cestello / componente di scorrimento',
+            str_contains($value, 'cover') || str_contains($value, 'case') || str_contains($value, 'shell') => 'cover / scocca plastica',
+            default => 'componente da confermare',
+        };
+    }
+
+    private function probableFunctionForLabel(string $label): string
+    {
+        $value = strtolower($label);
+        return match (true) {
+            str_contains($value, 'hinge') || str_contains($value, 'joint') => 'Allows two parts to rotate, open or close while staying aligned.',
+            str_contains($value, 'knob') || str_contains($value, 'control') => 'Transfers hand input to a control shaft, switch or selector.',
+            str_contains($value, 'wheel') || str_contains($value, 'rolling') => 'Lets a basket, drawer or moving element slide or roll correctly.',
+            str_contains($value, 'cover') || str_contains($value, 'case') || str_contains($value, 'shell') => 'Protects internal components or restores the external shape of the object.',
+            default => 'Mechanical or protective function to be confirmed with one more photo and measurements.',
+        };
     }
 }

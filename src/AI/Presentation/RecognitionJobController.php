@@ -7,6 +7,7 @@ namespace Reborn\AI\Presentation;
 use Reborn\AI\Application\GetRecognitionJobService;
 use Reborn\AI\Application\ListRecognitionJobsService;
 use Reborn\AI\Application\RequestRecognitionJobService;
+use Reborn\AI\Application\PhotoRecognitionGateway;
 use Reborn\Identity\Application\AuthContext;
 use Reborn\Repair\Application\GetRepairCaseService;
 use Reborn\Repair\Application\RepairCaseAccessPolicy;
@@ -24,7 +25,18 @@ final class RecognitionJobController
         private readonly GetRepairCaseService $getRepairCase,
         private readonly AuthContext $auth,
         private readonly RepairCaseAccessPolicy $accessPolicy,
+        private readonly PhotoRecognitionGateway $photoRecognitionGateway,
     ) {
+    }
+
+
+    public function providerStatus(Request $request): JsonResponse
+    {
+        $this->auth->user($request);
+
+        return JsonResponse::ok([
+            'photo_recognition_provider' => $this->photoRecognitionGateway->status(),
+        ], $request->requestId());
     }
 
     public function index(Request $request): JsonResponse

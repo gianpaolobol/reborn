@@ -5,6 +5,114 @@ const menuButton = document.getElementById('menuButton');
 const D = window.REBORN_DATA;
 const S = window.REBORN_STATE;
 
+
+const REBORN_I18N = {
+  it: {
+    liveApi: 'API attiva', mockMode: 'Modalità demo', apiError: 'Errore API', checkingApi: 'Controllo API', noSyncYet: 'Nessuna sincronizzazione', lastSync: 'Ultima sincronizzazione', guest: 'Ospite', savedToken: 'Token salvato', logout: 'Esci', login: 'Accedi', refreshApi: 'Aggiorna API',
+    advancedConsole: 'Console avanzata', advancedConsoleNote: 'Quest’area è per operatori, investitori o governance. Il percorso utente resta guidato in quattro passaggi.', backToGuidedRepair: 'Torna al percorso guidato',
+    stepProblem: 'Problema', stepPhotos: 'Foto', stepGenerate: 'Genera', stepQuote: 'Preventivo',
+    photoCtaInitial: 'Carica foto e identifica il pezzo', photoCtaMore: 'Carica altre immagini', photoCtaBusy: 'Sto caricando e analizzando…',
+    photoPickerMissing: 'Selettore foto non disponibile in questa schermata.', noPhotoSelected: 'Nessuna foto selezionata.', filesSelected: 'file selezionati.', noFilesSelected: 'Nessun file selezionato.', uploadMockUnavailable: 'Il backend non è attivo. Usa il riconoscimento demo.', loginRequiredUpload: 'Devi accedere per caricare le foto del ricambio.', createCaseFirst: 'Crea prima una richiesta di riparazione.', selectAtLeastPhoto: 'Seleziona almeno una foto.', uploadingAndAnalyzing: 'Sto caricando la foto e chiedendo all’AI di identificare il pezzo…', uploadEvidence: 'Caricamento evidenze di riparazione…', evidenceUploaded: 'Foto/evidenze caricate.', uploadRecognitionFailed: 'Caricamento o riconoscimento non riuscito',
+    aiAnalyzing: 'L’AI sta analizzando la foto. La prima richiesta reale può richiedere fino a 90 secondi.', aiFailed: 'Riconoscimento AI non riuscito', noUploadedPhoto: 'Non è disponibile nessuna foto caricata per il riconoscimento AI.', aiNoClearResult: 'L’AI non ha restituito un risultato chiaro. La schermata indica cosa provare ora.', aiNeedsMore: 'Serve un’altra immagine o un riferimento di scala prima di identificare bene il pezzo.', aiIdentified: 'L’AI ha identificato il ricambio probabile e ha generato un brief chiaro.', toastAiNoIdentify: 'L’AI non riesce ancora a identificare il pezzo.', toastAiNeedsMore: 'Servono altre immagini per aumentare la sicurezza.', toastAiIdentified: 'L’AI ha identificato il pezzo probabile.',
+    uploadedAttachmentsEmpty: 'Nessuna foto caricata. Usa il pulsante principale per caricare la prima immagine.', noLocalFiles: 'Nessun file locale selezionato.', quoteAfterValidation: 'Preventivo dopo verifica', statusAnalyzing: 'analisi in corso',
+    aiFirstLook: 'Primo sguardo AI', aiReadyHeadline: 'Carica una foto per identificare il pezzo', aiBusyHeadline: 'Sto analizzando la foto…', aiFailureHeadline: 'Non riesco ancora a identificare il pezzo', aiReadyDescription: 'Premi un solo pulsante, scegli una foto e Re-born ti dirà se riconosce il pezzo oppure quali immagini servono per identificarlo.', aiBusyDescription: 'Attendi su questa pagina. L’analisi AI di una foto reale può richiedere più tempo di una normale richiesta.', aiFailureDescription: 'La richiesta AI non ha prodotto un risultato chiaro. Riprova con una foto più nitida o con un’altra angolazione.', whatToDoNow: 'Cosa fare ora', whatToDoNowText: 'Usa lo stesso pulsante principale per caricare altre immagini: una foto ravvicinata, una laterale, una del pezzo montato e una con riferimento di scala.', expectedResult: 'Risultato atteso', expectedResultText: 'Ottenere subito un riconoscimento chiaro del pezzo oppure una richiesta precisa delle immagini mancanti.',
+    needsMoreTitle: 'Non ho ancora abbastanza elementi per identificare bene il pezzo.', recognizedTitlePrefix: 'Pezzo probabilmente riconosciuto:', needsMoreEyebrow: 'Primo sguardo AI · servono altre immagini', recognizedEyebrow: 'Primo sguardo AI · pezzo riconosciuto', nextAction: 'Prossima azione', needsMoreActionText: 'Usa il pulsante principale “Carica altre immagini”. Re-born aggiungerà le nuove foto al caso e riproverà automaticamente il riconoscimento.', requestedPhotos: 'Foto richieste', usefulMeasures: 'Misure utili', minimalQuestions: 'Domande minime', provider: 'Provider', prelimHumanValidation: 'L’AI è preliminare: prima di produrre il ricambio servirà conferma dimensionale.', recognizedFallbackLabel: 'componente da confermare', generable: 'Generabile', yes: 'sì', toValidate: 'da verificare', nextStep: 'Prossimo passo', clearAiOutput: 'Output AI chiaro', probableFunction: 'Funzione probabile', materialSuggested: 'Materiale suggerito', damageEstimated: 'Danno stimato', fallbackUsed: 'Fallback AI usato', measuresToConfirm: 'Misure da confermare', usefulImagesStill: 'Immagini ancora utili', beforeGenerate: 'Prima di generare il ricambio', goGenerateRoute: 'Vai al percorso di generazione', loadMoreIfWrong: 'Se l’identificazione non ti convince, usa lo stesso pulsante principale per caricare altre immagini.', visibleTextRead: 'Testo letto nell’immagine', partNumber: 'Codice pezzo', knownDimensions: 'Dimensioni lette', keyFeatures: 'Caratteristiche visibili', sourceImage: 'Tipo immagine', productReferenceAccepted: 'Immagine di riferimento accettata',
+    activeRequest: 'Richiesta attiva', brokenPartPhoto: 'Foto del pezzo rotto', brokenPartPhotoHint: 'Scegli una foto JPG/PNG/WebP. Se non basta, l’AI ti chiederà solo le viste mancanti: laterale, oggetto completo o riferimento di scala.', backToGuide: 'Torna alla guida', oneButtonHint: 'Questo pulsante esegue tutto: selezione immagine, upload e primo riconoscimento AI. Se la foto non basta, lo stesso pulsante diventa “Carica altre immagini”.', uploadedPhotos: 'Foto già caricate', aiProvider: 'Provider AI', lastAiError: 'Ultimo errore AI/API', step2Eyebrow: 'Step 2 di 4 · riconoscimento AI da foto', step2Title: 'Carica una foto: Re-born identifica il pezzo o ti chiede solo ciò che manca.', step2Description: 'Un solo pulsante apre la scelta foto, carica l’immagine e avvia l’AI. Se la prima foto non basta, lo stesso pulsante diventa “Carica altre immagini”.',
+    photoReferenceFront: 'foto frontale ravvicinata', photoReferenceSide: 'foto laterale', photoReferenceMounted: 'foto del pezzo montato o della zona rotta', photoReferenceScale: 'foto con righello o moneta per la scala', widthTotal: 'larghezza totale', heightTotal: 'altezza totale', thickness: 'spessore', holesOrHooks: 'fori o agganci', fallbackRepairSummary: 'Il pezzo è stato riconosciuto abbastanza bene per preparare il percorso di generazione o produzione.'
+  },
+  en: {
+    liveApi: 'Live API', mockMode: 'Demo mode', apiError: 'API error', checkingApi: 'Checking API', noSyncYet: 'No sync yet', lastSync: 'Last sync', guest: 'Guest', savedToken: 'Saved token', logout: 'Logout', login: 'Login', refreshApi: 'Refresh API',
+    advancedConsole: 'Advanced console', advancedConsoleNote: 'This area is for operators, investors or governance review. The user flow stays guided in four steps.', backToGuidedRepair: 'Back to guided repair',
+    stepProblem: 'Problem', stepPhotos: 'Photos', stepGenerate: 'Generate', stepQuote: 'Quote',
+    photoCtaInitial: 'Upload photo and identify part', photoCtaMore: 'Upload more images', photoCtaBusy: 'Uploading and analyzing…',
+    photoPickerMissing: 'Photo picker is not available on this screen.', noPhotoSelected: 'No photo selected.', filesSelected: 'files selected.', noFilesSelected: 'No files selected.', uploadMockUnavailable: 'Backend API is not live. Use mock recognition instead.', loginRequiredUpload: 'Login required to upload repair evidence.', createCaseFirst: 'Create a repair case first.', selectAtLeastPhoto: 'Select at least one photo.', uploadingAndAnalyzing: 'Uploading the photo and asking AI to identify the part…', uploadEvidence: 'Uploading repair evidence…', evidenceUploaded: 'Repair evidence uploaded.', uploadRecognitionFailed: 'Upload or recognition failed',
+    aiAnalyzing: 'AI is analyzing the photo. This can take up to 90 seconds on the first live request.', aiFailed: 'AI recognition failed', noUploadedPhoto: 'No uploaded photo is available for AI recognition.', aiNoClearResult: 'The AI could not return a clear result. The screen explains what to try next.', aiNeedsMore: 'AI needs another image or a scale reference before it can identify the part clearly.', aiIdentified: 'AI identified the probable replacement part and generated a clear brief.', toastAiNoIdentify: 'AI could not identify the part yet.', toastAiNeedsMore: 'AI needs more images to be more confident.', toastAiIdentified: 'AI identified the probable part.',
+    uploadedAttachmentsEmpty: 'No uploaded photos yet. Use the main button to upload the first image.', noLocalFiles: 'No local files selected yet.', quoteAfterValidation: 'Quote after validation', statusAnalyzing: 'analyzing',
+    aiFirstLook: 'AI first look', aiReadyHeadline: 'Upload a photo to identify the part', aiBusyHeadline: 'Analyzing the photo…', aiFailureHeadline: 'I cannot identify the part yet', aiReadyDescription: 'Press one button, choose a photo, and Re-born will either identify the part or ask for the images needed.', aiBusyDescription: 'Stay on this page. Live photo analysis may take longer than a normal request.', aiFailureDescription: 'The AI request did not produce a clear result. Try a sharper photo or another angle.', whatToDoNow: 'What to do now', whatToDoNowText: 'Use the same main button to upload more images: close-up, side view, mounted part and a scale reference.', expectedResult: 'Expected result', expectedResultText: 'Get a clear part recognition or a precise request for missing images.',
+    needsMoreTitle: 'I do not have enough evidence to identify the part clearly yet.', recognizedTitlePrefix: 'Probable part recognized:', needsMoreEyebrow: 'AI first look · more images needed', recognizedEyebrow: 'AI first look · part recognized', nextAction: 'Next action', needsMoreActionText: 'Use the main “Upload more images” button. Re-born will add the new photos to the case and automatically retry recognition.', requestedPhotos: 'Requested photos', usefulMeasures: 'Useful measurements', minimalQuestions: 'Minimal questions', provider: 'Provider', prelimHumanValidation: 'AI is preliminary: dimensional validation is required before manufacturing.', recognizedFallbackLabel: 'component to confirm', generable: 'Generable', yes: 'yes', toValidate: 'to validate', nextStep: 'Next step', clearAiOutput: 'Clear AI output', probableFunction: 'Probable function', materialSuggested: 'Suggested material', damageEstimated: 'Estimated damage', fallbackUsed: 'AI fallback used', measuresToConfirm: 'Measurements to confirm', usefulImagesStill: 'Still useful images', beforeGenerate: 'Before generating the part', goGenerateRoute: 'Go to generation route', loadMoreIfWrong: 'If the identification does not look right, use the same main button to upload more images.', visibleTextRead: 'Text read in the image', partNumber: 'Part number', knownDimensions: 'Read dimensions', keyFeatures: 'Visible features', sourceImage: 'Image type', productReferenceAccepted: 'Reference image accepted',
+    activeRequest: 'Active request', brokenPartPhoto: 'Broken part photo', brokenPartPhotoHint: 'Choose a JPG/PNG/WebP photo. If it is not enough, AI will ask only for missing views: side, complete object or scale reference.', backToGuide: 'Back to guide', oneButtonHint: 'This button does everything: image selection, upload and AI first look. If the photo is not enough, the same button becomes “Upload more images”.', uploadedPhotos: 'Uploaded photos', aiProvider: 'AI provider', lastAiError: 'Last AI/API error', step2Eyebrow: 'Step 2 of 4 · AI photo recognition', step2Title: 'Upload a photo: Re-born identifies the part or asks only for what is missing.', step2Description: 'One button opens the picker, uploads the image and starts AI. If the first photo is not enough, the same button becomes “Upload more images”.',
+    photoReferenceFront: 'close-up front photo', photoReferenceSide: 'side photo', photoReferenceMounted: 'photo of the mounted part or broken area', photoReferenceScale: 'photo with ruler or coin for scale', widthTotal: 'total width', heightTotal: 'total height', thickness: 'thickness', holesOrHooks: 'holes or hooks', fallbackRepairSummary: 'The part was recognized clearly enough to prepare the generation or production path.'
+  }
+};
+
+function currentLanguage() {
+  const saved = localStorage.getItem('reborn_language');
+  return saved === 'en' ? 'en' : 'it';
+}
+
+function t(key) {
+  const lang = currentLanguage();
+  return REBORN_I18N[lang]?.[key] || REBORN_I18N.it[key] || key;
+}
+
+function setLanguage(lang) {
+  localStorage.setItem('reborn_language', lang === 'en' ? 'en' : 'it');
+  
+function syncStaticChromeLanguage() {
+  const lang = currentLanguage();
+  const chrome = {
+    it: {
+      title: 'Re-born Prototype — Piattaforma intelligente per ricambi e riparazioni',
+      skip: 'Vai al prototipo',
+      nav: {
+        'repair-guide': 'Ripara il mio oggetto',
+        start: '1. Problema',
+        capture: '2. Foto',
+        'repair-paths': '3. Genera ricambio',
+        'provider-network': '4. Preventivo',
+        account: 'La mia riparazione',
+        advanced: 'Console avanzate'
+      },
+      footerStrong: 'Prototipo v0.1',
+      footerText: 'HTML/CSS/JS Vanilla. Prototipo collegato alle API con fallback demo. Nessun framework. Nessun pagamento reale.',
+      footerLinks: ['Genera ricambio', 'Inizia con una foto', 'Console avanzate', 'Pilot pubblico', 'PRODUCT.md']
+    },
+    en: {
+      title: 'Re-born Prototype — Repair Intelligence Platform',
+      skip: 'Skip to prototype',
+      nav: {
+        'repair-guide': 'Repair my object',
+        start: '1. Problem',
+        capture: '2. Photos',
+        'repair-paths': '3. Generate part',
+        'provider-network': '4. Quote',
+        account: 'My repair',
+        advanced: 'Advanced consoles'
+      },
+      footerStrong: 'Prototype v0.1',
+      footerText: 'HTML/CSS/JS Vanilla. API-aware prototype with mock fallback. No framework. No real payments.',
+      footerLinks: ['Generate replacement part', 'Start with one photo', 'Advanced consoles', 'Public pilot', 'PRODUCT.md']
+    }
+  }[lang];
+  document.title = chrome.title;
+  const skip = document.querySelector('.skip-link');
+  if (skip) skip.textContent = chrome.skip;
+  Object.entries(chrome.nav).forEach(([key, text]) => {
+    const node = document.querySelector(`[data-nav="${key}"]`);
+    if (node) node.textContent = text;
+  });
+  const footerStrong = document.querySelector('.footer strong');
+  if (footerStrong) footerStrong.textContent = chrome.footerStrong;
+  const footerDiv = document.querySelector('.footer > div:first-child');
+  if (footerDiv) footerDiv.innerHTML = `<strong>${chrome.footerStrong}</strong><br />${chrome.footerText}`;
+  document.querySelectorAll('.footer-links a').forEach((node, index) => {
+    if (chrome.footerLinks[index]) node.textContent = chrome.footerLinks[index];
+  });
+}
+
+document.documentElement.lang = currentLanguage();
+syncStaticChromeLanguage();
+  syncStaticChromeLanguage();
+  render();
+}
+
+function languageSwitch() {
+  const lang = currentLanguage();
+  return `<div class="language-switch" aria-label="Lingua / Language"><button class="mini-button ${lang === 'it' ? 'is-active' : ''}" type="button" onclick="setLanguage('it')">IT</button><button class="mini-button ${lang === 'en' ? 'is-active' : ''}" type="button" onclick="setLanguage('en')">EN</button></div>`;
+}
+
+document.documentElement.lang = currentLanguage();
+
 function html(strings, ...values) {
   return strings.map((s, i) => s + (values[i] ?? '')).join('');
 }
@@ -41,7 +149,7 @@ function setBusy(value) {
 }
 
 function formatEuro(cents) {
-  if (typeof cents !== 'number' || Number.isNaN(cents)) return 'Quote after validation';
+  if (typeof cents !== 'number' || Number.isNaN(cents)) return t('quoteAfterValidation');
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(cents / 100);
 }
 
@@ -57,19 +165,20 @@ function apiBanner() {
   const api = S.api;
   const auth = S.auth;
   const statusClass = api.status === 'live' ? 'live' : api.status === 'mock' ? 'mock' : api.status === 'error' ? 'error' : 'checking';
-  const label = api.status === 'live' ? 'Live API' : api.status === 'mock' ? 'Mock mode' : api.status === 'error' ? 'API error' : 'Checking API';
-  const sync = api.lastSyncAt ? `Last sync ${new Date(api.lastSyncAt).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : 'No sync yet';
+  const label = api.status === 'live' ? t('liveApi') : api.status === 'mock' ? t('mockMode') : api.status === 'error' ? t('apiError') : t('checkingApi');
+  const sync = api.lastSyncAt ? `${t('lastSync')} ${new Date(api.lastSyncAt).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : t('noSyncYet');
   const user = auth.user;
-  const authLabel = auth.status === 'authenticated' && user ? `${user.name || user.email} · ${humanRole(user.role)}` : auth.tokenStored ? 'Saved token' : 'Guest';
+  const authLabel = auth.status === 'authenticated' && user ? `${user.name || user.email} · ${humanRole(user.role)}` : auth.tokenStored ? t('savedToken') : t('guest');
   return html`<div class="api-banner ${statusClass}" role="status">
     <div><strong>${label}</strong><span>${safe(api.message)}</span></div>
     <div class="api-banner-actions">
       <span>${sync}</span>
       <span class="auth-chip ${auth.status === 'authenticated' ? 'signed-in' : ''}">${safe(authLabel)}</span>
+      ${languageSwitch()}
       ${auth.status === 'authenticated'
-        ? `<button class="mini-button" type="button" onclick="handleLogout()" ${S.busy ? 'disabled' : ''}>Logout</button>`
-        : `<a class="mini-button link-button" href="#/login">Login</a>`}
-      <button class="mini-button" type="button" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh API</button>
+        ? `<button class="mini-button" type="button" onclick="handleLogout()" ${S.busy ? 'disabled' : ''}>${t('logout')}</button>`
+        : `<a class="mini-button link-button" href="#/login">${t('login')}</a>`}
+      <button class="mini-button" type="button" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>${t('refreshApi')}</button>
     </div>
   </div>`;
 }
@@ -100,14 +209,14 @@ function stepper(active) {
   };
   const normalized = userStepAliases[active] || active;
   const steps = [
-    ['start', '01', 'Problem'],
-    ['capture', '02', 'Photos'],
-    ['repair-paths', '03', 'Generate'],
-    ['provider-network', '04', 'Quote']
+    ['start', '01', t('stepProblem')],
+    ['capture', '02', t('stepPhotos')],
+    ['repair-paths', '03', t('stepGenerate')],
+    ['provider-network', '04', t('stepQuote')]
   ];
   const activeIndex = steps.findIndex(s => s[0] === normalized);
   if (activeIndex < 0) {
-    return html`<div class="advanced-mode-note"><strong>Advanced console</strong><span>This area is for operators, investors or governance review. The user repair flow stays in four visible steps.</span><a href="#/repair-guide">Back to guided repair</a></div>`;
+    return html`<div class="advanced-mode-note"><strong>${t('advancedConsole')}</strong><span>${t('advancedConsoleNote')}</span><a href="#/repair-guide">${t('backToGuidedRepair')}</a></div>`;
   }
   return html`<div class="stepper simple-stepper" aria-label="Guided replacement-part progress">
     ${steps.map((s, i) => `<div class="step ${i < activeIndex ? 'done' : ''} ${s[0] === normalized ? 'active' : ''}"><strong>${s[1]}</strong>${s[2]}</div>`).join('')}
@@ -441,7 +550,7 @@ function nextGuidedAction() {
     return { label: 'Login to start', href: '#/login', note: 'Use a demo account, then return to the guided repair path.' };
   }
   if (!repairCase) return { label: 'Start with the broken part', href: '#/start', note: 'Step 1 of 4: describe the object and the part to replace.' };
-  if (!attachments.length) return { label: 'Add photo or file', href: '#/capture', note: 'Step 2 of 4: one clear phone photo is enough to continue.' };
+  if (!attachments.length) return { label: 'Add photo or file', href: '#/capture', note: 'Step 2 di 4: one clear phone photo is enough to continue.' };
   if (!recognition) return { label: 'Identify the part', onclick: 'runAIRecognition()', note: 'Step 3 of 4: Re-born identifies the part and damage before suggesting how to obtain it.' };
   if (!decision) return { label: 'Generate replacement options', onclick: 'runRepairPathDecision()', note: 'Step 3 of 4: choose between existing spare, generated model, maker/CAD help or provider production.' };
   if (!providerMatch) return { label: 'Find production help', onclick: 'runProviderMatch()', note: 'Step 4 of 4: route the replacement part to a suitable provider or maker.' };
@@ -545,7 +654,7 @@ function advancedConsoleDirectory() {
     <section class="grid two advanced-directory">
       ${groups.map(([title, links]) => `<article class="panel stack"><h3>${safe(title)}</h3><div class="console-link-list">${links.map(([label, href]) => `<a href="${href}">${safe(label)}</a>`).join('')}</div></article>`).join('')}
     </section>
-    <section class="section panel stack"><h3>UX rule after Step 44</h3><p class="muted">Governance modules may exist, but the first-time user must always see the repair-first flow: problem, photo, generate route, quote.</p><div class="actions"><a class="btn green" href="#/repair-guide">Back to guided repair</a><a class="btn secondary" href="#/overview">Platform overview</a></div></section>
+    <section class="section panel stack"><h3>UX rule after Step 44</h3><p class="muted">Governance modules may exist, but the first-time user must always see the repair-first flow: problem, photo, generate route, quote.</p><div class="actions"><a class="btn green" href="#/repair-guide">${t('backToGuidedRepair')}</a><a class="btn secondary" href="#/overview">Platform overview</a></div></section>
   `);
 }
 
@@ -564,7 +673,7 @@ function start() {
           <div class="field"><label for="repairUrgency">What matters most</label><select id="repairUrgency" name="urgency"><option>Fast, within 48 hours</option><option>Lowest cost</option><option>Best quality</option><option>Lowest environmental impact</option></select></div>
         </div>
         <div class="field"><label for="repairDescription">What should work again?</label><textarea id="repairDescription" name="description">The lower basket wheel is broken. The dishwasher still works but the basket no longer slides correctly.</textarea></div>
-        <div class="actions"><button class="btn green" type="submit" ${S.busy ? 'disabled' : ''}>Continue to photos</button><a class="btn secondary" href="#/repair-guide">Back to guided path</a></div>
+        <div class="actions"><button class="btn green" type="submit" ${S.busy ? 'disabled' : ''}>Continue to photos</button><a class="btn secondary" href="#/repair-guide">${t('backToGuidedRepair')}</a></div>
       </form>
       <aside class="panel dark-panel stack">
         <h3>Next step</h3>
@@ -586,6 +695,10 @@ function activeRecognitionJobs() {
 
 function activeRecognitionJob() {
   return S.api.recognitionJob || activeRecognitionJobs()[0] || null;
+}
+
+function photoRecognitionProvider() {
+  return S.api.photoRecognitionProvider || activeRecognitionJob()?.result_json?.ai_provider || { provider: 'openai', mode: 'deterministic_fallback', configured: false };
 }
 
 function activeRepairPathDecisions() {
@@ -698,8 +811,20 @@ function activeOpsSummary() {
 
 function mockRecognitionResult() {
   return {
-    object_guess: { label: 'appliance knob / plastic cover / hinge / wearable case', confidence: 0.72 },
+    recognition_mode: 'deterministic_fallback_no_openai_key',
+    ai_provider: { provider: 'openai', status: 'not_configured_fallback', mode: 'mock_result' },
+    object_guess: { label: 'appliance knob / plastic cover / hinge / wearable case', confidence: 0.72, object_context: 'Mock mode simulates the AI first look from uploaded photo evidence.' },
     damage_assessment: { type: 'broken_part', severity: 'medium', repairability_score: 0.78 },
+    replacement_part_brief: {
+      plain_language_summary: 'This looks like a small functional replacement part. Add one side photo and dimensions before generating the model.',
+      probable_function: 'Holds, guides or protects another part of the object.',
+      part_family: 'small plastic replacement component',
+      manufacturing_candidate: true,
+      material_hint: 'PETG or ASA for rigid parts; TPU only if flexibility is required.',
+      critical_dimensions: ['overall width', 'overall height', 'thickness', 'mounting holes or clip gap'],
+      photo_requirements: ['side view', 'full object context', 'photo with ruler'],
+      user_questions: ['What does the part do?', 'Is it exposed to heat, water, load or bending?']
+    },
     recommended_next_step: { path: 'ask_more_photos', reason: 'Mock fallback suggests adding more angles before choosing a repair path.' },
     suggested_inputs: ['Add one photo from the side', 'Measure the broken part width', 'Upload any existing CAD or manual'],
     repair_notes: ['This is a preliminary AI diagnosis.', 'Final manufacturability must be verified before production.']
@@ -935,7 +1060,7 @@ function fulfilmentTimeline(fulfilment) {
 
 function selectedFilePreview() {
   const files = Array.isArray(S.selectedUploadFiles) ? S.selectedUploadFiles : [];
-  if (!files.length) return '<p class="muted small">No local files selected yet.</p>';
+  if (!files.length) return `<p class="muted small">${t('noLocalFiles')}</p>`;
 
   return `<div class="upload-preview-grid">${files.map((file, index) => {
     const isImage = String(file.type || '').startsWith('image/');
@@ -946,28 +1071,142 @@ function selectedFilePreview() {
 
 function attachmentList() {
   const attachments = activeAttachments();
-  if (!attachments.length) return '<p class="muted small">No uploaded attachments yet. Upload photos, manuals or CAD evidence before running recognition.</p>';
+  if (!attachments.length) return `<p class="muted small">${t('uploadedAttachmentsEmpty')}</p>`;
 
   return `<div class="attachment-list">${attachments.map(attachment => `<div class="attachment-row"><div><strong>${safe(attachment.original_filename)}</strong><span>${safe(attachment.mime_type)} · ${Math.ceil(Number(attachment.size_bytes || 0) / 1024)} KB</span></div><code>${safe(String(attachment.id || '').slice(0, 8))}</code></div>`).join('')}</div>`;
+}
+
+function recognitionNeedsMoreEvidence(result) {
+  if (!result) return true;
+  const confidence = Number(result.object_guess?.confidence || 0);
+  const label = String(result.object_guess?.label || '').toLowerCase();
+  const nextPath = String(result.recommended_next_step?.path || 'ask_more_photos');
+  const identification = result.identification || {};
+  const status = String(identification.status || '').toLowerCase();
+  const sourceType = String(identification.source_image_type || '').toLowerCase();
+  const partNumber = String(identification.part_number || '').trim();
+  const hasVisibleText = Array.isArray(identification.visible_text) && identification.visible_text.length > 0;
+  const hasPartSpec = Boolean(result.part_spec?.name_it || result.part_spec?.name_en);
+  const referenceImageRecognized = ['reference_product_image', 'dimension_diagram', 'mixed_reference_images'].includes(sourceType) && (hasVisibleText || partNumber || hasPartSpec);
+
+  if (status === 'recognized' || referenceImageRecognized || partNumber) return false;
+  return confidence < 0.62 || nextPath === 'ask_more_photos' || label.includes('unknown') || label.includes('unclear') || label.includes('sconosci');
+}
+
+function recognitionPhotoRequestList(result) {
+  const brief = result?.replacement_part_brief || {};
+  const photos = Array.isArray(brief.photo_requirements) ? brief.photo_requirements : [];
+  const fallback = [t('photoReferenceFront'), t('photoReferenceSide'), t('photoReferenceMounted'), t('photoReferenceScale')];
+  return (photos.length ? photos : fallback).slice(0, 4);
+}
+
+function shortBadgeList(items, color = 'blue', limit = 5) {
+  const list = Array.isArray(items) ? items.filter(Boolean).slice(0, limit) : [];
+  if (!list.length) return '';
+  return `<div class="badges">${list.map(item => `<span class="badge ${color}">${safe(item)}</span>`).join('')}</div>`;
+}
+
+function sourceImageLabel(sourceType) {
+  const value = String(sourceType || 'unknown');
+  const labels = {
+    real_broken_part_photo: 'foto reale del pezzo',
+    reference_product_image: 'immagine prodotto / ricambio',
+    dimension_diagram: 'immagine con misure',
+    mixed_reference_images: 'immagini di riferimento',
+    unknown: 'da confermare'
+  };
+  return labels[value] || value;
+}
+
+function currentPhotoCtaLabel() {
+  if (S.busy) return t('photoCtaBusy');
+  const job = activeRecognitionJob();
+  if (!job) return t('photoCtaInitial');
+  if (job.status === 'failed' || job.error_message || S.api.lastError) return t('photoCtaMore');
+  if (!job.result_json) return t('photoCtaMore');
+  return recognitionNeedsMoreEvidence(job.result_json) ? t('photoCtaMore') : t('photoCtaInitial');
+}
+
+function photoCtaHint() {
+  const job = activeRecognitionJob();
+  if (job?.result_json && recognitionNeedsMoreEvidence(job.result_json)) return t('needsMoreActionText');
+  if (job?.status === 'failed' || job?.error_message || S.api.lastError) return t('whatToDoNowText');
+  return t('oneButtonHint');
 }
 
 function recognitionResultPanel() {
   const job = activeRecognitionJob();
   const result = job?.result_json;
+  const provider = result?.ai_provider || photoRecognitionProvider();
+  const providerMode = provider?.mode || provider?.status || result?.recognition_mode || 'fallback';
+
   if (!job || !result) {
-    return html`<div class="panel stack"><h3>AI recognition result</h3><p class="muted">Run AI recognition after upload to produce a preliminary repair diagnosis.</p></div>`;
+    const status = job?.status || (S.busy ? 'analyzing' : 'ready');
+    const isFailure = status === 'failed' || Boolean(job?.error_message) || Boolean(S.api.lastError);
+    const headline = isFailure ? t('aiFailureHeadline') : S.busy ? t('aiBusyHeadline') : t('aiReadyHeadline');
+    const description = isFailure
+      ? (job?.error_message || S.api.lastError || t('aiFailureDescription'))
+      : S.busy
+        ? t('aiBusyDescription')
+        : t('aiReadyDescription');
+    return html`<div class="panel stack ai-first-look-card one-button-ai-result">
+      <div class="section-head"><div><p class="eyebrow">${t('aiFirstLook')}</p><h3>${safe(headline)}</h3></div><span class="badge ${isFailure ? 'orange' : provider?.enabled ? 'green' : 'orange'}">${safe(status === 'analyzing' ? t('statusAnalyzing') : providerMode)}</span></div>
+      <p class="muted">${safe(description)}</p>
+      ${isFailure ? `<div class="notice warning"><strong>${t('whatToDoNow')}</strong><span>${t('whatToDoNowText')}</span></div>` : `<div class="notice"><strong>${t('expectedResult')}</strong><span>${t('expectedResultText')}</span></div>`}
+    </div>`;
   }
 
-  return html`<div class="panel stack recognition-result">
-    <div class="section-head"><div><p class="eyebrow">AI recognition</p><h3>${safe(result.object_guess?.label || 'Preliminary object guess')}</h3></div><span class="badge green">${Math.round(Number(result.object_guess?.confidence || 0) * 100)}% confidence</span></div>
+  const brief = result.replacement_part_brief || {};
+  const confidence = Number(result.object_guess?.confidence || 0);
+  const needsMoreEvidence = recognitionNeedsMoreEvidence(result);
+  const photoRequests = recognitionPhotoRequestList(result);
+  const dims = Array.isArray(brief.critical_dimensions) ? brief.critical_dimensions : [];
+  const questions = Array.isArray(brief.user_questions) ? brief.user_questions : [];
+  const providerLabel = `${provider?.provider || 'openai'} · ${provider?.model || providerMode || 'fallback'}`;
+  const identification = result.identification || {};
+  const partSpec = result.part_spec || {};
+  const visibleText = Array.isArray(identification.visible_text) ? identification.visible_text : [];
+  const knownDimensions = Array.isArray(partSpec.known_dimensions) ? partSpec.known_dimensions : [];
+  const keyFeatures = Array.isArray(partSpec.key_features) ? partSpec.key_features : [];
+  const partNumber = String(identification.part_number || '').trim();
+  const sourceType = sourceImageLabel(identification.source_image_type);
+
+  if (needsMoreEvidence) {
+    return html`<div class="panel stack recognition-result ai-first-look-card one-button-ai-result needs-more-evidence">
+      <div class="section-head"><div><p class="eyebrow">${t('needsMoreEyebrow')}</p><h3>${t('needsMoreTitle')}</h3></div><span class="badge orange">${Math.round(confidence * 100)}% confidence</span></div>
+      <p class="muted">${safe(result.recommended_next_step?.reason || 'La foto caricata non è sufficiente per distinguere con sicurezza forma, funzione o scala del componente.')}</p>
+      <table class="table"><tr><th>${t('sourceImage')}</th><td>${safe(sourceType)}</td></tr>${partNumber ? `<tr><th>${t('partNumber')}</th><td>${safe(partNumber)}</td></tr>` : ''}</table>
+      ${visibleText.length ? `<div><h4>${t('visibleTextRead')}</h4>${shortBadgeList(visibleText, 'blue', 6)}</div>` : ''}
+      <div class="notice warning"><strong>${t('nextAction')}</strong><span>${t('needsMoreActionText')}</span></div>
+      <div><h4>${t('requestedPhotos')}</h4><div class="badges">${photoRequests.map(item => `<span class="badge orange">${safe(item)}</span>`).join('')}</div></div>
+      ${dims.length ? `<div><h4>${t('usefulMeasures')}</h4><div class="badges">${dims.slice(0, 4).map(item => `<span class="badge blue">${safe(item)}</span>`).join('')}</div></div>` : ''}
+      ${questions.length ? `<div><h4>${t('minimalQuestions')}</h4><ul class="compact-list">${questions.slice(0, 3).map(item => `<li>${safe(item)}</li>`).join('')}</ul></div>` : ''}
+      <p class="muted small">${t('provider')}: ${safe(providerLabel)}. ${t('prelimHumanValidation')}</p>
+    </div>`;
+  }
+
+  return html`<div class="panel stack recognition-result ai-first-look-card one-button-ai-result recognized-part">
+    <div class="section-head"><div><p class="eyebrow">${t('recognizedEyebrow')}</p><h3>${t('recognizedTitlePrefix')} ${safe(partSpec.name_it || result.object_guess?.label || t('recognizedFallbackLabel'))}</h3></div><span class="badge green">${Math.round(confidence * 100)}% confidence</span></div>
+    <p class="muted">${safe(result.object_guess?.object_context || brief.plain_language_summary || 'L’AI ha generato una prima identificazione leggibile dal materiale caricato.')}</p>
     <div class="grid three">
-      ${metric(result.damage_assessment?.type || 'unknown', 'Damage type')}
-      ${metric(result.damage_assessment?.severity || 'review', 'Severity')}
-      ${metric(result.recommended_next_step?.path || 'ask_more_photos', 'Next path')}
+      ${metric(brief.part_family || partSpec.name_it || result.object_guess?.label || 'part', 'Tipo pezzo')}
+      ${metric(partNumber || t('toValidate'), t('partNumber'))}
+      ${metric(brief.manufacturing_candidate ? t('yes') : t('toValidate'), t('generable'))}
     </div>
-    <p class="muted">${safe(result.recommended_next_step?.reason || 'Recognition completed with mock AI result.')}</p>
-    <div class="badges">${(result.suggested_inputs || []).map(item => `<span class="badge blue">${safe(item)}</span>`).join('')}</div>
-    <div class="notice"><strong>MVP guardrail</strong><span>${safe((result.repair_notes || [])[1] || 'Final manufacturability must be verified before production.')}</span></div>
+    <div class="notice"><strong>${t('clearAiOutput')}</strong><span>${safe(brief.plain_language_summary || result.recommended_next_step?.reason || t('fallbackRepairSummary'))}</span></div>
+    <table class="table"><tr><th>${t('sourceImage')}</th><td>${safe(sourceType)}</td></tr>${partNumber ? `<tr><th>${t('partNumber')}</th><td>${safe(partNumber)}</td></tr>` : ''}${visibleText.length ? `<tr><th>${t('visibleTextRead')}</th><td>${safe(visibleText.slice(0, 5).join(' · '))}</td></tr>` : ''}</table>
+    <table class="table"><tr><th>${t('probableFunction')}</th><td>${safe(brief.probable_function || 'Da confermare')}</td></tr><tr><th>${t('materialSuggested')}</th><td>${safe(brief.material_hint || 'Da scegliere dopo verifica di carico, calore e flessibilità')}</td></tr><tr><th>${t('damageEstimated')}</th><td>${safe(result.damage_assessment?.type || t('toValidate'))}</td></tr><tr><th>${t('provider')}</th><td>${safe(providerLabel)}</td></tr></table>
+    ${provider?.status === 'error_fallback' ? `<div class="notice warning"><strong>${t('fallbackUsed')}</strong><span>${safe(provider.error || 'OpenAI non ha risposto correttamente; Re-born ha generato un risultato sicuro per non bloccare il flusso.')}</span></div>` : ''}
+    ${knownDimensions.length ? `<div><h4>${t('knownDimensions')}</h4>${shortBadgeList(knownDimensions, 'green', 5)}</div>` : ''}
+    ${keyFeatures.length ? `<div><h4>${t('keyFeatures')}</h4>${shortBadgeList(keyFeatures, 'blue', 6)}</div>` : ''}
+    <div class="grid two">
+      <div><h4>${t('measuresToConfirm')}</h4><div class="badges">${(dims.length ? dims : [t('widthTotal'), t('heightTotal'), t('thickness'), t('holesOrHooks')]).slice(0, 5).map(item => `<span class="badge blue">${safe(item)}</span>`).join('')}</div></div>
+      <div><h4>${t('usefulImagesStill')}</h4><div class="badges">${photoRequests.slice(0, 5).map(item => `<span class="badge orange">${safe(item)}</span>`).join('')}</div></div>
+    </div>
+    ${questions.length ? `<div><h4>${t('beforeGenerate')}</h4><ul class="compact-list">${questions.slice(0, 4).map(item => `<li>${safe(item)}</li>`).join('')}</ul></div>` : ''}
+    <div class="actions"><button class="btn green large-cta" onclick="runRepairPathDecision()" ${S.busy ? 'disabled' : ''}>${t('goGenerateRoute')}</button></div>
+    <div class="notice"><strong>Guardrail</strong><span>${safe((result.repair_notes || [])[0] || 'Il riconoscimento AI è preliminare. La produzione richiede verifica umana, dimensionale e materiale.')}</span></div>
+    <p class="muted small">${t('loadMoreIfWrong')}</p>
   </div>`;
 }
 
@@ -975,7 +1214,7 @@ function repairPathDecisionPanel() {
   const decision = activeRepairPathDecision();
   const result = decision?.result_json;
   if (!decision || !result) {
-    return html`<div class="panel stack"><h3>Repair Path Decision Engine</h3><p class="muted">After AI recognition, ask Re-born to rank concrete repair paths by feasibility, cost, risk, ETA and learning value.</p><div class="actions"><button class="btn green" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Generate replacement options</button><a class="btn secondary" href="#/repair-paths">Open repair paths</a></div></div>`;
+    return html`<div class="panel stack"><h3>Repair Path Decision Engine</h3><p class="muted">After Riconoscimento AI, ask Re-born to rank concrete repair paths by feasibility, cost, risk, ETA and learning value.</p><div class="actions"><button class="btn green" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Generate replacement options</button><a class="btn secondary" href="#/repair-paths">Open repair paths</a></div></div>`;
   }
 
   const paths = Array.isArray(result.ranked_paths) ? result.ranked_paths : [];
@@ -1003,7 +1242,7 @@ function diagnosisTimeline() {
   const rows = [
     ['1', 'Case created', repairCase ? `Repair DNA draft ${String(repairCase.id).slice(0, 8)}` : 'Create or select a repair case first.', repairCase ? 'done' : ''],
     ['2', 'Files uploaded', attachments.length ? `${attachments.length} attachment(s) linked to the repair case.` : 'Add photos, manuals or CAD files.', attachments.length ? 'done' : ''],
-    ['3', 'AI recognition requested', job ? `Job ${String(job.id).slice(0, 8)} is ${job.status}.` : 'Run recognition from uploaded evidence.', job ? 'done' : ''],
+    ['3', 'Riconoscimento AI requested', job ? `Job ${String(job.id).slice(0, 8)} is ${job.status}.` : 'Run recognition from uploaded evidence.', job ? 'done' : ''],
     ['4', 'Preliminary diagnosis completed', result ? `${result.object_guess?.label || 'Object guessed'} with repairability score ${result.damage_assessment?.repairability_score || '-'}.` : 'Waiting for recognition result.', result ? 'done' : ''],
     ['5', 'Next repair action suggested', result ? `${result.recommended_next_step?.path}: ${result.recommended_next_step?.reason}` : 'Re-born will suggest the next action after diagnosis.', result ? 'done' : ''],
     ['6', 'Repair paths ranked', decisionResult ? `Recommended: ${decisionResult.recommended_path}` : 'Run the Decision Engine to rank repair options.', decisionResult ? 'done' : '']
@@ -1017,16 +1256,16 @@ function capture() {
 
   if (S.api.status !== 'live') {
     return layout('Upload repair evidence', html`
-      <section class="section-head"><div><p class="eyebrow">Step 2 of 4 · Mock fallback</p><h2>Add evidence for replacement-part generation</h2></div><p class="muted">Add a photo, manual or CAD file so Re-born can identify the broken component and route it toward a replacement.</p></section>
+      <section class="section-head"><div><p class="eyebrow">Step 2 di 4 · modalità demo</p><h2>Carica foto per generare il ricambio</h2></div><p class="muted">Carica una foto: Re-born identifica il componente rotto e lo porta verso il ricambio generabile.</p></section>
       <section class="grid two">
         <div class="panel stack">
-          <h3>Local prototype mode</h3>
-          <p class="muted">The backend is not live, so this screen shows the Step 2 of 4 flow with local staged files and a mock recognition result.</p>
-          <input id="repairFileInput" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,.stl,.step,.stp,.obj" onchange="handleRepairFilesSelected(event)" />
+          <h3>Modalità prototipo locale</h3>
+          <p class="muted">Il backend non è attivo: questa schermata mostra il flusso Step 2 con un risultato demo.</p>
+          <input id="repairFileInput" class="hidden-upload-input" type="file" multiple accept="image/jpeg,image/png,image/webp" onchange="handleRepairFilesSelectedAndIdentify(event)" />
           ${selectedFilePreview()}
-          <div class="actions"><button class="btn green" onclick="runMockRecognition()">Identify part in mock mode</button><a class="btn secondary" href="#/start">Back to intake</a></div>
+          <div class="actions"><button class="btn green large-cta" onclick="openRepairPhotoPicker()">${t('photoCtaInitial')}</button><a class="btn secondary" href="#/start">Torna all’inserimento</a></div>
         </div>
-        <aside class="panel stack"><h3>Diagnosis timeline</h3>${diagnosisTimeline()}</aside>
+        <aside class="panel stack"><h3>Sequenza diagnosi</h3>${diagnosisTimeline()}</aside>
       </section>
       <section class="section grid two">${recognitionResultPanel()}${repairPathDecisionPanel()}</section>
     `, { currentStep: 'capture' });
@@ -1041,34 +1280,35 @@ function capture() {
     return layout('Upload repair evidence', html`
       <section class="grid two">
         <div class="panel stack">
-          <p class="eyebrow">Step 2 of 4</p>
-          <h2>Add evidence for replacement-part generation</h2>
-          <p class="muted">Add a photo, manual or CAD file so Re-born can identify the broken component and route it toward a replacement. First create a repair request so every file is linked to the object you want to make functional again.</p>
-          <div class="actions"><button class="btn green" onclick="createDemoRepairCase()" ${S.busy ? 'disabled' : ''}>Start repair request</button><a class="btn secondary" href="#/start">Open intake form</a></div>
+          <p class="eyebrow">Step 2 di 4</p>
+          <h2>Carica foto per generare il ricambio</h2>
+          <p class="muted">Carica una foto: Re-born identifica il componente rotto e lo porta verso il ricambio generabile. Crea prima una richiesta: ogni foto deve essere collegata all’oggetto da riportare in funzione.</p>
+          <div class="actions"><button class="btn green" onclick="createDemoRepairCase()" ${S.busy ? 'disabled' : ''}>Avvia richiesta ricambio</button><a class="btn secondary" href="#/start">Apri richiesta</a></div>
         </div>
-        <aside class="panel dark-panel stack"><h3>Repair-first rule</h3><p class="muted">The upload is not a generic STL library. It is evidence for a real object that must return to function.</p>${badges([['Repair case required', 'green'], ['Attachment evidence', 'blue'], ['AI recognition', 'orange']])}</aside>
+        <aside class="panel dark-panel stack"><h3>Regola repair-first</h3><p class="muted">Il caricamento non è una libreria STL generica. È evidenza di un oggetto reale che deve tornare a funzionare.</p>${badges([['Richiesta necessaria', 'green'], ['Foto/evidenze', 'blue'], ['Riconoscimento AI', 'orange']])}</aside>
       </section>
     `, { currentStep: 'capture' });
   }
 
   return layout('Upload repair evidence', html`
-    <section class="section-head"><div><p class="eyebrow">Step 2 of 4 · Photo/file</p><h2>Add one clear photo or file.</h2></div><p class="muted">Do not worry about CAD formats. A phone photo is enough; STL/STEP is useful only if you already have it.</p></section>
+    <section class="section-head"><div><p class="eyebrow">${t('step2Eyebrow')}</p><h2>${t('step2Title')}</h2></div><p class="muted">${t('step2Description')}</p></section>
     <section class="grid two">
-      <div class="panel stack">
-        <div class="notice"><strong>Active repair case</strong><span>${safe(repairCase.title)} · ${safe(repairCase.category)} · ${safe(String(repairCase.id).slice(0, 8))}</span></div>
-        <div class="dropzone file-dropzone">
-          <div><div class="dropzone-icon">▣</div><h3>Select photos or files</h3><p class="muted">Best: one close-up, one full object, and a size reference. Optional: PDF, STL, STEP, STP or OBJ.</p><input id="repairFileInput" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,.stl,.step,.stp,.obj" onchange="handleRepairFilesSelected(event)" /></div>
+      <div class="panel stack one-button-upload-panel">
+        <div class="notice"><strong>${t('activeRequest')}</strong><span>${safe(repairCase.title)} · ${safe(repairCase.category)} · ${safe(String(repairCase.id).slice(0, 8))}</span></div>
+        <div class="dropzone file-dropzone one-button-dropzone">
+          <div><div class="dropzone-icon">▣</div><h3>${t('brokenPartPhoto')}</h3><p class="muted">${t('brokenPartPhotoHint')}</p><input id="repairFileInput" class="hidden-upload-input" type="file" multiple accept="image/jpeg,image/png,image/webp" onchange="handleRepairFilesSelectedAndIdentify(event)" /></div>
         </div>
         ${selectedFilePreview()}
-        <div class="actions"><button class="btn green" onclick="uploadSelectedRepairFiles()" ${S.busy ? 'disabled' : ''}>Upload photo/file</button><button class="btn orange" onclick="runAIRecognition()" ${S.busy || !activeAttachments().length ? 'disabled' : ''}>Identify part</button><a class="btn secondary" href="#/repair-guide">Back to guide</a></div>
+        <div class="actions"><button class="btn green large-cta" onclick="openRepairPhotoPicker()" ${S.busy ? 'disabled' : ''}>${currentPhotoCtaLabel()}</button><a class="btn secondary" href="#/repair-guide">${t('backToGuide')}</a></div>
+        <p class="muted small">${t('oneButtonHint')}</p>
       </div>
       <aside class="panel stack">
-        <h3>Uploaded attachments</h3>
+        <h3>${t('uploadedPhotos')}</h3>
         ${attachmentList()}
+        <div class="notice"><strong>${t('aiProvider')}</strong><span>${safe(photoRecognitionProvider()?.provider || 'openai')} · ${safe(photoRecognitionProvider()?.mode || photoRecognitionProvider()?.status || 'fallback')} · ${safe(photoRecognitionProvider()?.model || 'gpt-5.4-mini')}</span></div>${S.api.lastError ? `<div class="notice warning"><strong>${t('lastAiError')}</strong><span>${safe(S.api.lastError)}</span></div>` : ''}
       </aside>
     </section>
     <section class="section grid two">
-      <div class="panel stack"><h3>Diagnosis timeline</h3>${diagnosisTimeline()}</div>
       ${recognitionResultPanel()}
       ${repairPathDecisionPanel()}
     </section>
@@ -1105,7 +1345,7 @@ function repairPaths() {
   const decisionResult = decision?.result_json;
   return layout('Repair paths', html`
     <section class="section-head"><div><p class="eyebrow">Step 3 of 4 · Replacement route</p><h2>Choose how to get the replacement part.</h2></div><p class="muted">Re-born ranks the practical routes: buy an existing spare, generate a replacement model, involve a maker/CAD expert, or ask a provider to produce it.</p></section>
-    ${decisionResult ? `<section class="panel stack"><div class="section-head"><div><p class="eyebrow">Latest decision</p><h3>Recommended: ${safe(decisionResult.recommended_path)}</h3></div><span class="badge green">${safe(String((decisionResult.ranked_paths || []).length))} paths ranked</span></div><p class="muted">Decision ${safe(String(decision.id || '').slice(0, 8))} was generated from ${safe(decision.recognition_job_id ? 'AI recognition evidence' : 'repair case intake evidence')}.</p></section>` : `<section class="panel stack"><h3>Generate replacement options</h3><p class="muted">After the part is identified, Re-born creates a short list of practical ways to obtain a usable replacement.</p><div class="actions"><button class="btn green" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Generate replacement options</button><a class="btn secondary" href="#/capture">Back to evidence</a></div></section>`}
+    ${decisionResult ? `<section class="panel stack"><div class="section-head"><div><p class="eyebrow">Latest decision</p><h3>Recommended: ${safe(decisionResult.recommended_path)}</h3></div><span class="badge green">${safe(String((decisionResult.ranked_paths || []).length))} paths ranked</span></div><p class="muted">Decision ${safe(String(decision.id || '').slice(0, 8))} was generated from ${safe(decision.recognition_job_id ? 'Riconoscimento AI evidence' : 'repair case intake evidence')}.</p></section>` : `<section class="panel stack"><h3>Generate replacement options</h3><p class="muted">After the part is identified, Re-born creates a short list of practical ways to obtain a usable replacement.</p><div class="actions"><button class="btn green" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Generate replacement options</button><a class="btn secondary" href="#/capture">Back to evidence</a></div></section>`}
     <section class="grid three">
       ${paths.map(path => `<article class="card interactive ${S.selectedPath === path.id ? 'selected' : ''}" onclick="REBORN_STATE.set('selectedPath', '${safe(path.id)}'); toast('${safe(path.title)} selected.'); render();"><div class="section-head"><h3>${safe(path.title)}</h3><span class="badge ${path.id === 'find_provider' || path.id === 'print' || path.id === 'provider_assisted_repair' ? 'green' : path.id === 'generate_part' || path.id === 'ai' || path.id === 'ai_generated_cad' ? 'orange' : 'blue'}">Score ${safe(path.score)}</span></div><p class="muted">${safe(path.recommendation)}</p><table class="table"><tr><th>Cost</th><td>${safe(path.cost)}</td></tr><tr><th>ETA</th><td>${safe(path.eta)}</td></tr><tr><th>Impact</th><td>${safe(path.impact)}</td></tr></table></article>`).join('')}
     </section>
@@ -3861,6 +4101,7 @@ async function refreshApiData(options = {}) {
     }
 
     const latestCase = bootstrap.repair_cases[0] || S.api.repairCase;
+    const providerStatus = S.auth.status === 'authenticated' ? await window.REBORN_API.getPhotoRecognitionStatus().catch(() => null) : null;
     S.setApi({
       status: 'live',
       mode: 'live',
@@ -3874,6 +4115,7 @@ async function refreshApiData(options = {}) {
       repairAttachments: bootstrap.repair_attachments || [],
       recognitionJobs: bootstrap.recognition_jobs || [],
       recognitionJob: (bootstrap.recognition_jobs || [])[0] || S.api.recognitionJob,
+      photoRecognitionProvider: providerStatus?.photo_recognition_provider || S.api.photoRecognitionProvider,
       repairPathDecisions: bootstrap.repair_path_decisions || [],
       repairPathDecision: (bootstrap.repair_path_decisions || [])[0] || S.api.repairPathDecision,
       providerMatches: bootstrap.provider_matches || [],
@@ -4193,49 +4435,97 @@ function submitIntakeFromPrototype(event) {
 function handleRepairFilesSelected(event) {
   const files = Array.from(event.currentTarget.files || []);
   S.set('selectedUploadFiles', files);
-  toast(files.length ? `${files.length} file(s) selected.` : 'No files selected.');
+  toast(files.length ? `${files.length} ${t('filesSelected')}` : t('noFilesSelected'));
   render();
 }
 
+function openRepairPhotoPicker() {
+  const input = document.getElementById('repairFileInput');
+  if (!input) {
+    toast(t('photoPickerMissing'));
+    return;
+  }
+  input.click();
+}
+
+async function handleRepairFilesSelectedAndIdentify(event) {
+  const files = Array.from(event.currentTarget.files || []);
+  S.set('selectedUploadFiles', files);
+  if (!files.length) {
+    toast(t('noPhotoSelected'));
+    render();
+    return;
+  }
+  await uploadAndIdentifySelectedRepairFiles();
+}
+
 async function uploadSelectedRepairFiles() {
+  return uploadSelectedRepairFilesInternal({ autoIdentify: false });
+}
+
+async function uploadAndIdentifySelectedRepairFiles() {
+  return uploadSelectedRepairFilesInternal({ autoIdentify: true });
+}
+
+async function uploadSelectedRepairFilesInternal({ autoIdentify = false } = {}) {
   if (S.api.status !== 'live') {
-    toast('Backend API is not live. Use mock recognition instead.');
+    if (autoIdentify) runMockRecognition();
+    else toast(t('uploadMockUnavailable'));
     return;
   }
 
   if (S.auth.status !== 'authenticated') {
-    toast('Login required to upload repair evidence.');
+    toast(t('loginRequiredUpload'));
     location.hash = '#/login';
     return;
   }
 
   const repairCase = S.api.repairCase;
   if (!repairCase) {
-    toast('Create a repair case before uploading files.');
+    toast(t('createCaseFirst'));
     location.hash = '#/start';
     return;
   }
 
   const files = Array.isArray(S.selectedUploadFiles) ? S.selectedUploadFiles : [];
-  if (!files.length) {
-    toast('Select at least one file first.');
+  if (!files.length && !activeAttachments().length) {
+    toast(t('selectAtLeastPhoto'));
     return;
   }
 
   setBusy(true);
+  S.setApi({
+    status: 'live',
+    message: autoIdentify ? t('uploadingAndAnalyzing') : t('uploadEvidence'),
+    lastError: null
+  });
+  render();
+
   try {
-    for (const file of files) {
-      await window.REBORN_API.uploadRepairAttachment(repairCase.id, file, String(file.type || '').startsWith('image/') ? 'diagnostic_photo' : 'repair_asset');
+    let attachments = activeAttachments();
+    if (files.length) {
+      for (const file of files) {
+        await window.REBORN_API.uploadRepairAttachment(repairCase.id, file, String(file.type || '').startsWith('image/') ? 'diagnostic_photo' : 'repair_asset');
+      }
+      const payload = await window.REBORN_API.getRepairAttachments(repairCase.id);
+      attachments = payload.attachments || [];
+      S.set('selectedUploadFiles', []);
+      S.setApi({ repairAttachments: attachments, lastSyncAt: new Date().toISOString() });
     }
-    const payload = await window.REBORN_API.getRepairAttachments(repairCase.id);
-    S.set('selectedUploadFiles', []);
-    S.setApi({ repairAttachments: payload.attachments || [], lastSyncAt: new Date().toISOString() });
-    toast('Repair evidence uploaded.');
+
+    if (autoIdentify) {
+      await requestAIRecognitionForAttachments(repairCase, attachments);
+    } else {
+      toast(t('evidenceUploaded'));
+      S.setApi({ status: 'live', message: t('evidenceUploaded'), lastError: null, lastSyncAt: new Date().toISOString() });
+    }
   } catch (error) {
-    S.setApi({ status: 'error', message: `Upload failed: ${error.message}`, lastError: error.message });
-    toast(`Upload failed: ${error.message}`);
+    S.setApi({ status: 'error', message: `${t('uploadRecognitionFailed')}: ${error.message}`, lastError: error.message });
+    toast(`${t('uploadRecognitionFailed')}: ${error.message}`);
   } finally {
     setBusy(false);
+    const input = document.getElementById('repairFileInput');
+    if (input) input.value = '';
     render();
   }
 }
@@ -4249,33 +4539,59 @@ async function runAIRecognition() {
   const repairCase = S.api.repairCase;
   const attachments = activeAttachments();
   if (!repairCase || !attachments.length) {
-    toast('Upload evidence before running AI recognition.');
+    openRepairPhotoPicker();
     return;
   }
 
   setBusy(true);
+  S.setApi({ status: 'live', message: t('aiAnalyzing'), lastError: null });
+  render();
   try {
-    const payload = await window.REBORN_API.requestRecognition(repairCase.id, attachments.map(attachment => attachment.id));
-    const jobs = await window.REBORN_API.getRecognitionJobs(repairCase.id).catch(() => ({ recognition_jobs: [payload.recognition_job] }));
-    S.setApi({
-      recognitionJob: payload.recognition_job,
-      recognitionJobs: jobs.recognition_jobs || [payload.recognition_job],
-      repairPathDecision: null,
-      repairPathDecisions: [],
-      repairPaths: [],
-      lastSyncAt: new Date().toISOString(),
-      message: 'AI recognition completed from uploaded repair evidence.',
-      status: 'live',
-      lastError: null
-    });
-    toast('AI recognition completed.');
+    await requestAIRecognitionForAttachments(repairCase, attachments);
   } catch (error) {
-    S.setApi({ status: 'error', message: `AI recognition failed: ${error.message}`, lastError: error.message });
-    toast(`AI recognition failed: ${error.message}`);
+    S.setApi({ status: 'error', message: `${t('aiFailed')}: ${error.message}`, lastError: error.message });
+    toast(`${t('aiFailed')}: ${error.message}`);
   } finally {
     setBusy(false);
     render();
   }
+}
+
+async function requestAIRecognitionForAttachments(repairCase, attachments) {
+  const usableAttachments = Array.isArray(attachments) ? attachments.filter(attachment => attachment?.id) : [];
+  if (!repairCase || !usableAttachments.length) {
+    throw new Error(t('noUploadedPhoto'));
+  }
+
+  S.setApi({ status: 'live', message: t('aiAnalyzing'), lastError: null });
+  const providerStatus = await window.REBORN_API.getPhotoRecognitionStatus().catch(() => null);
+  if (providerStatus?.photo_recognition_provider) S.setApi({ photoRecognitionProvider: providerStatus.photo_recognition_provider });
+
+  const payload = await window.REBORN_API.requestRecognition(repairCase.id, usableAttachments.map(attachment => attachment.id));
+  const jobs = await window.REBORN_API.getRecognitionJobs(repairCase.id).catch(() => ({ recognition_jobs: [payload.recognition_job] }));
+  const job = payload.recognition_job;
+  const hasResult = Boolean(job?.result_json);
+  const failed = job?.status === 'failed' || !hasResult;
+  const provider = job?.result_json?.ai_provider || providerStatus?.photo_recognition_provider || S.api.photoRecognitionProvider;
+  const needsMoreEvidence = hasResult ? recognitionNeedsMoreEvidence(job.result_json) : true;
+
+  S.setApi({
+    recognitionJob: job,
+    recognitionJobs: jobs.recognition_jobs || [job],
+    photoRecognitionProvider: provider,
+    repairPathDecision: null,
+    repairPathDecisions: [],
+    repairPaths: [],
+    lastSyncAt: new Date().toISOString(),
+    message: failed
+      ? t('aiNoClearResult')
+      : needsMoreEvidence
+        ? t('aiNeedsMore')
+        : t('aiIdentified'),
+    status: failed ? 'error' : 'live',
+    lastError: failed ? (job?.error_message || 'Recognition job completed without result_json.') : null
+  });
+  toast(failed ? t('toastAiNoIdentify') : needsMoreEvidence ? t('toastAiNeedsMore') : t('toastAiIdentified'));
 }
 
 function runMockRecognition() {
@@ -4292,7 +4608,7 @@ function runMockRecognition() {
     completed_at: new Date().toISOString()
   };
   S.setApi({ recognitionJob: job, recognitionJobs: [job], repairAttachments: activeAttachments().length ? activeAttachments() : [{ id: 'mock-attachment', original_filename: 'mock-photo.png', mime_type: 'image/png', size_bytes: 2048 }] });
-  toast('Mock AI recognition completed.');
+  toast('Mock Riconoscimento AI completed.');
   render();
 }
 
@@ -4306,7 +4622,7 @@ async function runRepairPathDecision() {
   const repairCase = S.api.repairCase;
   const recognitionJob = activeRecognitionJob();
   if (!repairCase || !recognitionJob) {
-    toast('Run AI recognition before generating repair paths.');
+    toast('Run Riconoscimento AI before generating repair paths.');
     location.hash = '#/capture';
     return;
   }
@@ -5119,7 +5435,10 @@ window.createDemoRepairCase = createDemoRepairCase;
 window.runLiveDiagnosis = runLiveDiagnosis;
 window.submitIntakeFromPrototype = submitIntakeFromPrototype;
 window.handleRepairFilesSelected = handleRepairFilesSelected;
+window.handleRepairFilesSelectedAndIdentify = handleRepairFilesSelectedAndIdentify;
+window.openRepairPhotoPicker = openRepairPhotoPicker;
 window.uploadSelectedRepairFiles = uploadSelectedRepairFiles;
+window.uploadAndIdentifySelectedRepairFiles = uploadAndIdentifySelectedRepairFiles;
 window.runAIRecognition = runAIRecognition;
 window.runMockRecognition = runMockRecognition;
 window.runRepairPathDecision = runRepairPathDecision;

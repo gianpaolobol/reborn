@@ -41,6 +41,9 @@ return static function (Router $router, RepairController $repairController, Auth
                 'role_based_authorization',
                 'repair_uploads',
                 'ai_recognition_jobs',
+                'openai_photo_recognition_api',
+                'ai_replacement_part_brief',
+                'guided_missing_inputs',
                 'repair_path_decision_engine',
                 'provider_match_engine',
                 'provider_quote_engine',
@@ -485,6 +488,7 @@ return static function (Router $router, RepairController $repairController, Auth
     $router->post('/api/v1/repair-cases/{id}/diagnose', [$repairController, 'diagnose']);
     $router->get('/api/v1/repair-cases/{id}/attachments', [$repairController, 'attachments']);
     $router->post('/api/v1/repair-cases/{id}/attachments', [$repairController, 'attach']);
+    $router->get('/api/v1/ai/photo-recognition/status', [$recognitionJobController, 'providerStatus']);
     $router->get('/api/v1/repair-cases/{id}/recognition-jobs', [$recognitionJobController, 'index']);
     $router->post('/api/v1/repair-cases/{id}/recognition-jobs', [$recognitionJobController, 'store']);
     $router->get('/api/v1/recognition-jobs/{id}', [$recognitionJobController, 'show']);

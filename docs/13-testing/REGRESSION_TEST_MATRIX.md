@@ -92,3 +92,4 @@ docs/13-testing/REGRESSION_TEST_MATRIX.md
 
 The Pull Request checklist requires this update.
 
+| 36 | 45 | AI / UX | AI Photo Recognition & Replacement-Part Brief | `smoke-ai-photo-recognition-replacement-brief.ps1` | release-blocking |

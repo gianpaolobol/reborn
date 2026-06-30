@@ -6,6 +6,7 @@ use Reborn\AI\Application\GetRecognitionJobService;
 use Reborn\AI\Application\ListRecognitionJobsService;
 use Reborn\AI\Application\RecognitionEngine;
 use Reborn\AI\Application\RequestRecognitionJobService;
+use Reborn\AI\Application\OpenAIPhotoRecognitionGateway;
 use Reborn\AI\Infrastructure\SqliteRecognitionJobRepository;
 use Reborn\AI\Presentation\RecognitionJobController;
 use Reborn\Dashboard\Application\UserDashboardService;
@@ -143,6 +144,7 @@ $config = [
     'database' => require dirname(__DIR__) . '/config/database.php',
     'auth' => require dirname(__DIR__) . '/config/auth.php',
     'security' => require dirname(__DIR__) . '/config/security.php',
+    'ai' => require dirname(__DIR__) . '/config/ai.php',
 ];
 
 $connection = new Connection($config['database']);
@@ -185,7 +187,9 @@ $knowledgeEngine = new KnowledgeEngine($pdo);
 $recognitionEngine = new RecognitionEngine($knowledgeEngine);
 $decisionService = new RepairPathDecisionService($pdo);
 $providerMatchingService = new ProviderMatchingService($pdo);
-$fileStorage = new LocalFileStorage(dirname(__DIR__) . '/storage/uploads');
+$uploadsRoot = dirname(__DIR__) . '/storage/uploads';
+$fileStorage = new LocalFileStorage($uploadsRoot);
+$photoRecognitionGateway = new OpenAIPhotoRecognitionGateway($config['ai']['photo_recognition'] ?? [], $uploadsRoot);
 
 $repairController = new RepairController(
     new ListRepairCasesService($repairRepository),
@@ -206,12 +210,13 @@ $repairController = new RepairController(
 
 
 $recognitionJobController = new RecognitionJobController(
-    new RequestRecognitionJobService($repairRepository, $attachmentRepository, $recognitionJobRepository, $eventBus),
+    new RequestRecognitionJobService($repairRepository, $attachmentRepository, $recognitionJobRepository, $eventBus, $photoRecognitionGateway),
     new ListRecognitionJobsService($repairRepository, $recognitionJobRepository),
     new GetRecognitionJobService($recognitionJobRepository),
     new GetRepairCaseService($repairRepository),
     $authContext,
-    new RepairCaseAccessPolicy()
+    new RepairCaseAccessPolicy(),
+    $photoRecognitionGateway
 );
 
 $repairPathDecisionController = new RepairPathDecisionController(

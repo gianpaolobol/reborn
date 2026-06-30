@@ -649,3 +649,64 @@ body.is-busy::after {
 @media (max-width: 920px) {
   .replacement-route-cards { grid-template-columns: 1fr; }
 }
+
+/* Step 45 — AI photo recognition replacement brief */
+.ai-first-look-card { border-color: rgba(78, 121, 255, 0.24); }
+.compact-list { margin: 0.4rem 0 0; padding-left: 1.15rem; color: var(--muted); }
+.compact-list li { margin: 0.25rem 0; }
+
+/* Step 45.3 — one-button photo recognition UX */
+.hidden-upload-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.one-button-upload-panel .large-cta,
+.one-button-ai-result .large-cta {
+  min-height: 56px;
+  font-size: 1.03rem;
+  justify-content: center;
+}
+.one-button-dropzone {
+  cursor: pointer;
+}
+.one-button-ai-result.needs-more-evidence {
+  border-left: 5px solid var(--safety-orange);
+}
+.one-button-ai-result.recognized-part {
+  border-left: 5px solid var(--repair-green);
+}
+
+/* Step 45.4 — adaptive one-button recognition + bilingual selector */
+.language-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 999px;
+  background: rgba(255,255,255,.05);
+}
+.language-switch .mini-button {
+  min-width: 36px;
+  justify-content: center;
+}
+.language-switch .mini-button.is-active {
+  background: var(--repair-green);
+  color: var(--graphite-950);
+}
+.one-button-dropzone {
+  cursor: default;
+}
+.one-button-upload-panel .large-cta {
+  width: 100%;
+}
+.needs-more-evidence + .panel .large-cta,
+.one-button-upload-panel .large-cta {
+  letter-spacing: -.01em;
+}
