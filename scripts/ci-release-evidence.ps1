@@ -7,7 +7,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-$Step39Version = "STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V1"
+$Step39Version = "STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V2_NO_MARKDOWN_BACKTICKS"
 Write-Host "Release evidence script version: $Step39Version" -ForegroundColor Magenta
 
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
@@ -225,8 +225,9 @@ $QualityGate | ConvertTo-Json -Depth 18 | Out-File -Encoding UTF8 $QualityGatePa
 $markdown = @()
 $markdown += "# Re-born CI Release Evidence"
 $markdown += ""
-$markdown += "Version: `$Step39Version`"
-$markdown += "Generated at: `$($Evidence.generated_at)`"
+$markdown += ("Version: {0}" -f $Step39Version)
+$GeneratedAtForMarkdown = [string]$Evidence.generated_at
+$markdown += ("Generated at: {0}" -f $GeneratedAtForMarkdown)
 $markdown += "Quality gate: **$GateStatus**"
 $SmokeStatusForMarkdown = if ($SmokeSummary) { Get-JsonProperty $SmokeSummary "status" "missing" } else { "missing" }
 $markdown += "Smoke suite: **$SmokeStatusForMarkdown**"
@@ -237,14 +238,14 @@ $failedChecks = @($GateChecks | Where-Object { $_.status -ne "passed" })
 if ($failedChecks.Count -eq 0) {
     $markdown += "No failed checks."
 } else {
-    foreach ($check in $failedChecks) { $markdown += "- `$($check.name)`" }
+    foreach ($check in $failedChecks) { $markdown += ("- {0}" -f $check.name) }
 }
 $markdown += ""
 $markdown += "## Files"
-$markdown += "- `storage/logs/ci-smoke-results.json`"
-$markdown += "- `storage/logs/ci-regression-test-matrix.json`"
-$markdown += "- `storage/logs/ci-release-evidence.json`"
-$markdown += "- `storage/logs/ci-quality-gate.json`"
+$markdown += '- `storage/logs/ci-smoke-results.json`'
+$markdown += '- `storage/logs/ci-regression-test-matrix.json`'
+$markdown += '- `storage/logs/ci-release-evidence.json`'
+$markdown += '- `storage/logs/ci-quality-gate.json`'
 $markdown -join "`n" | Out-File -Encoding UTF8 $MarkdownSummaryPath
 
 if ($env:GITHUB_STEP_SUMMARY) {
@@ -255,7 +256,7 @@ if ($env:GITHUB_STEP_SUMMARY) {
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Matrix rows: **$($MatrixRows.Count)**"
     Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
-    Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "Evidence files are uploaded as the `reborn-ci-release-evidence` artifact."
+    Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value 'Evidence files are uploaded as the `reborn-ci-release-evidence` artifact.'
 }
 
 if ($GateStatus -eq "passed") {

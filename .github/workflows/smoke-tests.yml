@@ -42,7 +42,7 @@ jobs:
 
       - name: Verify PHP runtime
         run: |
-          echo "Workflow runtime marker: STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V1"
+          echo "Workflow runtime marker: STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V2_NO_MARKDOWN_BACKTICKS"
           php -v
           php -m | grep -Ei 'PDO|pdo_sqlite|sqlite3|fileinfo|json'
           php scripts/ci-verify-runtime.php
@@ -100,10 +100,10 @@ jobs:
       - name: Verify CI smoke guard markers
         shell: bash
         run: |
-          echo "Workflow marker: STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V1"
+          echo "Workflow marker: STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V2_NO_MARKDOWN_BACKTICKS"
           grep -n "STEP38_CI_AUTH_GUARD_V3" scripts/ci-smoke-tests.ps1
           grep -n "STEP38_IDENTITY_SMOKE_GUARD_V3" scripts/smoke-identity-access.ps1
-          grep -n "STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V1" scripts/ci-release-evidence.ps1
+          grep -n "STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V2_NO_MARKDOWN_BACKTICKS" scripts/ci-release-evidence.ps1
 
       - name: Verify API auth preflight
         shell: pwsh
@@ -117,6 +117,18 @@ jobs:
       - name: Run full smoke test suite
         shell: pwsh
         run: ./scripts/ci-smoke-tests.ps1 -BaseUrl http://127.0.0.1:8080
+
+      - name: Verify Step 39 release evidence script version
+        if: always()
+        shell: bash
+        run: |
+          echo "Step 39 script marker check: STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V2_NO_MARKDOWN_BACKTICKS"
+          grep -n "STEP39_RELEASE_EVIDENCE_QUALITY_GATE_V2_NO_MARKDOWN_BACKTICKS" scripts/ci-release-evidence.ps1
+          if grep -n 'Generated at: `\$' scripts/ci-release-evidence.ps1; then
+            echo "Old broken Generated at quoting is still present."
+            exit 1
+          fi
+          grep -n "Generated at:" scripts/ci-release-evidence.ps1
 
       - name: Generate release evidence and quality gate
         if: always()
