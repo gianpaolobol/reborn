@@ -114,7 +114,8 @@ $RegressionMatrix = @(
     [ordered]@{ order = 35; step = 44; domain = "UX"; capability = "Repair-First Offer Architecture & Replacement-Part Wizard"; script = "smoke-repair-first-offer-architecture.ps1"; gate = "release-blocking"; asset = "User Activation" },
     [ordered]@{ order = 36; step = 45; domain = "AI / UX"; capability = "AI Photo Recognition & Replacement-Part Brief"; script = "smoke-ai-photo-recognition-replacement-brief.ps1"; gate = "release-blocking"; asset = "AI Learning" },
     [ordered]@{ order = 37; step = 46; domain = "UX"; capability = "User Repair Wizard Simplification"; script = "smoke-user-repair-wizard-simplification.ps1"; gate = "release-blocking"; asset = "User Activation" },
-    [ordered]@{ order = 38; step = 47; domain = "AI / UX"; capability = "Maximum Vision Recognition Quality Profile"; script = "smoke-ai-vision-quality-profile.ps1"; gate = "release-blocking"; asset = "AI Learning" }
+    [ordered]@{ order = 38; step = 47; domain = "AI / UX"; capability = "Maximum Vision Recognition Quality Profile"; script = "smoke-ai-vision-quality-profile.ps1"; gate = "release-blocking"; asset = "AI Learning" },
+    [ordered]@{ order = 39; step = 48; domain = "AI / Vision"; capability = "Gemini-only Vision Provider Router + HTTP-0 Body Acceptance"; script = "smoke-gemini-vision-provider.ps1"; gate = "release-blocking"; asset = "AI Provider Router" }
 )
 
 $SmokeSummary = $null

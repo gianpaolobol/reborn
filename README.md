@@ -983,3 +983,88 @@ scripts/smoke-ai-vision-quality-profile.ps1
 ```
 
 The full CI suite now includes Step 47 as a release-blocking AI quality gate, while preserving deterministic fallback for CI environments without a real API key.
+
+
+### Step 47.5 — PHP transport compatibility
+
+La chiamata live a OpenAI Vision ora è più robusta negli ambienti Windows/PHP locali: se l'estensione PHP `curl` non è caricata e il wrapper `https` non è disponibile perché `openssl` non è abilitato, il gateway prova anche `curl.exe`/`curl` di sistema. Inoltre il codice non dipende più obbligatoriamente da `mbstring` per `mb_substr()`/`mb_strtolower()`.
+
+Questo evita risposte contaminate da warning HTML come `Unable to find the wrapper https` e l'errore `Call to undefined function ... mb_substr()`.
+
+## Step 48.1 — Gemini-only Vision Provider Router
+
+Step 48.1 removes Google Cloud Vision API from the recognition flow. Re-born now uses Gemini API directly for both OCR-like reading and visual/product reasoning:
+
+```text
+Gemini Vision → Re-born repair brief
+```
+
+The router can run in `auto` mode and try providers in this order:
+
+```env
+AI_PHOTO_RECOGNITION_PROVIDER=auto
+AI_VISION_PROVIDER_ORDER=gemini,openai
+```
+
+Recommended local `.env` configuration:
+
+```env
+AI_PHOTO_RECOGNITION_PROVIDER=auto
+AI_PHOTO_RECOGNITION_ENABLED=true
+AI_VISION_PROVIDER_ORDER=gemini,openai
+
+GEMINI_API_KEY=
+GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
+GEMINI_VISION_MODEL=gemini-2.5-flash
+GEMINI_TIMEOUT_SECONDS=90
+GEMINI_MAX_OUTPUT_TOKENS=4096
+GEMINI_TEMPERATURE=0.1
+
+OPENAI_API_KEY=
+```
+
+Implementation files:
+
+```text
+src/AI/Application/GeminiGooglePhotoRecognitionGateway.php
+src/AI/Application/MultiProviderPhotoRecognitionGateway.php
+config/ai.php
+scripts/smoke-gemini-vision-provider.ps1
+```
+
+Quality behavior:
+
+- Gemini receives the original image and must read visible text, product titles, part numbers and callouts itself.
+- No `GOOGLE_CLOUD_VISION_API_KEY` is required.
+- If Gemini reads `165314 Dishwasher Lower Rack Wheel`, Re-born should identify it as a dishwasher lower-rack wheel/roller, not as a generic cover/scocca.
+- If all live providers fail, Re-born marks the result as provider fallback and does not pretend the image was read by AI.
+
+Smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-gemini-vision-provider.ps1 -BaseUrl http://127.0.0.1:8080
+powershell -ExecutionPolicy Bypass -File .\scripts\ci-smoke-tests.ps1 -BaseUrl http://127.0.0.1:8080
+```
+
+
+## Step 48.2 — Gemini external curl body acceptance hotfix
+
+Step 48.2 fixes the Windows/PHP transport edge case where `curl.exe` can return a Gemini JSON body while PHP records the HTTP status as `0`. In that case Re-born now parses the response body first: if it is valid Gemini JSON with `candidates` and no `error`, the gateway accepts it as a live Gemini response instead of falling back. This is required for environments where PHP lacks native cURL/HTTPS wrappers and uses the external curl transport.
+
+Expected live debug result after this hotfix:
+
+```text
+recognition_mode: gemini_vision_api
+```
+
+For the sample image `165314-dishwasher-wheel`, the result should include `165314`, `Dishwasher Lower Rack Wheel`, and `Ruota del cestello inferiore per lavastoviglie`.
+
+
+### Step 48.4 — Deterministic upload-recognition CI smoke
+
+The generic `smoke-repair-upload-recognition.ps1` test now submits `recognition_mode=deterministic_smoke`. This keeps the full CI suite fast and deterministic even when `AI_PHOTO_RECOGNITION_PROVIDER=auto` and Gemini Vision is configured. Real provider quality remains covered by the explicit live debug script `scripts/debug-ai-vision-quality-live.ps1` and by provider-specific smoke markers.
+
+
+### Step 48.6 — deterministic recognition for generic CI smoke tests
+
+Generic CI smoke tests that exercise upload, path-decision and provider/quote pipelines now pass `recognition_mode=deterministic_smoke` when creating recognition jobs. This keeps the CI suite deterministic and prevents live Gemini/OpenAI calls from causing timeout, quota or network failures. Real model quality is still validated separately with `scripts/debug-ai-vision-quality-live.ps1` using real images.

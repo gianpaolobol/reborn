@@ -52,6 +52,7 @@ function Invoke-MultipartUpload($uri, $token, $filePath) {
 }
 
 Info "Checking Re-born Repair Upload & AI Recognition API at $BaseUrl"
+Info "Step 48.4: generic CI upload smoke uses deterministic_smoke recognition to avoid live Gemini/OpenAI latency, quota and network dependency."
 
 $health = Invoke-RestMethod -Method GET -Uri "$BaseUrl/api/health" -TimeoutSec 10
 if ($health.status -ne "ok") { throw "Health check did not return ok." }
@@ -107,19 +108,24 @@ try {
   }
   Ok "List attachments: ok"
 
-  $recognitionBody = @{ attachment_ids = @($attachmentId) } | ConvertTo-Json -Compress
+  $recognitionBody = @{ attachment_ids = @($attachmentId); recognition_mode = "deterministic_smoke" } | ConvertTo-Json -Compress
   $job = Invoke-RestMethod `
     -Method POST `
     -Uri "$BaseUrl/api/v1/repair-cases/$caseId/recognition-jobs" `
     -ContentType "application/json" `
     -Headers $repairHeaders `
     -Body $recognitionBody `
-    -TimeoutSec 10
+    -TimeoutSec 20
 
   if ($job.recognition_job.status -ne "completed") {
     $job | ConvertTo-Json -Depth 10
     throw "Recognition job did not complete synchronously."
   }
+  if ($job.recognition_job.result_json.recognition_mode -ne "deterministic_smoke") {
+    $job | ConvertTo-Json -Depth 10
+    throw "Generic CI upload smoke must use deterministic_smoke recognition mode."
+  }
+  Ok "Deterministic smoke recognition mode: ok"
   if (-not $job.recognition_job.result_json.object_guess) { throw "Recognition result missing object_guess." }
   if (-not $job.recognition_job.result_json.damage_assessment) { throw "Recognition result missing damage_assessment." }
   if (-not $job.recognition_job.result_json.recommended_next_step) { throw "Recognition result missing recommended_next_step." }

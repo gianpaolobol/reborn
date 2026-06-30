@@ -42,6 +42,8 @@ return static function (Router $router, RepairController $repairController, Auth
                 'repair_uploads',
                 'ai_recognition_jobs',
                 'openai_photo_recognition_api',
+                'gemini_vision_provider',
+                'multi_provider_vision_router',
                 'ai_replacement_part_brief',
                 'ai_vision_quality_profile',
                 'max_vision_ocr_reference_identification',

@@ -95,7 +95,7 @@ try {
   $attachmentId = $uploaded.attachment.id
   Ok "Upload attachment: ok"
 
-  $recognitionBody = @{ attachment_ids = @($attachmentId) } | ConvertTo-Json -Compress
+  $recognitionBody = @{ attachment_ids = @($attachmentId); recognition_mode = "deterministic_smoke" } | ConvertTo-Json -Compress
   $job = Invoke-RestMethod `
     -Method POST `
     -Uri "$BaseUrl/api/v1/repair-cases/$caseId/recognition-jobs" `
@@ -108,7 +108,12 @@ try {
     $job | ConvertTo-Json -Depth 20
     throw "Recognition job did not complete synchronously."
   }
+  if ($job.recognition_job.result_json.recognition_mode -ne "deterministic_smoke") {
+    $job | ConvertTo-Json -Depth 20
+    throw "Provider-match CI smoke must use deterministic_smoke recognition mode."
+  }
   $recognitionJobId = $job.recognition_job.id
+  Ok "Deterministic smoke recognition mode: ok"
   Ok "AI recognition job completed: ok"
 
   $decisionBody = @{ recognition_job_id = $recognitionJobId } | ConvertTo-Json -Compress

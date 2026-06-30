@@ -1,15 +1,15 @@
 ﻿{
-    "failed_script":  "smoke-ai-vision-quality-profile.ps1",
-    "failed_at":  "2026-06-30T18:56:16.8094858Z",
-    "error_message":  "Impossibile recuperare la variabile $this perché non è stata impostata.",
-    "position":  "In C:\\REBORN\\REBORN\\scripts\\smoke-ai-vision-quality-profile.ps1:57 car:17\r\n+     \"detail\u0027 =\u003e $this-\u003eimageDetail()\",\r\n+                 ~~~~~",
-    "script_stack_trace":  "in \u003cScriptBlock\u003e, C:\\REBORN\\REBORN\\scripts\\smoke-ai-vision-quality-profile.ps1: riga 55\r\nin \u003cScriptBlock\u003e, C:\\REBORN\\REBORN\\scripts\\ci-smoke-tests.ps1: riga 219",
+    "failed_script":  "smoke-ai-photo-recognition-replacement-brief.ps1",
+    "failed_at":  "2026-06-30T21:38:29.0970579Z",
+    "error_message":  "Expected OpenAI provider status.",
+    "position":  "In C:\\REBORN\\REBORN\\scripts\\smoke-ai-photo-recognition-replacement-brief.ps1:9 car:27\r\n+ function Fail($message) { throw $message }\r\n+                           ~~~~~~~~~~~~~~",
+    "script_stack_trace":  "in Fail, C:\\REBORN\\REBORN\\scripts\\smoke-ai-photo-recognition-replacement-brief.ps1: riga 9\r\nin \u003cScriptBlock\u003e, C:\\REBORN\\REBORN\\scripts\\smoke-ai-photo-recognition-replacement-brief.ps1: riga 58\r\nin \u003cScriptBlock\u003e, C:\\REBORN\\REBORN\\scripts\\ci-smoke-tests.ps1: riga 220",
     "readiness":  {
                       "success":  true,
                       "readiness":  {
                                         "status":  "degraded",
                                         "environment":  "development",
-                                        "generated_at":  "2026-06-30T18:56:16+00:00",
+                                        "generated_at":  "2026-06-30T21:38:29+00:00",
                                         "checks":  {
                                                        "database":  {
                                                                         "status":  "ok",
@@ -80,14 +80,14 @@
                                                        "observability":  {
                                                                              "status":  "ok",
                                                                              "message":  "HTTP metrics recorder is available.",
-                                                                             "recorded_requests":  11178,
-                                                                             "last_request_at":  "2026-06-30T18:56:16+00:00"
+                                                                             "recorded_requests":  13517,
+                                                                             "last_request_at":  "2026-06-30T21:38:29+00:00"
                                                                          },
                                                        "backup":  {
                                                                       "status":  "ok",
                                                                       "message":  "At least one completed backup exists.",
                                                                       "backup_dir":  "C:\\REBORN\\reborn/storage/backups",
-                                                                      "latest_completed_backup_at":  "2026-06-30T18:55:46+00:00"
+                                                                      "latest_completed_backup_at":  "2026-06-30T21:38:01+00:00"
                                                                   },
                                                        "incident_response":  {
                                                                                  "status":  "ok",
@@ -100,7 +100,7 @@
                                                        "notification_center":  {
                                                                                    "status":  "ok",
                                                                                    "message":  "Notification and escalation tables are available.",
-                                                                                   "active_channels":  19,
+                                                                                   "active_channels":  22,
                                                                                    "enabled_notification_rules":  4,
                                                                                    "enabled_escalation_policies":  4,
                                                                                    "missing_tables":  [
@@ -139,9 +139,9 @@
                                                        "partner_onboarding":  {
                                                                                   "status":  "ok",
                                                                                   "message":  "Partner onboarding governance tables are available.",
-                                                                                  "partners":  15,
-                                                                                  "onboarding_tasks":  56,
-                                                                                  "agreements":  15,
+                                                                                  "partners":  18,
+                                                                                  "onboarding_tasks":  68,
+                                                                                  "agreements":  18,
                                                                                   "missing_tables":  [
 
                                                                                                      ]
@@ -150,8 +150,8 @@
                                                                                    "status":  "ok",
                                                                                    "message":  "Marketplace revenue, credits and payout governance tables are available.",
                                                                                    "fee_policies":  3,
-                                                                                   "credit_accounts":  24,
-                                                                                   "payout_accounts":  14,
+                                                                                   "credit_accounts":  30,
+                                                                                   "payout_accounts":  17,
                                                                                    "missing_tables":  [
 
                                                                                                       ]
@@ -159,8 +159,8 @@
                                                        "maker_economy":  {
                                                                              "status":  "ok",
                                                                              "message":  "Maker economy, model licensing and repair bounty governance tables are available.",
-                                                                             "maker_profiles":  12,
-                                                                             "model_assets":  12,
+                                                                             "maker_profiles":  15,
+                                                                             "model_assets":  15,
                                                                              "model_licenses":  3,
                                                                              "repair_bounties":  2,
                                                                              "missing_tables":  [
@@ -171,9 +171,9 @@
                                                                                       "status":  "ok",
                                                                                       "message":  "AI pipeline governance, human review, dataset and safety rule tables are available.",
                                                                                       "ai_model_providers":  3,
-                                                                                      "ai_pipeline_runs":  12,
+                                                                                      "ai_pipeline_runs":  15,
                                                                                       "ai_safety_rules":  3,
-                                                                                      "ai_dataset_items":  12,
+                                                                                      "ai_dataset_items":  15,
                                                                                       "missing_tables":  [
 
                                                                                                          ]
@@ -182,7 +182,7 @@
                                                                                    "status":  "ok",
                                                                                    "message":  "AI provider adapter sandbox and job orchestration tables are available. Missing provider secrets remain warnings while adapters are mock/sandbox only.",
                                                                                    "sandbox_adapters":  4,
-                                                                                   "orchestration_jobs":  11,
+                                                                                   "orchestration_jobs":  14,
                                                                                    "missing_provider_secrets":  2,
                                                                                    "missing_tables":  [
 
@@ -193,8 +193,8 @@
                                                                                      "message":  "CAD/geometry validation and printability governance tables are available. Real mesh/CAD kernel analysis remains out of scope for the local pilot.",
                                                                                      "validation_profiles":  2,
                                                                                      "printability_rules":  4,
-                                                                                     "geometry_assets":  11,
-                                                                                     "validation_runs":  10,
+                                                                                     "geometry_assets":  14,
+                                                                                     "validation_runs":  13,
                                                                                      "missing_tables":  [
 
                                                                                                         ]
@@ -205,7 +205,7 @@
                                                                                 "provider_capabilities":  3,
                                                                                 "machine_profiles":  4,
                                                                                 "routing_policies":  3,
-                                                                                "routing_requests":  11,
+                                                                                "routing_requests":  14,
                                                                                 "missing_tables":  [
 
                                                                                                    ]
@@ -214,9 +214,9 @@
                                                                                    "status":  "ok",
                                                                                    "message":  "Dispatch, shipment tracking and proof-of-repair governance tables are available. Real courier booking and return logistics remain out of scope for the local pilot.",
                                                                                    "dispatch_policies":  3,
-                                                                                   "dispatches":  10,
-                                                                                   "tracking_events":  30,
-                                                                                   "proof_of_repair_records":  10,
+                                                                                   "dispatches":  13,
+                                                                                   "tracking_events":  39,
+                                                                                   "proof_of_repair_records":  13,
                                                                                    "missing_tables":  [
 
                                                                                                       ]
@@ -226,8 +226,8 @@
                                                                                         "message":  "Customer acceptance, warranty placeholder and post-repair support governance tables are available. Legal warranty terms, refunds and CRM integrations remain out of scope for the local pilot.",
                                                                                         "acceptance_policies":  3,
                                                                                         "warranty_policies":  2,
-                                                                                        "acceptance_records":  10,
-                                                                                        "support_tickets":  10,
+                                                                                        "acceptance_records":  13,
+                                                                                        "support_tickets":  13,
                                                                                         "missing_tables":  [
 
                                                                                                            ]
@@ -236,9 +236,9 @@
                                                                                      "status":  "ok",
                                                                                      "message":  "Sustainability impact, circularity metrics and repair outcome intelligence tables are available. Public environmental claims remain out of scope until methodology is validated.",
                                                                                      "sustainability_factors":  6,
-                                                                                     "repair_impact_records":  10,
-                                                                                     "circularity_snapshots":  10,
-                                                                                     "open_insights":  11,
+                                                                                     "repair_impact_records":  13,
+                                                                                     "circularity_snapshots":  13,
+                                                                                     "open_insights":  14,
                                                                                      "missing_tables":  [
 
                                                                                                         ]
@@ -248,7 +248,7 @@
                                                                                   "message":  "Investor demo KPI, narrative and board reporting governance tables are available. Metrics remain pilot/local evidence until externally validated.",
                                                                                   "kpi_definitions":  6,
                                                                                   "narrative_sections":  5,
-                                                                                  "readiness_reviews":  10,
+                                                                                  "readiness_reviews":  13,
                                                                                   "missing_tables":  [
 
                                                                                                      ]
@@ -258,7 +258,7 @@
                                                                                 "message":  "Demo mode, guided repair journey and investor walkthrough tables are available. Demo output remains local/pilot evidence with explicit caveats.",
                                                                                 "active_modes":  2,
                                                                                 "active_steps":  8,
-                                                                                "readiness_reviews":  9,
+                                                                                "readiness_reviews":  12,
                                                                                 "missing_tables":  [
 
                                                                                                    ]
@@ -266,10 +266,10 @@
                                                        "pilot_launch":  {
                                                                             "status":  "ok",
                                                                             "message":  "Demo data room, pilot launch checklist and stakeholder feedback loop tables are available. Pilot launch remains conditional until legal, provider, fulfilment and production readiness are validated.",
-                                                                            "ready_data_room_assets":  13,
+                                                                            "ready_data_room_assets":  16,
                                                                             "checklist_items":  6,
-                                                                            "feedback_loops":  10,
-                                                                            "go_no_go_decisions":  10,
+                                                                            "feedback_loops":  13,
+                                                                            "go_no_go_decisions":  13,
                                                                             "missing_tables":  [
 
                                                                                                ]
@@ -278,9 +278,9 @@
                                                                             "status":  "ok",
                                                                             "message":  "Public pilot demo, external stakeholder intake, lead scoring and real-world validation case tables are available. Public pilot remains controlled and caveated until legal, provider, payments, fulfilment and production readiness are validated.",
                                                                             "active_public_pages":  3,
-                                                                            "intake_submissions":  10,
-                                                                            "validation_cases":  17,
-                                                                            "lead_scores":  10,
+                                                                            "intake_submissions":  13,
+                                                                            "validation_cases":  23,
+                                                                            "lead_scores":  13,
                                                                             "missing_tables":  [
 
                                                                                                ]
@@ -288,7 +288,7 @@
                                                    }
                                     },
                       "meta":  {
-                                   "request_id":  "5c3400d52726f793"
+                                   "request_id":  "a125bce5c4d92fbe"
                                }
                   },
     "health":  {
@@ -311,6 +311,8 @@
                                         "repair_uploads",
                                         "ai_recognition_jobs",
                                         "openai_photo_recognition_api",
+                                        "gemini_vision_provider",
+                                        "multi_provider_vision_router",
                                         "ai_replacement_part_brief",
                                         "ai_vision_quality_profile",
                                         "max_vision_ocr_reference_identification",
@@ -453,7 +455,7 @@
                                         "domain_events"
                                     ],
                    "meta":  {
-                                "request_id":  "512cb3c8077a4708"
+                                "request_id":  "768fe2f164bb9a63"
                             }
                },
     "server_log_tail":  [
@@ -463,172 +465,172 @@
                            {
                                "script":  "smoke-identity-access.ps1",
                                "status":  "passed",
-                               "duration_seconds":  0.84
+                               "duration_seconds":  0.81
                            },
                            {
                                "script":  "smoke-ownership-dashboards.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.45
+                               "duration_seconds":  1.53
                            },
                            {
                                "script":  "smoke-prototype-auth-ui.ps1",
                                "status":  "passed",
-                               "duration_seconds":  2.24
+                               "duration_seconds":  2.28
                            },
                            {
                                "script":  "smoke-repair-upload-recognition.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.35
+                               "duration_seconds":  1.18
                            },
                            {
                                "script":  "smoke-repair-path-decision.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.43
+                               "duration_seconds":  1.32
                            },
                            {
                                "script":  "smoke-provider-match-quote.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.81
+                               "duration_seconds":  1.67
                            },
                            {
                                "script":  "smoke-repair-order-payment-intent.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.7
+                               "duration_seconds":  1.63
                            },
                            {
                                "script":  "smoke-repair-fulfilment-workflow.ps1",
                                "status":  "passed",
-                               "duration_seconds":  2.21
+                               "duration_seconds":  2.1
                            },
                            {
                                "script":  "smoke-repair-completion-learning.ps1",
                                "status":  "passed",
-                               "duration_seconds":  2.87
+                               "duration_seconds":  2.91
                            },
                            {
                                "script":  "smoke-provider-trust-quality.ps1",
                                "status":  "passed",
-                               "duration_seconds":  2.77
+                               "duration_seconds":  2.51
                            },
                            {
                                "script":  "smoke-provider-ranking-governance.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.64
+                               "duration_seconds":  1.33
                            },
                            {
                                "script":  "smoke-admin-ops-moderation.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.77
+                               "duration_seconds":  1.65
                            },
                            {
                                "script":  "smoke-production-readiness.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.01
+                               "duration_seconds":  1.12
                            },
                            {
                                "script":  "smoke-observability-ops.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.55
+                               "duration_seconds":  2.01
                            },
                            {
                                "script":  "smoke-incident-response-status.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.68
+                               "duration_seconds":  1.76
                            },
                            {
                                "script":  "smoke-notification-escalation.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.58
+                               "duration_seconds":  1.57
                            },
                            {
                                "script":  "smoke-service-governance-sla.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.67
+                               "duration_seconds":  1.58
                            },
                            {
                                "script":  "smoke-privacy-data-governance.ps1",
                                "status":  "passed",
-                               "duration_seconds":  2.06
+                               "duration_seconds":  1.87
                            },
                            {
                                "script":  "smoke-beta-release-management.ps1",
                                "status":  "passed",
-                               "duration_seconds":  2.31
+                               "duration_seconds":  2.24
                            },
                            {
                                "script":  "smoke-partner-onboarding-governance.ps1",
                                "status":  "passed",
-                               "duration_seconds":  2.55
+                               "duration_seconds":  1.97
                            },
                            {
                                "script":  "smoke-marketplace-revenue-governance.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.92
+                               "duration_seconds":  1.86
                            },
                            {
                                "script":  "smoke-maker-economy-governance.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.92
+                               "duration_seconds":  1.82
                            },
                            {
                                "script":  "smoke-ai-pipeline-governance.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.35
+                               "duration_seconds":  1.42
                            },
                            {
                                "script":  "smoke-ai-provider-sandbox-orchestration.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.59
+                               "duration_seconds":  1.49
                            },
                            {
                                "script":  "smoke-geometry-printability-governance.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.64
+                               "duration_seconds":  1.53
                            },
                            {
                                "script":  "smoke-provider-routing-governance.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.53
+                               "duration_seconds":  1.63
                            },
                            {
                                "script":  "smoke-dispatch-proof-governance.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.81
+                               "duration_seconds":  1.7
                            },
                            {
                                "script":  "smoke-customer-care-warranty-support.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.87
+                               "duration_seconds":  1.89
                            },
                            {
                                "script":  "smoke-sustainability-impact-circularity.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.84
+                               "duration_seconds":  1.76
                            },
                            {
                                "script":  "smoke-investor-reporting-board-readiness.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.74
+                               "duration_seconds":  1.93
                            },
                            {
                                "script":  "smoke-demo-walkthrough-investor-journey.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.65
+                               "duration_seconds":  1.67
                            },
                            {
                                "script":  "smoke-demo-data-room-pilot-feedback-loop.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.82
+                               "duration_seconds":  1.86
                            },
                            {
                                "script":  "smoke-public-pilot-real-world-validation.ps1",
                                "status":  "passed",
-                               "duration_seconds":  1.96
+                               "duration_seconds":  1.77
                            },
                            {
                                "script":  "smoke-guided-user-repair-experience.ps1",
                                "status":  "passed",
-                               "duration_seconds":  0.57
+                               "duration_seconds":  0.55
                            },
                            {
                                "script":  "smoke-repair-first-offer-architecture.ps1",
@@ -637,19 +639,9 @@
                            },
                            {
                                "script":  "smoke-ai-photo-recognition-replacement-brief.ps1",
-                               "status":  "passed",
-                               "duration_seconds":  0.96
-                           },
-                           {
-                               "script":  "smoke-user-repair-wizard-simplification.ps1",
-                               "status":  "passed",
-                               "duration_seconds":  0.33
-                           },
-                           {
-                               "script":  "smoke-ai-vision-quality-profile.ps1",
                                "status":  "failed",
-                               "duration_seconds":  0.65,
-                               "error":  "Impossibile recuperare la variabile $this perché non è stata impostata."
+                               "duration_seconds":  0.5,
+                               "error":  "Expected OpenAI provider status."
                            }
                        ]
 }

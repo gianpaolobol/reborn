@@ -38,4 +38,19 @@ final class Env
         $value = self::get($key, $default ? 'true' : 'false');
         return filter_var($value, FILTER_VALIDATE_BOOL);
     }
+
+    /** @return list<string> */
+    public static function csv(string $key, array $default = []): array
+    {
+        $value = self::get($key, null);
+        if ($value === null || $value === false || trim((string) $value) === '') {
+            return array_values(array_map('strval', $default));
+        }
+
+        return array_values(array_filter(array_map(
+            static fn(string $item): string => trim($item),
+            explode(',', (string) $value)
+        ), static fn(string $item): bool => $item !== ''));
+    }
 }
+

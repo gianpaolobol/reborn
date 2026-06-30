@@ -51,7 +51,7 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
 
         $images = $this->loadImageInputs($attachments);
         if ($images === []) {
-            return null;
+            return $this->fallbackAfterProviderError($case, $attachments, 'No usable image input was found for OpenAI Vision. Check uploaded attachment MIME type, extension, stored path and readability.');
         }
 
         try {
@@ -112,20 +112,18 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
         $images = [];
 
         foreach ($attachments as $attachment) {
-            if (!str_starts_with($attachment->mimeType, 'image/')) {
-                continue;
-            }
-
-            if (!in_array($attachment->mimeType, ['image/jpeg', 'image/png', 'image/webp'], true)) {
-                continue;
-            }
-
             if ($attachment->sizeBytes > $this->maxImageBytes()) {
                 continue;
             }
 
             $absolutePath = rtrim($this->uploadsRoot, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $attachment->storedPath);
             if (!is_file($absolutePath) || !is_readable($absolutePath)) {
+                continue;
+            }
+
+            $imageSize = @getimagesize($absolutePath);
+            $resolvedMimeType = $this->imageMimeTypeForAttachment($attachment, $absolutePath, is_array($imageSize) ? $imageSize : null);
+            if ($resolvedMimeType === null) {
                 continue;
             }
 
@@ -136,19 +134,18 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
 
             $width = null;
             $height = null;
-            $imageSize = @getimagesize($absolutePath);
             if (is_array($imageSize)) {
                 $width = isset($imageSize[0]) ? (int) $imageSize[0] : null;
                 $height = isset($imageSize[1]) ? (int) $imageSize[1] : null;
             }
 
             $images[] = [
-                'mime_type' => $attachment->mimeType,
+                'mime_type' => $resolvedMimeType,
                 'filename' => $attachment->originalFilename,
                 'size_bytes' => $attachment->sizeBytes,
                 'width' => $width,
                 'height' => $height,
-                'data_url' => 'data:' . $attachment->mimeType . ';base64,' . base64_encode($bytes),
+                'data_url' => 'data:' . $resolvedMimeType . ';base64,' . base64_encode($bytes),
             ];
 
             if (count($images) >= $this->maxImages()) {
@@ -157,6 +154,37 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
         }
 
         return $images;
+    }
+
+    /** @param array<int, mixed>|null $imageSize */
+    private function imageMimeTypeForAttachment(RepairAttachment $attachment, string $absolutePath, ?array $imageSize): ?string
+    {
+        $allowed = ['image/jpeg', 'image/png', 'image/webp'];
+        $declaredMime = strtolower(trim($attachment->mimeType));
+        if (in_array($declaredMime, $allowed, true)) {
+            return $declaredMime;
+        }
+
+        if (function_exists('mime_content_type')) {
+            $detectedMime = strtolower((string) (mime_content_type($absolutePath) ?: ''));
+            if (in_array($detectedMime, $allowed, true)) {
+                return $detectedMime;
+            }
+        }
+
+        $extension = strtolower(pathinfo($attachment->originalFilename !== '' ? $attachment->originalFilename : $attachment->storedPath, PATHINFO_EXTENSION));
+        $extensionMime = match ($extension) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            default => null,
+        };
+
+        if ($extensionMime !== null && is_array($imageSize)) {
+            return $extensionMime;
+        }
+
+        return null;
     }
 
     /** @param list<RepairAttachment> $attachments @param list<array{mime_type:string,data_url:string,filename:string,size_bytes:int,width:int|null,height:int|null}> $images @return array<string, mixed> */
@@ -373,49 +401,16 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
         ];
 
         $timeout = max(5, (int) ($this->config['timeout_seconds'] ?? 90));
-        if (function_exists('curl_init')) {
-            $curl = curl_init($url);
-            if ($curl === false) {
-                throw new \RuntimeException('Unable to initialize cURL.');
-            }
-            curl_setopt_array($curl, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => $json,
-                CURLOPT_HTTPHEADER => $headers,
-                CURLOPT_TIMEOUT => $timeout,
-                CURLOPT_CONNECTTIMEOUT => min(15, $timeout),
-                CURLOPT_USERAGENT => 'Re-born AI Photo Recognition MVP/1.0',
-            ]);
-            $response = curl_exec($curl);
-            $statusCode = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-            $error = curl_error($curl);
-            curl_close($curl);
+        $response = $this->postJsonWithPhpCurl($url, $json, $headers, $timeout);
+        if ($response === null) {
+            $response = $this->postJsonWithPhpStreams($url, $json, $headers, $timeout);
+        }
+        if ($response === null) {
+            $response = $this->postJsonWithExternalCurl($url, $json, $headers, $timeout);
+        }
 
-            if ($response === false || $response === '') {
-                throw new \RuntimeException('OpenAI request failed: ' . ($error ?: 'empty response'));
-            }
-            if ($statusCode < 200 || $statusCode >= 300) {
-                throw new \RuntimeException('OpenAI returned HTTP ' . $statusCode . ': ' . substr((string) $response, 0, 600));
-            }
-        } else {
-            $context = stream_context_create([
-                'http' => [
-                    'method' => 'POST',
-                    'header' => implode("\r\n", $headers),
-                    'content' => $json,
-                    'timeout' => $timeout,
-                    'ignore_errors' => true,
-                ],
-            ]);
-            $response = file_get_contents($url, false, $context);
-            if ($response === false || $response === '') {
-                throw new \RuntimeException('OpenAI request failed: empty response.');
-            }
-            $statusLine = $http_response_header[0] ?? '';
-            if (preg_match('/HTTP\/\S+\s+(\d+)/', $statusLine, $matches) && ((int) $matches[1] < 200 || (int) $matches[1] >= 300)) {
-                throw new \RuntimeException('OpenAI returned ' . $statusLine . ': ' . substr((string) $response, 0, 600));
-            }
+        if ($response === null) {
+            throw new \RuntimeException('OpenAI request could not be sent: PHP cURL is not loaded, the PHP https stream wrapper is unavailable, and curl.exe/curl was not found or could not execute. Enable extension=curl or extension=openssl in php.ini, or keep curl.exe available in PATH.');
         }
 
         $decoded = json_decode((string) $response, true);
@@ -424,6 +419,193 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
         }
 
         return $decoded;
+    }
+
+    /** @param list<string> $headers */
+    private function postJsonWithPhpCurl(string $url, string $json, array $headers, int $timeout): ?string
+    {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
+
+        $curl = curl_init($url);
+        if ($curl === false) {
+            return null;
+        }
+
+        curl_setopt_array($curl, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $json,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_CONNECTTIMEOUT => min(15, $timeout),
+            CURLOPT_USERAGENT => 'Re-born AI Photo Recognition MVP/1.0',
+        ]);
+        $response = curl_exec($curl);
+        $statusCode = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+
+        if ($response === false || $response === '') {
+            throw new \RuntimeException('OpenAI request failed via PHP cURL: ' . ($error ?: 'empty response'));
+        }
+        if ($statusCode < 200 || $statusCode >= 300) {
+            throw new \RuntimeException('OpenAI returned HTTP ' . $statusCode . ': ' . $this->safeSubstring((string) $response, 0, 600));
+        }
+
+        return (string) $response;
+    }
+
+    /** @param list<string> $headers */
+    private function postJsonWithPhpStreams(string $url, string $json, array $headers, int $timeout): ?string
+    {
+        $wrappers = stream_get_wrappers();
+        if (!in_array('https', $wrappers, true)) {
+            return null;
+        }
+
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => implode("\r\n", $headers),
+                'content' => $json,
+                'timeout' => $timeout,
+                'ignore_errors' => true,
+            ],
+        ]);
+        $http_response_header = [];
+        $response = @file_get_contents($url, false, $context);
+        if ($response === false || $response === '') {
+            throw new \RuntimeException('OpenAI request failed via PHP streams: empty response.');
+        }
+        $statusLine = $http_response_header[0] ?? '';
+        if (preg_match('/HTTP\/\S+\s+(\d+)/', $statusLine, $matches) && ((int) $matches[1] < 200 || (int) $matches[1] >= 300)) {
+            throw new \RuntimeException('OpenAI returned ' . $statusLine . ': ' . $this->safeSubstring((string) $response, 0, 600));
+        }
+
+        return (string) $response;
+    }
+
+    /** @param list<string> $headers */
+    private function postJsonWithExternalCurl(string $url, string $json, array $headers, int $timeout): ?string
+    {
+        if (!function_exists('shell_exec')) {
+            return null;
+        }
+
+        $curlBinary = $this->externalCurlBinary();
+        if ($curlBinary === null) {
+            return null;
+        }
+
+        $payloadPath = $this->temporaryFile('reborn_openai_payload_', '.json');
+        $responsePath = $this->temporaryFile('reborn_openai_response_', '.json');
+        $configPath = $this->temporaryFile('reborn_openai_curl_', '.conf');
+
+        try {
+            if (file_put_contents($payloadPath, $json) === false) {
+                throw new \RuntimeException('Unable to write temporary OpenAI payload file.');
+            }
+
+            $configLines = [
+                'url = ' . $this->curlConfigQuote($url),
+                'request = POST',
+                'location',
+                'silent',
+                'show-error',
+                'max-time = ' . $timeout,
+                'connect-timeout = ' . min(15, $timeout),
+                'user-agent = ' . $this->curlConfigQuote('Re-born AI Photo Recognition MVP/1.0'),
+                'header = ' . $this->curlConfigQuote('Content-Type: application/json'),
+            ];
+            foreach ($headers as $header) {
+                if (str_starts_with($header, 'Authorization:')) {
+                    $configLines[] = 'header = ' . $this->curlConfigQuote($header);
+                }
+            }
+            $configLines[] = 'data-binary = ' . $this->curlConfigQuote('@' . $this->normalizePathForCurl($payloadPath));
+
+            if (file_put_contents($configPath, implode(PHP_EOL, $configLines) . PHP_EOL) === false) {
+                throw new \RuntimeException('Unable to write temporary curl config file.');
+            }
+
+            $command = escapeshellarg($curlBinary)
+                . ' --config ' . escapeshellarg($configPath)
+                . ' --output ' . escapeshellarg($responsePath)
+                . ' --write-out ' . escapeshellarg('%{http_code}')
+                . ' 2>&1';
+
+            $output = shell_exec($command);
+            if (!is_string($output)) {
+                return null;
+            }
+
+            $statusCode = 0;
+            if (preg_match('/(\d{3})\s*$/', trim($output), $matches)) {
+                $statusCode = (int) $matches[1];
+            }
+
+            $response = is_file($responsePath) ? (string) file_get_contents($responsePath) : '';
+            if ($response === '') {
+                $cleanOutput = $this->sanitizeProviderError($output);
+                throw new \RuntimeException('OpenAI request failed via external curl: ' . ($cleanOutput !== '' ? $cleanOutput : 'empty response'));
+            }
+            if ($statusCode < 200 || $statusCode >= 300) {
+                throw new \RuntimeException('OpenAI returned HTTP ' . $statusCode . ' via external curl: ' . $this->safeSubstring($response, 0, 600));
+            }
+
+            return $response;
+        } finally {
+            @unlink($payloadPath);
+            @unlink($responsePath);
+            @unlink($configPath);
+        }
+    }
+
+    private function externalCurlBinary(): ?string
+    {
+        foreach (['curl.exe', 'curl'] as $binary) {
+            $command = (PHP_OS_FAMILY === 'Windows')
+                ? 'where ' . escapeshellarg($binary) . ' 2>NUL'
+                : 'command -v ' . escapeshellarg($binary) . ' 2>/dev/null';
+            $output = shell_exec($command);
+            if (!is_string($output) || trim($output) === '') {
+                continue;
+            }
+            $lines = preg_split('/\r?\n/', trim($output)) ?: [];
+            foreach ($lines as $line) {
+                $candidate = trim($line);
+                if ($candidate !== '') {
+                    return $candidate;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function temporaryFile(string $prefix, string $suffix): string
+    {
+        $base = tempnam(sys_get_temp_dir(), $prefix);
+        if ($base === false) {
+            throw new \RuntimeException('Unable to create temporary file.');
+        }
+        $path = $base . $suffix;
+        if (!@rename($base, $path)) {
+            return $base;
+        }
+        return $path;
+    }
+
+    private function normalizePathForCurl(string $path): string
+    {
+        return str_replace('\\', '/', $path);
+    }
+
+    private function curlConfigQuote(string $value): string
+    {
+        return '"' . str_replace(['\\', '"'], ['/', '\"'], $value) . '"';
     }
 
     /** @param array<string, mixed> $raw @return array<string, mixed>|null */
@@ -573,7 +755,7 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
     private function refineResultFromVisibleText(array $result): array
     {
         $visibleText = implode(' ', array_map('strval', $result['identification']['visible_text'] ?? []));
-        $haystack = mb_strtolower(implode(' ', [
+        $haystack = $this->safeLowercase(implode(' ', [
             $visibleText,
             (string) ($result['identification']['part_number'] ?? ''),
             (string) ($result['identification']['commercial_name'] ?? ''),
@@ -667,7 +849,7 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
         $seen = [];
         $out = [];
         foreach ($values as $value) {
-            $key = mb_strtolower(trim($value));
+            $key = $this->safeLowercase(trim($value));
             if ($key === '' || isset($seen[$key])) {
                 continue;
             }
@@ -680,13 +862,24 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
     /** @param array<string, mixed> $result */
     private function shouldRetryForBetterIdentification(array $result): bool
     {
-        $label = mb_strtolower((string) ($result['object_guess']['label'] ?? ''));
+        $label = $this->safeLowercase((string) ($result['object_guess']['label'] ?? ''));
         $status = (string) ($result['identification']['status'] ?? 'unclear');
         $visibleText = is_array($result['identification']['visible_text'] ?? null) ? $result['identification']['visible_text'] : [];
         $confidence = (float) ($result['object_guess']['confidence'] ?? 0);
         $genericLabel = str_contains($label, 'cover') || str_contains($label, 'case') || str_contains($label, 'shell') || str_contains($label, 'scocca') || str_contains($label, 'unknown') || str_contains($label, 'sconosci') || str_contains($label, 'componente da confermare');
 
         return $status !== 'recognized' || ($genericLabel && $confidence < 0.86) || ($visibleText === [] && $confidence < 0.78);
+    }
+
+
+    private function safeLowercase(string $value): string
+    {
+        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+    }
+
+    private function safeSubstring(string $value, int $offset, int $length): string
+    {
+        return function_exists('mb_substr') ? mb_substr($value, $offset, $length, 'UTF-8') : substr($value, $offset, $length);
     }
 
     private function sanitizeProviderError(string $error): string
@@ -697,13 +890,13 @@ final class OpenAIPhotoRecognitionGateway implements PhotoRecognitionGateway
             return 'OpenAI request failed without a readable error message.';
         }
 
-        return mb_substr($error, 0, 900);
+        return $this->safeSubstring($error, 0, 900);
     }
 
     /** @param list<RepairAttachment> $attachments @return array<string, mixed> */
     private function fallbackAfterProviderError(RepairCase $case, array $attachments, string $error): array
     {
-        $imageCount = count(array_filter($attachments, static fn(RepairAttachment $attachment): bool => str_starts_with($attachment->mimeType, 'image/')));
+        $imageCount = count($this->loadImageInputs($attachments));
         $label = $this->guessLabelFromText($case);
         $path = $imageCount < 2 ? 'ask_more_photos' : 'maker_brief';
 

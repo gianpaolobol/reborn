@@ -6,6 +6,8 @@ use Reborn\AI\Application\GetRecognitionJobService;
 use Reborn\AI\Application\ListRecognitionJobsService;
 use Reborn\AI\Application\RecognitionEngine;
 use Reborn\AI\Application\RequestRecognitionJobService;
+use Reborn\AI\Application\GeminiGooglePhotoRecognitionGateway;
+use Reborn\AI\Application\MultiProviderPhotoRecognitionGateway;
 use Reborn\AI\Application\OpenAIPhotoRecognitionGateway;
 use Reborn\AI\Infrastructure\SqliteRecognitionJobRepository;
 use Reborn\AI\Presentation\RecognitionJobController;
@@ -189,7 +191,13 @@ $decisionService = new RepairPathDecisionService($pdo);
 $providerMatchingService = new ProviderMatchingService($pdo);
 $uploadsRoot = dirname(__DIR__) . '/storage/uploads';
 $fileStorage = new LocalFileStorage($uploadsRoot);
-$photoRecognitionGateway = new OpenAIPhotoRecognitionGateway($config['ai']['photo_recognition'] ?? [], $uploadsRoot);
+$aiPhotoRecognitionConfig = $config['ai']['photo_recognition'] ?? [];
+$openAiPhotoRecognitionGateway = new OpenAIPhotoRecognitionGateway($aiPhotoRecognitionConfig, $uploadsRoot);
+$geminiPhotoRecognitionGateway = new GeminiGooglePhotoRecognitionGateway($aiPhotoRecognitionConfig, $uploadsRoot);
+$photoRecognitionGateway = new MultiProviderPhotoRecognitionGateway($aiPhotoRecognitionConfig, [
+    'gemini' => $geminiPhotoRecognitionGateway,
+    'openai' => $openAiPhotoRecognitionGateway,
+]);
 
 $repairController = new RepairController(
     new ListRepairCasesService($repairRepository),

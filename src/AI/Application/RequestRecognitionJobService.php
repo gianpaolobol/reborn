@@ -27,7 +27,7 @@ final class RequestRecognitionJobService
     }
 
     /** @param list<string> $attachmentIds @return array<string, mixed> */
-    public function handle(string $repairCaseId, string $requestedBy, array $attachmentIds): array
+    public function handle(string $repairCaseId, string $requestedBy, array $attachmentIds, bool $deterministicSmoke = false): array
     {
         $case = $this->repairCases->find($repairCaseId);
         if ($case === null) {
@@ -66,7 +66,9 @@ final class RequestRecognitionJobService
 
         try {
             $this->recognitionJobs->markProcessing($job->id);
-            $result = $this->photoRecognitionGateway->analyze($case, $selectedAttachments) ?? $this->mockResult($case, $selectedAttachments);
+            $result = $deterministicSmoke
+                ? $this->deterministicSmokeResult($case, $selectedAttachments)
+                : ($this->photoRecognitionGateway->analyze($case, $selectedAttachments) ?? $this->mockResult($case, $selectedAttachments));
             $completed = $this->recognitionJobs->complete($job->id, $result);
             $this->eventBus->publish(new AIRecognitionCompleted(
                 $repairCaseId,
@@ -81,6 +83,23 @@ final class RequestRecognitionJobService
             $failed = $this->recognitionJobs->fail($job->id, $exception->getMessage());
             return $failed->toArray();
         }
+    }
+
+
+    /** @param list<RepairAttachment> $attachments @return array<string, mixed> */
+    private function deterministicSmokeResult(RepairCase $case, array $attachments): array
+    {
+        $result = $this->mockResult($case, $attachments);
+        $result['recognition_mode'] = 'deterministic_smoke';
+        $result['ai_provider'] = [
+            'provider' => 'deterministic_smoke',
+            'status' => 'ci_safe_no_external_ai_call',
+            'mode' => 'mock_result',
+            'note' => 'CI smoke mode bypasses live providers so the generic upload pipeline test remains fast, deterministic and free from API quota/network dependencies.',
+        ];
+        $result['repair_notes'][] = 'CI deterministic smoke recognition was used; run debug-ai-vision-quality-live.ps1 for real provider quality validation.';
+
+        return $result;
     }
 
     /** @param list<RepairAttachment> $attachments @return array<string, mixed> */

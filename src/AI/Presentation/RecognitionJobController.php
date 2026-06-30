@@ -76,7 +76,13 @@ final class RecognitionJobController
             throw new ValidationException(['attachment_ids' => ['attachment_ids must be an array.']]);
         }
 
-        $job = $this->requestRecognitionJob->handle($repairCaseId, $user->id, $attachmentIds);
+        $recognitionMode = strtolower(trim((string) ($body['recognition_mode'] ?? $body['mode'] ?? '')));
+        $deterministicSmoke = in_array($recognitionMode, ['deterministic_smoke', 'ci_deterministic', 'ci_mock'], true);
+        if ($deterministicSmoke && $this->isProductionEnvironment()) {
+            throw new ValidationException(['recognition_mode' => ['deterministic_smoke is not allowed in production.']]);
+        }
+
+        $job = $this->requestRecognitionJob->handle($repairCaseId, $user->id, $attachmentIds, $deterministicSmoke);
 
         return JsonResponse::created(['recognition_job' => $job], $request->requestId());
     }
@@ -99,5 +105,11 @@ final class RecognitionJobController
         }
 
         return JsonResponse::ok(['recognition_job' => $job], $request->requestId());
+    }
+
+    private function isProductionEnvironment(): bool
+    {
+        $env = strtolower(trim((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: 'production')));
+        return $env === 'production';
     }
 }

@@ -37,7 +37,7 @@ function Invoke-MultipartUpload($uri, $token, $filePath) {
     }
 }
 
-Write-Host "Checking Re-born Step 45 AI Photo Recognition & Replacement Brief at $BaseUrl" -ForegroundColor Cyan
+Write-Host "Checking Re-born Step 45/48.6 AI Photo Recognition & Replacement Brief at $BaseUrl" -ForegroundColor Cyan
 
 $health = Invoke-RestMethod -Method GET -Uri "$BaseUrl/api/health" -TimeoutSec 15
 if (-not $health.success -or $health.status -ne "ok") { Fail "Health check failed." }
@@ -55,9 +55,18 @@ Ok "Repair user login: ok"
 
 $status = Invoke-RestMethod -Method GET -Uri "$BaseUrl/api/v1/ai/photo-recognition/status" -Headers $headers -TimeoutSec 15
 if (-not $status.success -or -not $status.photo_recognition_provider) { Fail "Photo recognition provider status missing." }
-if ($status.photo_recognition_provider.provider -ne "openai") { Fail "Expected OpenAI provider status." }
-if (-not $status.photo_recognition_provider.capability) { Fail "Provider capability missing." }
-Ok "Photo recognition provider status: ok ($($status.photo_recognition_provider.mode))"
+$provider = [string]$status.photo_recognition_provider.provider
+# Step 48.6: the structural Step 45 smoke must remain compatible with both the legacy OpenAI-only status
+# and the newer auto/gemini multi-provider router. It validates API shape, not live provider choice.
+if (@("openai", "gemini", "auto") -notcontains $provider) { Fail "Expected OpenAI/Gemini/auto provider status, got: $provider" }
+if ($provider -eq "auto") {
+    if (-not $status.photo_recognition_provider.providers) { Fail "Auto provider router status missing providers map." }
+    if (-not $status.photo_recognition_provider.provider_order) { Fail "Auto provider router status missing provider_order." }
+    Ok "Photo recognition provider status: ok (auto router: $($status.photo_recognition_provider.provider_order -join ','))"
+} else {
+    if (-not $status.photo_recognition_provider.capability) { Fail "Provider capability missing." }
+    Ok "Photo recognition provider status: ok ($($status.photo_recognition_provider.mode))"
+}
 
 $caseBody = @{
     title = "Step 45 photo recognition smoke case"
@@ -79,13 +88,15 @@ try {
     $attachmentId = $uploaded.attachment.id
     Ok "Diagnostic photo uploaded: ok"
 
-    $recognitionBody = @{ attachment_ids = @($attachmentId) } | ConvertTo-Json -Compress
+    $recognitionBody = @{ attachment_ids = @($attachmentId); recognition_mode = "deterministic_smoke" } | ConvertTo-Json -Compress
     $job = Invoke-RestMethod -Method POST -Uri "$BaseUrl/api/v1/repair-cases/$caseId/recognition-jobs" -ContentType "application/json" -Headers $headers -Body $recognitionBody -TimeoutSec 100
     if (-not $job.success -or $job.recognition_job.status -ne "completed") {
         $job | ConvertTo-Json -Depth 10
         Fail "Recognition job did not complete."
     }
     $result = $job.recognition_job.result_json
+    if ($result.recognition_mode -ne "deterministic_smoke") { Fail "Step 45/48 structural CI smoke must use deterministic_smoke recognition mode." }
+    Ok "Deterministic smoke recognition mode: ok"
     if (-not $result.ai_provider) { Fail "Recognition result missing ai_provider metadata." }
     if (-not $result.recognition_mode) { Fail "Recognition result missing recognition_mode." }
     if (-not $result.identification) { Fail "Recognition result missing identification metadata." }
@@ -110,4 +121,4 @@ try {
     if (Test-Path $tempPng) { Remove-Item $tempPng -Force }
 }
 
-Write-Host "Step 45 AI photo recognition replacement brief smoke test passed." -ForegroundColor Green
+Write-Host "Step 45/48.6 AI photo recognition replacement brief smoke test passed." -ForegroundColor Green
