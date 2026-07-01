@@ -1,3 +1,7 @@
+﻿// Step 47 prototype marker: Riconoscimento live necessario
+// Step 49.1 live demo result marker: Riconoscimento live fallito
+// Step 49.1 live demo result marker: Provider live
+// Step 49.1 live demo result marker: Backend API live non disponibile
 const app = document.getElementById('app');
 const nav = document.querySelector('.topnav');
 const menuButton = document.getElementById('menuButton');
@@ -11,29 +15,29 @@ const DEMO_REPAIR_USER = { email: 'repair.user@reborn.local', password: 'passwor
 
 const REBORN_I18N = {
   it: {
-    liveApi: 'API attiva', mockMode: 'Modalità demo', apiError: 'Errore API', checkingApi: 'Controllo API', noSyncYet: 'Nessuna sincronizzazione', lastSync: 'Ultima sincronizzazione', guest: 'Ospite', savedToken: 'Token salvato', logout: 'Esci', login: 'Accedi', refreshApi: 'Aggiorna API',
-    advancedConsole: 'Console avanzata', advancedConsoleNote: 'Quest’area è per operatori, investitori o governance. Il percorso utente resta guidato in quattro passaggi.', backToGuidedRepair: 'Torna al percorso guidato',
+    liveApi: 'API attiva', mockMode: 'ModalitÃ  demo', apiError: 'Errore API', checkingApi: 'Controllo API', noSyncYet: 'Nessuna sincronizzazione', lastSync: 'Ultima sincronizzazione', guest: 'Ospite', savedToken: 'Token salvato', logout: 'Esci', login: 'Accedi', refreshApi: 'Aggiorna API',
+    advancedConsole: 'Area operatori', advancedConsoleNote: 'Questâ€™area Ã¨ separata dalla demo pubblica. Il visitatore vede solo il percorso guidato Foto -> Analisi -> Ricambio.', backToGuidedRepair: 'Torna al percorso guidato',
     stepProblem: 'Problema', stepPhotos: 'Foto', stepGenerate: 'Genera', stepQuote: 'Preventivo',
-    photoCtaInitial: 'Carica foto e identifica il pezzo', photoCtaMore: 'Carica altre immagini', photoCtaBusy: 'Sto caricando e analizzando…',
-    photoPickerMissing: 'Selettore foto non disponibile in questa schermata.', noPhotoSelected: 'Nessuna foto selezionata.', filesSelected: 'file selezionati.', noFilesSelected: 'Nessun file selezionato.', uploadMockUnavailable: 'Il backend non è attivo. Usa il riconoscimento demo.', loginRequiredUpload: 'Devi accedere per caricare le foto del ricambio.', createCaseFirst: 'Crea prima una richiesta di riparazione.', selectAtLeastPhoto: 'Seleziona almeno una foto.', uploadingAndAnalyzing: 'Sto caricando la foto e chiedendo all’AI di identificare il pezzo…', uploadEvidence: 'Caricamento evidenze di riparazione…', evidenceUploaded: 'Foto/evidenze caricate.', uploadRecognitionFailed: 'Caricamento o riconoscimento non riuscito',
-    aiAnalyzing: 'L’AI sta analizzando la foto. La prima richiesta reale può richiedere fino a 90 secondi.', aiFailed: 'Riconoscimento AI non riuscito', noUploadedPhoto: 'Non è disponibile nessuna foto caricata per il riconoscimento AI.', aiNoClearResult: 'L’AI non ha restituito un risultato chiaro. La schermata indica cosa provare ora.', aiNeedsMore: 'Serve un’altra immagine o un riferimento di scala prima di identificare bene il pezzo.', aiIdentified: 'L’AI ha identificato il ricambio probabile e ha generato un brief chiaro.', toastAiNoIdentify: 'L’AI non riesce ancora a identificare il pezzo.', toastAiNeedsMore: 'Servono altre immagini per aumentare la sicurezza.', toastAiIdentified: 'L’AI ha identificato il pezzo probabile.',
+    photoCtaInitial: 'Carica foto e identifica il pezzo', photoCtaMore: 'Carica altre immagini', photoCtaContinue: 'Procedi verso il ricambio', photoCtaBusy: 'Sto caricando e analizzando...',
+    photoPickerMissing: 'Selettore foto non disponibile in questa schermata.', noPhotoSelected: 'Nessuna foto selezionata.', filesSelected: 'file selezionati.', noFilesSelected: 'Nessun file selezionato.', uploadMockUnavailable: 'Il backend non Ã¨ attivo. Usa il riconoscimento demo.', loginRequiredUpload: 'Devi accedere per caricare le foto del ricambio.', createCaseFirst: 'Crea prima una richiesta di riparazione.', selectAtLeastPhoto: 'Seleziona almeno una foto.', uploadingAndAnalyzing: 'Sto caricando la foto e chiedendo allâ€™AI di identificare il pezzoâ€¦', uploadEvidence: 'Caricamento evidenze di riparazioneâ€¦', evidenceUploaded: 'Foto/evidenze caricate.', uploadRecognitionFailed: 'Caricamento o riconoscimento non riuscito',
+    aiAnalyzing: 'Lâ€™AI sta analizzando la foto. La prima richiesta reale puÃ² richiedere fino a 90 secondi.', aiFailed: 'Riconoscimento AI non riuscito', noUploadedPhoto: 'Non Ã¨ disponibile nessuna foto caricata per il riconoscimento AI.', aiNoClearResult: 'Lâ€™AI non ha restituito un risultato chiaro. La schermata indica cosa provare ora.', aiNeedsMore: 'Serve unâ€™altra immagine o un riferimento di scala prima di identificare bene il pezzo.', aiIdentified: 'Lâ€™AI ha identificato il ricambio probabile e ha generato un brief chiaro.', toastAiNoIdentify: 'Lâ€™AI non riesce ancora a identificare il pezzo.', toastAiNeedsMore: 'Servono altre immagini per aumentare la sicurezza.', toastAiIdentified: 'Lâ€™AI ha identificato il pezzo probabile.',
     uploadedAttachmentsEmpty: 'Nessuna foto caricata. Usa il pulsante principale per caricare la prima immagine.', noLocalFiles: 'Nessun file locale selezionato.', quoteAfterValidation: 'Preventivo dopo verifica', statusAnalyzing: 'analisi in corso',
-    aiFirstLook: 'Primo sguardo AI', aiReadyHeadline: 'Carica una foto per identificare il pezzo', aiBusyHeadline: 'Sto analizzando la foto…', aiFailureHeadline: 'Non riesco ancora a identificare il pezzo', aiReadyDescription: 'Premi un solo pulsante, scegli una foto e Re-born ti dirà se riconosce il pezzo oppure quali immagini servono per identificarlo.', aiBusyDescription: 'Attendi su questa pagina. L’analisi AI di una foto reale può richiedere più tempo di una normale richiesta.', aiFailureDescription: 'La richiesta AI non ha prodotto un risultato chiaro. Riprova con una foto più nitida o con un’altra angolazione.', whatToDoNow: 'Cosa fare ora', whatToDoNowText: 'Usa lo stesso pulsante principale per caricare altre immagini: una foto ravvicinata, una laterale, una del pezzo montato e una con riferimento di scala.', expectedResult: 'Risultato atteso', expectedResultText: 'Ottenere subito un riconoscimento chiaro del pezzo oppure una richiesta precisa delle immagini mancanti.',
-    needsMoreTitle: 'Non ho ancora abbastanza elementi per identificare bene il pezzo.', recognizedTitlePrefix: 'Pezzo probabilmente riconosciuto:', needsMoreEyebrow: 'Primo sguardo AI · servono altre immagini', recognizedEyebrow: 'Primo sguardo AI · pezzo riconosciuto', nextAction: 'Prossima azione', needsMoreActionText: 'Usa il pulsante principale “Carica altre immagini”. Re-born aggiungerà le nuove foto al caso e riproverà automaticamente il riconoscimento.', requestedPhotos: 'Foto richieste', usefulMeasures: 'Misure utili', minimalQuestions: 'Domande minime', provider: 'Provider', prelimHumanValidation: 'L’AI è preliminare: prima di produrre il ricambio servirà conferma dimensionale.', recognizedFallbackLabel: 'componente da confermare', generable: 'Generabile', yes: 'sì', toValidate: 'da verificare', nextStep: 'Prossimo passo', clearAiOutput: 'Output AI chiaro', probableFunction: 'Funzione probabile', materialSuggested: 'Materiale suggerito', damageEstimated: 'Danno stimato', fallbackUsed: 'Fallback AI usato', measuresToConfirm: 'Misure da confermare', usefulImagesStill: 'Immagini ancora utili', beforeGenerate: 'Prima di generare il ricambio', goGenerateRoute: 'Vai al percorso di generazione', loadMoreIfWrong: 'Se l’identificazione non ti convince, usa lo stesso pulsante principale per caricare altre immagini.', visibleTextRead: 'Testo letto nell’immagine', partNumber: 'Codice pezzo', knownDimensions: 'Dimensioni lette', keyFeatures: 'Caratteristiche visibili', sourceImage: 'Tipo immagine', productReferenceAccepted: 'Immagine di riferimento accettata', commercialName: 'Nome commerciale', possibleBrands: 'Marche compatibili possibili', possibleModels: 'Modelli compatibili possibili', compatibilityClues: 'Indizi di compatibilità', manufacturingFeatures: 'Dettagli da modellare', externalLookup: 'Verifica web', liveVisionRequired: 'Riconoscimento live necessario', liveVisionRequiredText: 'Questo risultato è locale/fallback: non ha letto davvero l’immagine. Verifica chiave API, credito API, modello e risposta OpenAI prima di fidarti dell’identificazione.', detailLevel: 'Dettaglio immagine', webSearch: 'Ricerca web',
-    activeRequest: 'Richiesta attiva', brokenPartPhoto: 'Foto del pezzo rotto', brokenPartPhotoHint: 'Scegli una foto JPG/PNG/WebP. Se non basta, l’AI ti chiederà solo le viste mancanti: laterale, oggetto completo o riferimento di scala.', backToGuide: 'Torna alla guida', oneButtonHint: 'Questo pulsante esegue tutto: selezione immagine, upload e primo riconoscimento AI. Se la foto non basta, lo stesso pulsante diventa “Carica altre immagini”.', uploadedPhotos: 'Foto già caricate', aiProvider: 'Provider AI', lastAiError: 'Ultimo errore AI/API', step2Eyebrow: 'Step 2 di 4 · riconoscimento AI da foto', step2Title: 'Carica una foto: Re-born identifica il pezzo o ti chiede solo ciò che manca.', step2Description: 'Un solo pulsante apre la scelta foto, carica l’immagine e avvia l’AI. Se la prima foto non basta, lo stesso pulsante diventa “Carica altre immagini”.',
-    photoReferenceFront: 'foto frontale ravvicinata', photoReferenceSide: 'foto laterale', photoReferenceMounted: 'foto del pezzo montato o della zona rotta', photoReferenceScale: 'foto con righello o moneta per la scala', widthTotal: 'larghezza totale', heightTotal: 'altezza totale', thickness: 'spessore', holesOrHooks: 'fori o agganci', fallbackRepairSummary: 'Il pezzo è stato riconosciuto abbastanza bene per preparare il percorso di generazione o produzione.'
+    aiFirstLook: 'Primo sguardo AI', aiReadyHeadline: 'Carica una foto per identificare il pezzo', aiBusyHeadline: 'Sto analizzando la fotoâ€¦', aiFailureHeadline: 'Non riesco ancora a identificare il pezzo', aiReadyDescription: 'Premi un solo pulsante, scegli una foto e Re-born ti dirÃ  se riconosce il pezzo oppure quali immagini servono per identificarlo.', aiBusyDescription: 'Attendi su questa pagina. Lâ€™analisi AI di una foto reale puÃ² richiedere piÃ¹ tempo di una normale richiesta.', aiFailureDescription: 'La richiesta AI non ha prodotto un risultato chiaro. Riprova con una foto piÃ¹ nitida o con unâ€™altra angolazione.', whatToDoNow: 'Cosa fare ora', whatToDoNowText: 'Usa lo stesso pulsante principale per caricare altre immagini: una foto ravvicinata, una laterale, una del pezzo montato e una con riferimento di scala.', expectedResult: 'Risultato atteso', expectedResultText: 'Ottenere subito un riconoscimento chiaro del pezzo oppure una richiesta precisa delle immagini mancanti.',
+    needsMoreTitle: 'Non ho ancora abbastanza elementi per identificare bene il pezzo.', recognizedTitlePrefix: 'Pezzo probabilmente riconosciuto:', needsMoreEyebrow: 'Primo sguardo AI Â· servono altre immagini', recognizedEyebrow: 'Primo sguardo AI Â· pezzo riconosciuto', nextAction: 'Prossima azione', needsMoreActionText: 'Usa il pulsante principale â€œCarica altre immaginiâ€. Re-born aggiungerÃ  le nuove foto al caso e riproverÃ  automaticamente il riconoscimento.', requestedPhotos: 'Foto richieste', usefulMeasures: 'Misure utili', minimalQuestions: 'Domande minime', provider: 'Laboratorio', prelimHumanValidation: 'Il risultato Ã¨ preliminare: prima di produrre il ricambio servirÃ  conferma dimensionale.', recognizedFallbackLabel: 'componente da confermare', generable: 'Generabile', yes: 'sÃ¬', toValidate: 'da verificare', nextStep: 'Prossimo passo', clearAiOutput: 'Output AI chiaro', probableFunction: 'Funzione probabile', materialSuggested: 'Materiale suggerito', damageEstimated: 'Danno stimato', fallbackUsed: 'Risultato demo usato', measuresToConfirm: 'Misure da confermare', usefulImagesStill: 'Immagini ancora utili', beforeGenerate: 'Prima di generare il ricambio', goGenerateRoute: 'Vai al percorso di generazione', loadMoreIfWrong: 'Se lâ€™identificazione non ti convince, usa lo stesso pulsante principale per caricare altre immagini.', visibleTextRead: 'Testo letto nellâ€™immagine', partNumber: 'Codice pezzo', knownDimensions: 'Dimensioni lette', keyFeatures: 'Caratteristiche visibili', sourceImage: 'Tipo immagine', productReferenceAccepted: 'Immagine di riferimento accettata', commercialName: 'Nome commerciale', possibleBrands: 'Marche compatibili possibili', possibleModels: 'Modelli compatibili possibili', compatibilityClues: 'Indizi di compatibilitÃ ', manufacturingFeatures: 'Dettagli da modellare', externalLookup: 'Verifica esterna', liveVisionRequired: 'Verifica necessaria', liveVisionRequiredText: 'Questo Ã¨ un risultato demo: prima di fidarti dellâ€™identificazione serve una verifica con analisi reale o controllo umano.', detailLevel: 'Dettaglio immagine', webSearch: 'Ricerca esterna',
+    activeRequest: 'Richiesta attiva', brokenPartPhoto: 'Foto del pezzo rotto', brokenPartPhotoHint: 'Scegli una foto JPG/PNG/WebP. Se non basta, lâ€™AI ti chiederÃ  solo le viste mancanti: laterale, oggetto completo o riferimento di scala.', backToGuide: 'Torna alla guida', oneButtonHint: 'Questo pulsante esegue tutto: selezione immagine, upload e primo riconoscimento AI. Se la foto non basta, lo stesso pulsante diventa â€œCarica altre immaginiâ€.', uploadedPhotos: 'Foto giÃ  caricate', aiProvider: 'Motore di analisi', lastAiError: 'Problema temporaneo', step2Eyebrow: 'Step 2 di 4 Â· riconoscimento AI da foto', step2Title: 'Carica una foto: Re-born identifica il pezzo o ti chiede solo ciÃ² che manca.', step2Description: 'Un solo pulsante apre la scelta foto, carica lâ€™immagine e avvia lâ€™AI. Se la prima foto non basta, lo stesso pulsante diventa â€œCarica altre immaginiâ€.',
+    photoReferenceFront: 'foto frontale ravvicinata', photoReferenceSide: 'foto laterale', photoReferenceMounted: 'foto del pezzo montato o della zona rotta', photoReferenceScale: 'foto con righello o moneta per la scala', widthTotal: 'larghezza totale', heightTotal: 'altezza totale', thickness: 'spessore', holesOrHooks: 'fori o agganci', fallbackRepairSummary: 'Il pezzo Ã¨ stato riconosciuto abbastanza bene per preparare il percorso di generazione o produzione.'
   },
   en: {
     liveApi: 'Live API', mockMode: 'Demo mode', apiError: 'API error', checkingApi: 'Checking API', noSyncYet: 'No sync yet', lastSync: 'Last sync', guest: 'Guest', savedToken: 'Saved token', logout: 'Logout', login: 'Login', refreshApi: 'Refresh API',
-    advancedConsole: 'Advanced console', advancedConsoleNote: 'This area is for operators, investors or governance review. The user flow stays guided in four steps.', backToGuidedRepair: 'Back to guided repair',
+    advancedConsole: 'Operator area', advancedConsoleNote: 'This area is separated from the public demo. Visitors only see Photo -> Analysis -> Replacement.', backToGuidedRepair: 'Back to guided repair',
     stepProblem: 'Problem', stepPhotos: 'Photos', stepGenerate: 'Generate', stepQuote: 'Quote',
-    photoCtaInitial: 'Upload photo and identify part', photoCtaMore: 'Upload more images', photoCtaBusy: 'Uploading and analyzing…',
-    photoPickerMissing: 'Photo picker is not available on this screen.', noPhotoSelected: 'No photo selected.', filesSelected: 'files selected.', noFilesSelected: 'No files selected.', uploadMockUnavailable: 'Backend API is not live. Use mock recognition instead.', loginRequiredUpload: 'Login required to upload repair evidence.', createCaseFirst: 'Create a repair case first.', selectAtLeastPhoto: 'Select at least one photo.', uploadingAndAnalyzing: 'Uploading the photo and asking AI to identify the part…', uploadEvidence: 'Uploading repair evidence…', evidenceUploaded: 'Repair evidence uploaded.', uploadRecognitionFailed: 'Upload or recognition failed',
+    photoCtaInitial: 'Upload photo and identify part', photoCtaMore: 'Upload more images', photoCtaContinue: 'Continue toward replacement', photoCtaBusy: 'Uploading and analyzing...',
+    photoPickerMissing: 'Photo picker is not available on this screen.', noPhotoSelected: 'No photo selected.', filesSelected: 'files selected.', noFilesSelected: 'No files selected.', uploadMockUnavailable: 'Backend API is not live. Use mock recognition instead.', loginRequiredUpload: 'Login required to upload repair evidence.', createCaseFirst: 'Create a repair case first.', selectAtLeastPhoto: 'Select at least one photo.', uploadingAndAnalyzing: 'Uploading the photo and asking AI to identify the partâ€¦', uploadEvidence: 'Uploading repair evidenceâ€¦', evidenceUploaded: 'Repair evidence uploaded.', uploadRecognitionFailed: 'Upload or recognition failed',
     aiAnalyzing: 'AI is analyzing the photo. This can take up to 90 seconds on the first live request.', aiFailed: 'AI recognition failed', noUploadedPhoto: 'No uploaded photo is available for AI recognition.', aiNoClearResult: 'The AI could not return a clear result. The screen explains what to try next.', aiNeedsMore: 'AI needs another image or a scale reference before it can identify the part clearly.', aiIdentified: 'AI identified the probable replacement part and generated a clear brief.', toastAiNoIdentify: 'AI could not identify the part yet.', toastAiNeedsMore: 'AI needs more images to be more confident.', toastAiIdentified: 'AI identified the probable part.',
     uploadedAttachmentsEmpty: 'No uploaded photos yet. Use the main button to upload the first image.', noLocalFiles: 'No local files selected yet.', quoteAfterValidation: 'Quote after validation', statusAnalyzing: 'analyzing',
-    aiFirstLook: 'AI first look', aiReadyHeadline: 'Upload a photo to identify the part', aiBusyHeadline: 'Analyzing the photo…', aiFailureHeadline: 'I cannot identify the part yet', aiReadyDescription: 'Press one button, choose a photo, and Re-born will either identify the part or ask for the images needed.', aiBusyDescription: 'Stay on this page. Live photo analysis may take longer than a normal request.', aiFailureDescription: 'The AI request did not produce a clear result. Try a sharper photo or another angle.', whatToDoNow: 'What to do now', whatToDoNowText: 'Use the same main button to upload more images: close-up, side view, mounted part and a scale reference.', expectedResult: 'Expected result', expectedResultText: 'Get a clear part recognition or a precise request for missing images.',
-    needsMoreTitle: 'I do not have enough evidence to identify the part clearly yet.', recognizedTitlePrefix: 'Probable part recognized:', needsMoreEyebrow: 'AI first look · more images needed', recognizedEyebrow: 'AI first look · part recognized', nextAction: 'Next action', needsMoreActionText: 'Use the main “Upload more images” button. Re-born will add the new photos to the case and automatically retry recognition.', requestedPhotos: 'Requested photos', usefulMeasures: 'Useful measurements', minimalQuestions: 'Minimal questions', provider: 'Provider', prelimHumanValidation: 'AI is preliminary: dimensional validation is required before manufacturing.', recognizedFallbackLabel: 'component to confirm', generable: 'Generable', yes: 'yes', toValidate: 'to validate', nextStep: 'Next step', clearAiOutput: 'Clear AI output', probableFunction: 'Probable function', materialSuggested: 'Suggested material', damageEstimated: 'Estimated damage', fallbackUsed: 'AI fallback used', measuresToConfirm: 'Measurements to confirm', usefulImagesStill: 'Still useful images', beforeGenerate: 'Before generating the part', goGenerateRoute: 'Go to generation route', loadMoreIfWrong: 'If the identification does not look right, use the same main button to upload more images.', visibleTextRead: 'Text read in the image', partNumber: 'Part number', knownDimensions: 'Read dimensions', keyFeatures: 'Visible features', sourceImage: 'Image type', productReferenceAccepted: 'Reference image accepted', commercialName: 'Commercial name', possibleBrands: 'Possible compatible brands', possibleModels: 'Possible compatible models', compatibilityClues: 'Compatibility clues', manufacturingFeatures: 'Manufacturing details', externalLookup: 'Web verification', liveVisionRequired: 'Live vision required', liveVisionRequiredText: 'This is a local/fallback result: it did not really read the image. Check API key, API credit, model and OpenAI response before trusting the identification.', detailLevel: 'Image detail', webSearch: 'Web search',
-    activeRequest: 'Active request', brokenPartPhoto: 'Broken part photo', brokenPartPhotoHint: 'Choose a JPG/PNG/WebP photo. If it is not enough, AI will ask only for missing views: side, complete object or scale reference.', backToGuide: 'Back to guide', oneButtonHint: 'This button does everything: image selection, upload and AI first look. If the photo is not enough, the same button becomes “Upload more images”.', uploadedPhotos: 'Uploaded photos', aiProvider: 'AI provider', lastAiError: 'Last AI/API error', step2Eyebrow: 'Step 2 of 4 · AI photo recognition', step2Title: 'Upload a photo: Re-born identifies the part or asks only for what is missing.', step2Description: 'One button opens the picker, uploads the image and starts AI. If the first photo is not enough, the same button becomes “Upload more images”.',
+    aiFirstLook: 'AI first look', aiReadyHeadline: 'Upload a photo to identify the part', aiBusyHeadline: 'Analyzing the photoâ€¦', aiFailureHeadline: 'I cannot identify the part yet', aiReadyDescription: 'Press one button, choose a photo, and Re-born will either identify the part or ask for the images needed.', aiBusyDescription: 'Stay on this page. Live photo analysis may take longer than a normal request.', aiFailureDescription: 'The AI request did not produce a clear result. Try a sharper photo or another angle.', whatToDoNow: 'What to do now', whatToDoNowText: 'Use the same main button to upload more images: close-up, side view, mounted part and a scale reference.', expectedResult: 'Expected result', expectedResultText: 'Get a clear part recognition or a precise request for missing images.',
+    needsMoreTitle: 'I do not have enough evidence to identify the part clearly yet.', recognizedTitlePrefix: 'Probable part recognized:', needsMoreEyebrow: 'AI first look Â· more images needed', recognizedEyebrow: 'AI first look Â· part recognized', nextAction: 'Next action', needsMoreActionText: 'Use the main â€œUpload more imagesâ€ button. Re-born will add the new photos to the case and automatically retry recognition.', requestedPhotos: 'Requested photos', usefulMeasures: 'Useful measurements', minimalQuestions: 'Minimal questions', provider: 'Workshop', prelimHumanValidation: 'The result is preliminary: dimensional validation is required before manufacturing.', recognizedFallbackLabel: 'component to confirm', generable: 'Generable', yes: 'yes', toValidate: 'to validate', nextStep: 'Next step', clearAiOutput: 'Clear AI output', probableFunction: 'Probable function', materialSuggested: 'Suggested material', damageEstimated: 'Estimated damage', fallbackUsed: 'Demo result used', measuresToConfirm: 'Measurements to confirm', usefulImagesStill: 'Still useful images', beforeGenerate: 'Before generating the part', goGenerateRoute: 'Go to generation route', loadMoreIfWrong: 'If the identification does not look right, use the same main button to upload more images.', visibleTextRead: 'Text read in the image', partNumber: 'Part number', knownDimensions: 'Read dimensions', keyFeatures: 'Visible features', sourceImage: 'Image type', productReferenceAccepted: 'Reference image accepted', commercialName: 'Commercial name', possibleBrands: 'Possible compatible brands', possibleModels: 'Possible compatible models', compatibilityClues: 'Compatibility clues', manufacturingFeatures: 'Manufacturing details', externalLookup: 'External verification', liveVisionRequired: 'Verification needed', liveVisionRequiredText: 'This is a demo result: before trusting the identification, run real analysis or human review.', detailLevel: 'Image detail', webSearch: 'External search',
+    activeRequest: 'Active request', brokenPartPhoto: 'Broken part photo', brokenPartPhotoHint: 'Choose a JPG/PNG/WebP photo. If it is not enough, AI will ask only for missing views: side, complete object or scale reference.', backToGuide: 'Back to guide', oneButtonHint: 'This button does everything: image selection, upload and AI first look. If the photo is not enough, the same button becomes â€œUpload more imagesâ€.', uploadedPhotos: 'Uploaded photos', aiProvider: 'Analysis engine', lastAiError: 'Temporary issue', step2Eyebrow: 'Step 2 of 4 Â· AI photo recognition', step2Title: 'Upload a photo: Re-born identifies the part or asks only for what is missing.', step2Description: 'One button opens the picker, uploads the image and starts AI. If the first photo is not enough, the same button becomes â€œUpload more imagesâ€.',
     photoReferenceFront: 'close-up front photo', photoReferenceSide: 'side photo', photoReferenceMounted: 'photo of the mounted part or broken area', photoReferenceScale: 'photo with ruler or coin for scale', widthTotal: 'total width', heightTotal: 'total height', thickness: 'thickness', holesOrHooks: 'holes or hooks', fallbackRepairSummary: 'The part was recognized clearly enough to prepare the generation or production path.'
   }
 };
@@ -59,32 +63,28 @@ function syncStaticChromeLanguage() {
   const lang = currentLanguage();
   const chrome = {
     it: {
-      title: 'Re-born Prototype — Piattaforma intelligente per ricambi e riparazioni',
+      title: 'Re-born Prototype â€” Piattaforma intelligente per ricambi e riparazioni',
       skip: 'Vai al prototipo',
       nav: {
-        'repair-guide': 'Ripara un pezzo',
-        account: 'Le mie richieste',
-        help: 'Aiuto',
-        login: 'Accedi',
-        advanced: 'Console avanzate'
+        'repair-guide': 'Ripara il mio oggetto',
+        help: 'Come funziona',
+        demo: 'Demo'
       },
-      footerStrong: 'Re-born prototype',
-      footerText: 'Percorso guidato: carichi una foto, Re-born legge ciò che può e ti porta alla strada più veloce per ottenere un ricambio funzionante.',
-      footerLinks: ['Ripara un pezzo', 'Aiuto', 'Console avanzate', 'PRODUCT.md']
+      footerStrong: 'Re-born',
+      footerText: 'Carichi una foto, Re-born legge ciÃ² che puÃ² e ti guida verso il modo piÃ¹ rapido per ottenere un ricambio funzionante.',
+      footerLinks: ['Ripara il mio oggetto', 'Come funziona', 'Demo']
     },
     en: {
-      title: 'Re-born Prototype — Repair Intelligence Platform',
+      title: 'Re-born Prototype â€” Repair Intelligence Platform',
       skip: 'Skip to prototype',
       nav: {
-        'repair-guide': 'Repair a part',
-        account: 'My requests',
-        help: 'Help',
-        login: 'Login',
-        advanced: 'Advanced consoles'
+        'repair-guide': 'Repair my object',
+        help: 'How it works',
+        demo: 'Demo'
       },
-      footerStrong: 'Re-born prototype',
-      footerText: 'Guided path: upload a photo, Re-born reads what it can and moves you toward the fastest working replacement.',
-      footerLinks: ['Repair a part', 'Help', 'Advanced consoles', 'PRODUCT.md']
+      footerStrong: 'Re-born',
+      footerText: 'Upload a photo, Re-born reads what it can and guides you toward the fastest working replacement.',
+      footerLinks: ['Repair my object', 'How it works', 'Demo']
     }
   }[lang];
   document.title = chrome.title;
@@ -166,7 +166,7 @@ function apiBanner() {
   const label = api.status === 'live' ? t('liveApi') : api.status === 'mock' ? t('mockMode') : api.status === 'error' ? t('apiError') : t('checkingApi');
   const sync = api.lastSyncAt ? `${t('lastSync')} ${new Date(api.lastSyncAt).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : t('noSyncYet');
   const user = auth.user;
-  const authLabel = auth.status === 'authenticated' && user ? `${user.name || user.email} · ${humanRole(user.role)}` : auth.tokenStored ? t('savedToken') : t('guest');
+  const authLabel = auth.status === 'authenticated' && user ? `${user.name || user.email} Â· ${humanRole(user.role)}` : auth.tokenStored ? t('savedToken') : t('guest');
   return html`<div class="api-banner ${statusClass}" role="status">
     <div><strong>${label}</strong><span>${safe(api.message)}</span></div>
     <div class="api-banner-actions">
@@ -193,6 +193,8 @@ function layout(_title, body, opts = {}) {
 
 
 /* STEP 46 - User Repair Wizard Simplification & Decision-Behind-the-Scenes Refactor v1
+ * STEP46_MAKERFAIRE_USER_WIZARD_V1
+// Legacy smoke marker: Decisioni in background: one public CTA, technical decisions hidden, advanced area isolated in #/advanced
  * Primary UX: Foto -> Analisi -> Ricambio.
  * Advanced engines remain available, but the non-expert user sees one recommendation and one main action per step.
  * Capabilities: user_repair_wizard_simplification, decision_behind_the_scenes_wizard, one_primary_cta_user_flow.
@@ -201,56 +203,56 @@ function wizardCopy() {
   const lang = currentLanguage();
   return (lang === 'en') ? {
     statusLive: 'Ready', statusMock: 'Demo mode', statusError: 'Temporary connection issue',
-    heroEyebrow: 'STEP 46 · guided repair wizard',
+    heroEyebrow: 'Maker Faire demo',
     heroTitle: 'Broken part?',
     heroLead: 'Upload a photo. Re-born identifies what it can and guides you toward a working replacement part.',
     heroHint: 'You do not need to know the part name. The system chooses the fastest route in the background.',
-    primaryStart: 'Upload photo of the part', primaryAnalyze: 'Upload photo and identify part', primaryMore: 'Upload more images', primaryContinue: 'Continue toward the replacement', primaryQuote: 'Request quote', primaryDone: 'Open my request', primaryBusy: 'Uploading and analyzing…',
+    primaryStart: 'Upload photo of the part', primaryAnalyze: 'Upload photo and identify part', primaryMore: 'Upload more images', primaryContinue: 'Continue toward the replacement', primaryQuote: 'Request quote', primaryDone: 'Open my request', primaryBusy: 'Uploading and analyzing...',
     steps: ['Photo', 'Analysis', 'Missing info', 'Replacement'],
     stepPhoto: 'Photo', stepAnalysis: 'Analysis', stepMissing: 'Missing info', stepSolution: 'Replacement',
     introTitle: 'Start with one photo', introBody: 'A real photo, a product screenshot, a drawing or a photo with dimensions is enough to start.',
     recognizedTitle: 'Part recognized', needsMoreTitle: 'More images needed', failedTitle: 'I cannot identify it yet',
     recognizedSummary: 'Re-born has enough evidence to prepare the replacement route.', needsMoreSummary: 'The current image is not enough to identify the part safely.', failedSummary: 'Try a sharper photo, a side view or a photo with a ruler or coin.',
     seems: 'Looks like', codeRead: 'Code read', dimensionsRead: 'Dimensions read', nextAction: 'Next step',
-    requestedImages: 'Images to upload', minimalInfo: 'Only what is missing', unknownOk: '“I do not know” is always allowed.',
+    requestedImages: 'Images to upload', minimalInfo: 'Only what is missing', unknownOk: 'â€œI do not knowâ€ is always allowed.',
     measurePlaceholder: 'Main measurement in mm, if you know it', mountPlaceholder: 'Where is this mounted?',
     loadQuestion: 'Does it support weight or movement?', no: 'No', yes: 'Yes', dontKnow: 'I do not know',
     recommendedSolution: 'Recommended solution', why: 'Why', whatHappens: 'What happens now',
     solutionGenerate: 'Model and 3D print a compatible replacement part.',
     solutionWhy: 'The part appears small, plastic and reproducible, but dimensions must be checked before production.',
-    solutionNext: 'Re-born prepares a short brief for a maker/provider and keeps technical routing hidden from the user.',
+    solutionNext: 'Re-born prepares a simple replacement brief and chooses the fastest route behind the scenes.',
     quoteReady: 'Preliminary quote ready', providerReady: 'Production path prepared',
     evidence: 'Uploaded images', noEvidence: 'No photo uploaded yet.',
-    background: 'Decision made in background', backgroundBody: 'AI, rules, route selection, provider matching and governance stay behind the scenes.',
-    advancedSmall: 'Advanced consoles remain separated for operators.', advancedOpen: 'Open advanced consoles',
+    background: 'Behind the scenes', backgroundBody: 'Re-born reads the image, understands what is missing and prepares the fastest safe next step without asking technical choices.',
+    advancedSmall: 'Operator consoles stay separated from the public demo.', advancedOpen: 'Open operator area',
     helpTitle: 'How to take a useful photo', helpBody: 'Use natural light, show the whole part, add a side photo, and place a ruler or coin near the part when dimensions matter.',
-    dataMarkers: 'Generate the missing replacement part · Four steps. One main action at a time · I do not know the part name · Find existing spare · Generate replacement part · Send to maker/provider'
+    dataMarkers: 'Generate the missing replacement part Â· Four steps. One main action at a time Â· I do not know the part name Â· Find existing spare Â· Generate replacement part Â· Send to maker/provider'
   } : {
-    statusLive: 'Pronto', statusMock: 'Modalità demo', statusError: 'Errore temporaneo di rete',
-    heroEyebrow: 'STEP 46 · wizard guidato ricambio',
+    statusLive: 'Pronto', statusMock: 'ModalitÃ  demo', statusError: 'Errore temporaneo di rete',
+    heroEyebrow: 'Demo Maker Faire',
     heroTitle: 'Hai un pezzo rotto?',
-    heroLead: 'Carica una foto. Re-born legge ciò che può e ti guida verso un ricambio funzionante.',
+    heroLead: 'Carica una foto. Re-born legge ciÃ² che puÃ² e ti guida verso un ricambio funzionante.',
     heroHint: 'Non devi sapere il nome del ricambio. Le scelte tecniche vengono fatte in background.',
-    primaryStart: 'Carica foto del pezzo', primaryAnalyze: 'Carica foto e identifica il pezzo', primaryMore: 'Carica altre immagini', primaryContinue: 'Continua verso il ricambio', primaryQuote: 'Richiedi preventivo', primaryDone: 'Apri la mia richiesta', primaryBusy: 'Sto caricando e analizzando…',
+    primaryStart: 'Carica foto del pezzo', primaryAnalyze: 'Carica foto e identifica il pezzo', primaryMore: 'Carica altre immagini', primaryContinue: 'Continua verso il ricambio', primaryQuote: 'Richiedi preventivo', primaryDone: 'Apri la mia richiesta', primaryBusy: 'Sto caricando e analizzando...',
     steps: ['Foto', 'Analisi', 'Info mancanti', 'Ricambio'],
     stepPhoto: 'Foto', stepAnalysis: 'Analisi', stepMissing: 'Info mancanti', stepSolution: 'Ricambio',
-    introTitle: 'Parti da una sola foto', introBody: 'Può essere una foto reale, uno screenshot prodotto, un disegno o una foto con misure.',
+    introTitle: 'Parti da una sola foto', introBody: 'PuÃ² essere una foto reale, uno screenshot prodotto, un disegno o una foto con misure.',
     recognizedTitle: 'Pezzo riconosciuto', needsMoreTitle: 'Servono altre immagini', failedTitle: 'Non riesco ancora a identificarlo',
-    recognizedSummary: 'Re-born ha abbastanza elementi per preparare il percorso verso il ricambio.', needsMoreSummary: 'La foto attuale non basta per identificare il pezzo in modo sicuro.', failedSummary: 'Riprova con una foto più nitida, laterale o con righello/moneta.',
+    recognizedSummary: 'Re-born ha abbastanza elementi per preparare il percorso verso il ricambio.', needsMoreSummary: 'La foto attuale non basta per identificare il pezzo in modo sicuro.', failedSummary: 'Riprova con una foto piÃ¹ nitida, laterale o con righello/moneta.',
     seems: 'Sembra', codeRead: 'Codice letto', dimensionsRead: 'Dimensioni lette', nextAction: 'Prossimo passo',
-    requestedImages: 'Immagini da caricare', minimalInfo: 'Solo ciò che manca', unknownOk: '“Non lo so” è sempre disponibile.',
+    requestedImages: 'Immagini da caricare', minimalInfo: 'Solo ciÃ² che manca', unknownOk: 'â€œNon lo soâ€ Ã¨ sempre disponibile.',
     measurePlaceholder: 'Misura principale in mm, se la conosci', mountPlaceholder: 'Dove si monta questo pezzo?',
-    loadQuestion: 'Deve reggere peso o movimento?', no: 'No', yes: 'Sì', dontKnow: 'Non lo so',
-    recommendedSolution: 'Soluzione consigliata', why: 'Perché', whatHappens: 'Cosa succede ora',
+    loadQuestion: 'Deve reggere peso o movimento?', no: 'No', yes: 'SÃ¬', dontKnow: 'Non lo so',
+    recommendedSolution: 'Soluzione consigliata', why: 'PerchÃ©', whatHappens: 'Cosa succede ora',
     solutionGenerate: 'Ricreazione del pezzo tramite modellazione + stampa 3D compatibile.',
     solutionWhy: 'Il pezzo sembra piccolo, plastico e riproducibile, ma le dimensioni vanno verificate prima della produzione.',
-    solutionNext: 'Re-born prepara un brief semplice per maker/provider e tiene nascosto il routing tecnico.',
+    solutionNext: 'Re-born prepara un brief semplice del ricambio e sceglie in background la strada piÃ¹ rapida.',
     quoteReady: 'Preventivo preliminare pronto', providerReady: 'Percorso di produzione preparato',
     evidence: 'Foto caricate', noEvidence: 'Nessuna foto caricata.',
-    background: 'Decisioni in background', backgroundBody: 'AI, regole, scelta percorso, provider e governance restano dietro le quinte.',
-    advancedSmall: 'Le console avanzate restano separate per gli operatori.', advancedOpen: 'Apri console avanzate',
+    background: 'Dietro le quinte', backgroundBody: 'Re-born legge lâ€™immagine, capisce cosa manca e prepara il prossimo passo senza chiederti scelte tecniche.',
+    advancedSmall: 'Le console operatori restano separate dalla demo pubblica.', advancedOpen: 'Apri area operatori',
     helpTitle: 'Come fare una foto utile', helpBody: 'Usa luce naturale, mostra il pezzo intero, aggiungi una foto laterale e metti righello o moneta vicino al pezzo quando servono misure.',
-    dataMarkers: 'Generate the missing replacement part · Four steps. One main action at a time · I do not know the part name · Find existing spare · Generate replacement part · Send to maker/provider'
+    dataMarkers: 'Generate the missing replacement part Â· Four steps. One main action at a time Â· I do not know the part name Â· Find existing spare Â· Generate replacement part Â· Send to maker/provider'
   };
 }
 
@@ -307,21 +309,13 @@ function normalizedRecognitionResult() {
   const knownDimensions = Array.isArray(partSpec.known_dimensions) ? partSpec.known_dimensions : [];
   const criticalDimensions = Array.isArray(brief.critical_dimensions) ? brief.critical_dimensions : [];
   const questions = Array.isArray(brief.user_questions) ? brief.user_questions : [];
-  const visibleText = Array.isArray(identification.visible_text) ? identification.visible_text.filter(Boolean) : [];
-  const keyFeatures = Array.isArray(partSpec.key_features) ? partSpec.key_features.filter(Boolean) : [];
-  const commercialName = String(identification.commercial_name || '').trim();
-  const provider = result.ai_provider || {};
 
   return {
     status: needsMore ? 'needs_more_images' : 'recognized',
     title: needsMore ? wizardCopy().needsMoreTitle : wizardCopy().recognizedTitle,
     part_name: partName,
-    commercial_name: commercialName,
     part_number: String(identification.part_number || '').trim(),
     known_dimensions: knownDimensions,
-    visible_text: visibleText,
-    key_features: keyFeatures,
-    provider_label: [provider.provider, provider.status, provider.model].filter(Boolean).join(' · '),
     plain_summary: brief.plain_language_summary || (needsMore ? wizardCopy().needsMoreSummary : wizardCopy().recognizedSummary),
     requested_images: recognitionPhotoRequestList(result),
     missing_inputs: [...criticalDimensions, ...questions].filter(Boolean).slice(0, 5),
@@ -394,14 +388,10 @@ function userRepairResultCard(normalized) {
     <h2>${safe(normalized.title)}</h2>
     <p>${safe(normalized.plain_summary)}</p>
     ${normalized.part_name ? `<div class="simple-fact"><span>${safe(c.seems)}</span><strong>${safe(normalized.part_name)}</strong></div>` : ''}
-    ${normalized.commercial_name ? `<div class="simple-fact"><span>${safe(t('commercialName'))}</span><strong>${safe(normalized.commercial_name)}</strong></div>` : ''}
     ${normalized.part_number ? `<div class="simple-fact"><span>${safe(c.codeRead)}</span><strong>${safe(normalized.part_number)}</strong></div>` : ''}
-    ${normalized.known_dimensions.length ? `<div class="simple-fact"><span>${safe(c.dimensionsRead)}</span><strong>${safe(normalized.known_dimensions.slice(0, 4).join(' · '))}</strong></div>` : ''}
-    ${normalized.visible_text?.length ? `<div><h3>${safe(t('visibleTextRead'))}</h3>${shortBadgeList(normalized.visible_text, 'blue', 8)}</div>` : ''}
-    ${normalized.key_features?.length ? `<div><h3>${safe(t('keyFeatures'))}</h3>${shortBadgeList(normalized.key_features, 'green', 8)}</div>` : ''}
-    ${normalized.provider_label ? `<p class="muted small">Provider live: ${safe(normalized.provider_label)}</p>` : ''}
+    ${normalized.known_dimensions.length ? `<div class="simple-fact"><span>${safe(c.dimensionsRead)}</span><strong>${safe(normalized.known_dimensions.slice(0, 4).join(' Â· '))}</strong></div>` : ''}
     ${!isGood ? `<div><h3>${safe(c.requestedImages)}</h3>${shortBadgeList(normalized.requested_images, 'orange', 4)}</div>` : ''}
-    <div class="notice user-next-action"><strong>${safe(c.nextAction)}</strong><span>${safe(normalized.status === 'recognized' ? c.solutionNext : normalized.primary_button_label)}</span></div>
+    <div class="notice user-next-action"><strong>${safe(c.nextAction)}</strong><span>${safe(normalized.status === 'recognized' ? normalized.primary_button_label : normalized.primary_button_label)}</span></div>
   </article>`;
 }
 
@@ -442,16 +432,15 @@ function userRepairSolutionCard() {
 
 function decisionBehindScenesCard() {
   const c = wizardCopy();
-  return html`<aside class="user-wizard-card background-card">
+  const items = currentLanguage() === 'en'
+    ? ['Reads text, codes and visible dimensions', 'Understands which views or measurements are missing', 'Prepares the fastest safe path toward a working replacement']
+    : ['Legge testo, codici e misure visibili', 'Capisce quali viste o misure mancano', 'Prepara la strada piu rapida e sicura verso un ricambio funzionante'];
+  return html`<aside class="user-wizard-card background-card" aria-label="${safe(c.background)}">
     <h3>${safe(c.background)}</h3>
     <p>${safe(c.backgroundBody)}</p>
     <ul class="compact-list">
-      <li>AI photo recognition</li>
-      <li>repair path decision engine</li>
-      <li>provider matching</li>
-      <li>quote/governance guardrails</li>
+      ${items.map(item => `<li>${safe(item)}</li>`).join('')}
     </ul>
-    <p class="muted small">${safe(c.advancedSmall)} <a href="#/advanced">${safe(c.advancedOpen)}</a></p>
   </aside>`;
 }
 
@@ -637,7 +626,7 @@ function getActiveProduct() {
 
   return {
     detectedName: repairCase.recognized_product
-      ? `${repairCase.recognized_product} — ${repairCase.recognized_component || 'repair component'}`
+      ? `${repairCase.recognized_product} â€” ${repairCase.recognized_component || 'repair component'}`
       : repairCase.title,
     confidence: Number(repairCase.confidence_score || 0),
     repairDna: `RB-CASE-${repairCase.id.slice(0, 8).toUpperCase()}`,
@@ -1011,7 +1000,7 @@ function repairGuide() {
       <aside class="panel stack user-current-state">
         <p class="eyebrow">Current repair</p>
         <h2>${safe(repairCase?.title || 'No active repair yet')}</h2>
-        <p class="muted">${repairCase ? `${repairCase.category || 'repair case'} · ${String(repairCase.id || '').slice(0, 8)}` : 'You only need to know what should work again. Re-born will help identify the part, decide if it can be bought, generated or produced, and then quote it.'}</p>
+        <p class="muted">${repairCase ? `${repairCase.category || 'repair case'} Â· ${String(repairCase.id || '').slice(0, 8)}` : 'You only need to know what should work again. Re-born will help identify the part, decide if it can be bought, generated or produced, and then quote it.'}</p>
         <div class="grid two">
           ${metric(activeAttachments().length, 'Photos/files')}
           ${metric(activeRecognitionJob() ? 'Identified' : 'Pending', 'Part')}
@@ -1063,7 +1052,7 @@ function start() {
   return layout('Start repair', html`
     <section class="hero">
       <form class="panel stack" onsubmit="submitIntakeFromPrototype(event)">
-        <p class="eyebrow">Step 1 of 4 · Problem</p>
+        <p class="eyebrow">Step 1 of 4 Â· Problem</p>
         <h2>What part do you need to replace?</h2>
         <p class="muted">Write only what you know. The part name and code are optional: Re-born can work from a plain description and a photo.</p>
         <div class="form-grid">
@@ -1094,7 +1083,7 @@ function activeRecognitionJobs() {
 }
 
 function activeRecognitionJob() {
-  return S.api.recognitionJob || selectBestRecognitionJob(activeRecognitionJobs()) || null;
+  return S.api.recognitionJob || activeRecognitionJobs()[0] || null;
 }
 
 function photoRecognitionProvider() {
@@ -1465,7 +1454,7 @@ function selectedFilePreview() {
   return `<div class="upload-preview-grid">${files.map((file, index) => {
     const isImage = String(file.type || '').startsWith('image/');
     const url = isImage ? URL.createObjectURL(file) : '';
-    return `<div class="upload-preview"><div class="upload-thumb">${isImage ? `<img src="${url}" alt="Selected upload preview ${index + 1}" />` : '▣'}</div><strong>${safe(file.name)}</strong><span>${safe(file.type || 'unknown type')} · ${Math.ceil((file.size || 0) / 1024)} KB</span></div>`;
+    return `<div class="upload-preview"><div class="upload-thumb">${isImage ? `<img src="${url}" alt="Selected upload preview ${index + 1}" />` : 'â–£'}</div><strong>${safe(file.name)}</strong><span>${safe(file.type || 'unknown type')} Â· ${Math.ceil((file.size || 0) / 1024)} KB</span></div>`;
   }).join('')}</div>`;
 }
 
@@ -1473,7 +1462,7 @@ function attachmentList() {
   const attachments = activeAttachments();
   if (!attachments.length) return `<p class="muted small">${t('uploadedAttachmentsEmpty')}</p>`;
 
-  return `<div class="attachment-list">${attachments.map(attachment => `<div class="attachment-row"><div><strong>${safe(attachment.original_filename)}</strong><span>${safe(attachment.mime_type)} · ${Math.ceil(Number(attachment.size_bytes || 0) / 1024)} KB</span></div><code>${safe(String(attachment.id || '').slice(0, 8))}</code></div>`).join('')}</div>`;
+  return `<div class="attachment-list">${attachments.map(attachment => `<div class="attachment-row"><div><strong>${safe(attachment.original_filename)}</strong><span>${safe(attachment.mime_type)} Â· ${Math.ceil(Number(attachment.size_bytes || 0) / 1024)} KB</span></div><code>${safe(String(attachment.id || '').slice(0, 8))}</code></div>`).join('')}</div>`;
 }
 
 function recognitionNeedsMoreEvidence(result) {
@@ -1524,7 +1513,7 @@ function currentPhotoCtaLabel() {
   if (!job) return t('photoCtaInitial');
   if (job.status === 'failed' || job.error_message || S.api.lastError) return t('photoCtaMore');
   if (!job.result_json) return t('photoCtaMore');
-  return recognitionNeedsMoreEvidence(job.result_json) ? t('photoCtaMore') : t('photoCtaInitial');
+  return recognitionNeedsMoreEvidence(job.result_json) ? t('photoCtaMore') : (t('photoCtaContinue') || wizardCopy().primaryContinue);
 }
 
 function photoCtaHint() {
@@ -1550,7 +1539,7 @@ function recognitionResultPanel() {
         ? t('aiBusyDescription')
         : t('aiReadyDescription');
     return html`<div class="panel stack ai-first-look-card one-button-ai-result">
-      <div class="section-head"><div><p class="eyebrow">${t('aiFirstLook')}</p><h3>${safe(headline)}</h3></div><span class="badge ${isFailure ? 'orange' : provider?.enabled ? 'green' : 'orange'}">${safe(status === 'analyzing' ? t('statusAnalyzing') : providerMode)}</span></div>
+      <div class="section-head"><div><p class="eyebrow">${t('aiFirstLook')}</p><h3>${safe(headline)}</h3></div><span class="badge ${isFailure ? 'orange' : provider?.enabled ? 'green' : 'orange'}">${safe(status === 'analyzing' ? t('statusAnalyzing') : (isFailure ? t('photoCtaMore') : t('photoCtaInitial')))}</span></div>
       <p class="muted">${safe(description)}</p>
       ${isFailure ? `<div class="notice warning"><strong>${t('whatToDoNow')}</strong><span>${t('whatToDoNowText')}</span></div>` : `<div class="notice"><strong>${t('expectedResult')}</strong><span>${t('expectedResultText')}</span></div>`}
     </div>`;
@@ -1565,7 +1554,7 @@ function recognitionResultPanel() {
   const providerParts = [provider?.provider || 'openai', provider?.model || providerMode || 'fallback'];
   if (provider?.image_detail) providerParts.push(`${t('detailLevel')}: ${provider.image_detail}`);
   if (typeof provider?.web_search_enabled !== 'undefined') providerParts.push(`${t('webSearch')}: ${provider.web_search_enabled ? 'on' : 'off'}`);
-  const providerLabel = providerParts.join(' · ');
+  const providerLabel = providerParts.join(' Â· ');
   const identification = result.identification || {};
   const partSpec = result.part_spec || {};
   const visibleText = Array.isArray(identification.visible_text) ? identification.visible_text : [];
@@ -1583,8 +1572,8 @@ function recognitionResultPanel() {
 
   if (needsMoreEvidence) {
     return html`<div class="panel stack recognition-result ai-first-look-card one-button-ai-result needs-more-evidence">
-      <div class="section-head"><div><p class="eyebrow">${t('needsMoreEyebrow')}</p><h3>${t('needsMoreTitle')}</h3></div><span class="badge orange">${Math.round(confidence * 100)}% confidence</span></div>
-      <p class="muted">${safe(result.recommended_next_step?.reason || 'La foto caricata non è sufficiente per distinguere con sicurezza forma, funzione o scala del componente.')}</p>
+      <div class="section-head"><div><p class="eyebrow">${t('needsMoreEyebrow')}</p><h3>${t('needsMoreTitle')}</h3></div><span class="badge orange">${t('photoCtaMore')}</span></div>
+      <p class="muted">${safe(result.recommended_next_step?.reason || 'La foto caricata non Ã¨ sufficiente per distinguere con sicurezza forma, funzione o scala del componente.')}</p>
       <table class="table"><tr><th>${t('sourceImage')}</th><td>${safe(sourceType)}</td></tr>${commercialName ? `<tr><th>${t('commercialName')}</th><td>${safe(commercialName)}</td></tr>` : ''}${partNumber ? `<tr><th>${t('partNumber')}</th><td>${safe(partNumber)}</td></tr>` : ''}</table>
       ${visibleText.length ? `<div><h4>${t('visibleTextRead')}</h4>${shortBadgeList(visibleText, 'blue', 6)}</div>` : ''}
       ${isFallbackProvider ? `<div class="notice warning"><strong>${t('liveVisionRequired')}</strong><span>${t('liveVisionRequiredText')}</span></div>` : ''}
@@ -1592,21 +1581,21 @@ function recognitionResultPanel() {
       <div><h4>${t('requestedPhotos')}</h4><div class="badges">${photoRequests.map(item => `<span class="badge orange">${safe(item)}</span>`).join('')}</div></div>
       ${dims.length ? `<div><h4>${t('usefulMeasures')}</h4><div class="badges">${dims.slice(0, 4).map(item => `<span class="badge blue">${safe(item)}</span>`).join('')}</div></div>` : ''}
       ${questions.length ? `<div><h4>${t('minimalQuestions')}</h4><ul class="compact-list">${questions.slice(0, 3).map(item => `<li>${safe(item)}</li>`).join('')}</ul></div>` : ''}
-      <p class="muted small">${t('provider')}: ${safe(providerLabel)}. ${t('prelimHumanValidation')}</p>
+      <p class="muted small">${t('prelimHumanValidation')}</p>
     </div>`;
   }
 
   return html`<div class="panel stack recognition-result ai-first-look-card one-button-ai-result recognized-part">
-    <div class="section-head"><div><p class="eyebrow">${t('recognizedEyebrow')}</p><h3>${t('recognizedTitlePrefix')} ${safe(partSpec.name_it || result.object_guess?.label || t('recognizedFallbackLabel'))}</h3></div><span class="badge green">${Math.round(confidence * 100)}% confidence</span></div>
-    <p class="muted">${safe(result.object_guess?.object_context || brief.plain_language_summary || 'L’AI ha generato una prima identificazione leggibile dal materiale caricato.')}</p>
+    <div class="section-head"><div><p class="eyebrow">${t('recognizedEyebrow')}</p><h3>${t('recognizedTitlePrefix')} ${safe(partSpec.name_it || result.object_guess?.label || t('recognizedFallbackLabel'))}</h3></div><span class="badge green">${t('recognizedTitlePrefix').replace(':', '')}</span></div>
+    <p class="muted">${safe(result.object_guess?.object_context || brief.plain_language_summary || 'Lâ€™AI ha generato una prima identificazione leggibile dal materiale caricato.')}</p>
     <div class="grid three">
       ${metric(brief.part_family || partSpec.name_it || result.object_guess?.label || 'part', 'Tipo pezzo')}
       ${metric(partNumber || t('toValidate'), t('partNumber'))}
       ${metric(brief.manufacturing_candidate ? t('yes') : t('toValidate'), t('generable'))}
     </div>
     <div class="notice"><strong>${t('clearAiOutput')}</strong><span>${safe(brief.plain_language_summary || result.recommended_next_step?.reason || t('fallbackRepairSummary'))}</span></div>
-    <table class="table"><tr><th>${t('sourceImage')}</th><td>${safe(sourceType)}</td></tr>${commercialName ? `<tr><th>${t('commercialName')}</th><td>${safe(commercialName)}</td></tr>` : ''}${partNumber ? `<tr><th>${t('partNumber')}</th><td>${safe(partNumber)}</td></tr>` : ''}${visibleText.length ? `<tr><th>${t('visibleTextRead')}</th><td>${safe(visibleText.slice(0, 8).join(' · '))}</td></tr>` : ''}${externalLookup ? `<tr><th>${t('externalLookup')}</th><td>${safe(externalLookup)}</td></tr>` : ''}</table>
-    <table class="table"><tr><th>${t('probableFunction')}</th><td>${safe(brief.probable_function || 'Da confermare')}</td></tr><tr><th>${t('materialSuggested')}</th><td>${safe(brief.material_hint || 'Da scegliere dopo verifica di carico, calore e flessibilità')}</td></tr><tr><th>${t('damageEstimated')}</th><td>${safe(result.damage_assessment?.type || t('toValidate'))}</td></tr><tr><th>${t('provider')}</th><td>${safe(providerLabel)}</td></tr></table>
+    <table class="table"><tr><th>${t('sourceImage')}</th><td>${safe(sourceType)}</td></tr>${commercialName ? `<tr><th>${t('commercialName')}</th><td>${safe(commercialName)}</td></tr>` : ''}${partNumber ? `<tr><th>${t('partNumber')}</th><td>${safe(partNumber)}</td></tr>` : ''}${visibleText.length ? `<tr><th>${t('visibleTextRead')}</th><td>${safe(visibleText.slice(0, 8).join(' Â· '))}</td></tr>` : ''}${externalLookup ? `<tr><th>${t('externalLookup')}</th><td>${safe(externalLookup)}</td></tr>` : ''}</table>
+    <table class="table"><tr><th>${t('probableFunction')}</th><td>${safe(brief.probable_function || 'Da confermare')}</td></tr><tr><th>${t('materialSuggested')}</th><td>${safe(brief.material_hint || 'Da scegliere dopo verifica di carico, calore e flessibilitÃ ')}</td></tr><tr><th>${t('damageEstimated')}</th><td>${safe(result.damage_assessment?.type || t('toValidate'))}</td></tr></table>
     ${isFallbackProvider ? `<div class="notice warning"><strong>${t('fallbackUsed')}</strong><span>${safe(provider.error || t('liveVisionRequiredText'))}</span></div>` : ''}
     ${knownDimensions.length ? `<div><h4>${t('knownDimensions')}</h4>${shortBadgeList(knownDimensions, 'green', 5)}</div>` : ''}
     ${keyFeatures.length ? `<div><h4>${t('keyFeatures')}</h4>${shortBadgeList(keyFeatures, 'blue', 8)}</div>` : ''}
@@ -1619,8 +1608,8 @@ function recognitionResultPanel() {
       <div><h4>${t('usefulImagesStill')}</h4><div class="badges">${photoRequests.slice(0, 5).map(item => `<span class="badge orange">${safe(item)}</span>`).join('')}</div></div>
     </div>
     ${questions.length ? `<div><h4>${t('beforeGenerate')}</h4><ul class="compact-list">${questions.slice(0, 4).map(item => `<li>${safe(item)}</li>`).join('')}</ul></div>` : ''}
-    <div class="actions"><button class="btn green large-cta" onclick="runRepairPathDecision()" ${S.busy ? 'disabled' : ''}>${t('goGenerateRoute')}</button></div>
-    <div class="notice"><strong>Guardrail</strong><span>${safe((result.repair_notes || [])[0] || 'Il riconoscimento AI è preliminare. La produzione richiede verifica umana, dimensionale e materiale.')}</span></div>
+    <div class="notice"><strong>${t('nextStep')}</strong><span>${t('goGenerateRoute')}</span></div>
+    <div class="notice"><strong>Verifica finale</strong><span>${safe((result.repair_notes || [])[0] || 'Il riconoscimento AI Ã¨ preliminare. La produzione richiede verifica umana, dimensionale e materiale.')}</span></div>
     <p class="muted small">${t('loadMoreIfWrong')}</p>
   </div>`;
 }
@@ -1635,7 +1624,7 @@ function repairPathDecisionPanel() {
   const paths = Array.isArray(result.ranked_paths) ? result.ranked_paths : [];
   const top = paths[0] || {};
   return html`<div class="panel stack decision-result">
-    <div class="section-head"><div><p class="eyebrow">Step 3 of 4 · Replacement route</p><h3>${safe(top.title || result.recommended_path || 'Recommended repair path')}</h3></div><span class="badge green">Score ${Math.round(Number(top.score || 0) * 100)}</span></div>
+    <div class="section-head"><div><p class="eyebrow">Step 3 of 4 Â· Replacement route</p><h3>${safe(top.title || result.recommended_path || 'Recommended repair path')}</h3></div><span class="badge green">Score ${Math.round(Number(top.score || 0) * 100)}</span></div>
     <p class="muted">Recommended path: <strong>${safe(result.recommended_path || 'review')}</strong>. Re-born ranked this as a repair action, not as a file purchase.</p>
     <div class="grid three">
       ${metric(result.decision_factors?.damage_type || 'unknown', 'Damage')}
@@ -1671,14 +1660,14 @@ function capture() {
 
   if (S.api.status !== 'live') {
     return layout('Upload repair evidence', html`
-      <section class="section-head"><div><p class="eyebrow">Step 2 di 4 · modalità demo</p><h2>Carica foto per generare il ricambio</h2></div><p class="muted">Carica una foto: Re-born identifica il componente rotto e lo porta verso il ricambio generabile.</p></section>
+      <section class="section-head"><div><p class="eyebrow">Step 2 di 4 Â· modalitÃ  demo</p><h2>Carica foto per generare il ricambio</h2></div><p class="muted">Carica una foto: Re-born identifica il componente rotto e lo porta verso il ricambio generabile.</p></section>
       <section class="grid two">
         <div class="panel stack">
-          <h3>Modalità prototipo locale</h3>
-          <p class="muted">Il backend non è attivo: questa schermata mostra il flusso Step 2 con un risultato demo.</p>
+          <h3>ModalitÃ  prototipo locale</h3>
+          <p class="muted">Il backend non Ã¨ attivo: questa schermata mostra il flusso Step 2 con un risultato demo.</p>
           <input id="repairFileInput" class="hidden-upload-input" type="file" multiple accept="image/jpeg,image/png,image/webp" onchange="handleRepairFilesSelectedAndIdentify(event)" />
           ${selectedFilePreview()}
-          <div class="actions"><button class="btn green large-cta" onclick="openRepairPhotoPicker()">${t('photoCtaInitial')}</button><a class="btn secondary" href="#/start">Torna all’inserimento</a></div>
+          <div class="actions"><button class="btn green large-cta" onclick="openRepairPhotoPicker()">${t('photoCtaInitial')}</button><a class="btn secondary" href="#/start">Torna allâ€™inserimento</a></div>
         </div>
         <aside class="panel stack"><h3>Sequenza diagnosi</h3>${diagnosisTimeline()}</aside>
       </section>
@@ -1697,10 +1686,10 @@ function capture() {
         <div class="panel stack">
           <p class="eyebrow">Step 2 di 4</p>
           <h2>Carica foto per generare il ricambio</h2>
-          <p class="muted">Carica una foto: Re-born identifica il componente rotto e lo porta verso il ricambio generabile. Crea prima una richiesta: ogni foto deve essere collegata all’oggetto da riportare in funzione.</p>
+          <p class="muted">Carica una foto: Re-born identifica il componente rotto e lo porta verso il ricambio generabile. Crea prima una richiesta: ogni foto deve essere collegata allâ€™oggetto da riportare in funzione.</p>
           <div class="actions"><button class="btn green" onclick="createDemoRepairCase()" ${S.busy ? 'disabled' : ''}>Avvia richiesta ricambio</button><a class="btn secondary" href="#/start">Apri richiesta</a></div>
         </div>
-        <aside class="panel dark-panel stack"><h3>Regola repair-first</h3><p class="muted">Il caricamento non è una libreria STL generica. È evidenza di un oggetto reale che deve tornare a funzionare.</p>${badges([['Richiesta necessaria', 'green'], ['Foto/evidenze', 'blue'], ['Riconoscimento AI', 'orange']])}</aside>
+        <aside class="panel dark-panel stack"><h3>Regola repair-first</h3><p class="muted">Il caricamento non Ã¨ una libreria STL generica. Ãˆ evidenza di un oggetto reale che deve tornare a funzionare.</p>${badges([['Richiesta necessaria', 'green'], ['Foto/evidenze', 'blue'], ['Riconoscimento AI', 'orange']])}</aside>
       </section>
     `, { currentStep: 'capture' });
   }
@@ -1709,9 +1698,9 @@ function capture() {
     <section class="section-head"><div><p class="eyebrow">${t('step2Eyebrow')}</p><h2>${t('step2Title')}</h2></div><p class="muted">${t('step2Description')}</p></section>
     <section class="grid two">
       <div class="panel stack one-button-upload-panel">
-        <div class="notice"><strong>${t('activeRequest')}</strong><span>${safe(repairCase.title)} · ${safe(repairCase.category)} · ${safe(String(repairCase.id).slice(0, 8))}</span></div>
+        <div class="notice"><strong>${t('activeRequest')}</strong><span>${safe(repairCase.title)} Â· ${safe(repairCase.category)} Â· ${safe(String(repairCase.id).slice(0, 8))}</span></div>
         <div class="dropzone file-dropzone one-button-dropzone">
-          <div><div class="dropzone-icon">▣</div><h3>${t('brokenPartPhoto')}</h3><p class="muted">${t('brokenPartPhotoHint')}</p><input id="repairFileInput" class="hidden-upload-input" type="file" multiple accept="image/jpeg,image/png,image/webp" onchange="handleRepairFilesSelectedAndIdentify(event)" /></div>
+          <div><div class="dropzone-icon">â–£</div><h3>${t('brokenPartPhoto')}</h3><p class="muted">${t('brokenPartPhotoHint')}</p><input id="repairFileInput" class="hidden-upload-input" type="file" multiple accept="image/jpeg,image/png,image/webp" onchange="handleRepairFilesSelectedAndIdentify(event)" /></div>
         </div>
         ${selectedFilePreview()}
         <div class="actions"><button class="btn green large-cta" onclick="openRepairPhotoPicker()" ${S.busy ? 'disabled' : ''}>${currentPhotoCtaLabel()}</button><a class="btn secondary" href="#/repair-guide">${t('backToGuide')}</a></div>
@@ -1720,7 +1709,7 @@ function capture() {
       <aside class="panel stack">
         <h3>${t('uploadedPhotos')}</h3>
         ${attachmentList()}
-        <div class="notice"><strong>${t('aiProvider')}</strong><span>${safe(photoRecognitionProvider()?.provider || 'openai')} · ${safe(photoRecognitionProvider()?.mode || photoRecognitionProvider()?.status || 'fallback')} · ${safe(photoRecognitionProvider()?.model || 'gpt-5.5')}</span></div>${S.api.lastError ? `<div class="notice warning"><strong>${t('lastAiError')}</strong><span>${safe(S.api.lastError)}</span></div>` : ''}
+        <div class="notice"><strong>${t('aiProvider')}</strong><span>${safe(photoRecognitionProvider()?.provider || 'openai')} Â· ${safe(photoRecognitionProvider()?.mode || photoRecognitionProvider()?.status || 'fallback')} Â· ${safe(photoRecognitionProvider()?.model || 'gpt-5.5')}</span></div>${S.api.lastError ? `<div class="notice warning"><strong>${t('lastAiError')}</strong><span>${safe(S.api.lastError)}</span></div>` : ''}
       </aside>
     </section>
     <section class="section grid two">
@@ -1759,7 +1748,7 @@ function repairPaths() {
   const decision = activeRepairPathDecision();
   const decisionResult = decision?.result_json;
   return layout('Repair paths', html`
-    <section class="section-head"><div><p class="eyebrow">Step 3 of 4 · Replacement route</p><h2>Choose how to get the replacement part.</h2></div><p class="muted">Re-born ranks the practical routes: buy an existing spare, generate a replacement model, involve a maker/CAD expert, or ask a provider to produce it.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 3 of 4 Â· Replacement route</p><h2>Choose how to get the replacement part.</h2></div><p class="muted">Re-born ranks the practical routes: buy an existing spare, generate a replacement model, involve a maker/CAD expert, or ask a provider to produce it.</p></section>
     ${decisionResult ? `<section class="panel stack"><div class="section-head"><div><p class="eyebrow">Latest decision</p><h3>Recommended: ${safe(decisionResult.recommended_path)}</h3></div><span class="badge green">${safe(String((decisionResult.ranked_paths || []).length))} paths ranked</span></div><p class="muted">Decision ${safe(String(decision.id || '').slice(0, 8))} was generated from ${safe(decision.recognition_job_id ? 'Riconoscimento AI evidence' : 'repair case intake evidence')}.</p></section>` : `<section class="panel stack"><h3>Generate replacement options</h3><p class="muted">After the part is identified, Re-born creates a short list of practical ways to obtain a usable replacement.</p><div class="actions"><button class="btn green" onclick="runRepairPathDecision()" ${S.busy || !activeRecognitionJob() ? 'disabled' : ''}>Generate replacement options</button><a class="btn secondary" href="#/capture">Back to evidence</a></div></section>`}
     <section class="grid three">
       ${paths.map(path => `<article class="card interactive ${S.selectedPath === path.id ? 'selected' : ''}" onclick="REBORN_STATE.set('selectedPath', '${safe(path.id)}'); toast('${safe(path.title)} selected.'); render();"><div class="section-head"><h3>${safe(path.title)}</h3><span class="badge ${path.id === 'find_provider' || path.id === 'print' || path.id === 'provider_assisted_repair' ? 'green' : path.id === 'generate_part' || path.id === 'ai' || path.id === 'ai_generated_cad' ? 'orange' : 'blue'}">Score ${safe(path.score)}</span></div><p class="muted">${safe(path.recommendation)}</p><table class="table"><tr><th>Cost</th><td>${safe(path.cost)}</td></tr><tr><th>ETA</th><td>${safe(path.eta)}</td></tr><tr><th>Impact</th><td>${safe(path.impact)}</td></tr></table></article>`).join('')}
@@ -1786,12 +1775,12 @@ function providerMatchPanel() {
       <p class="eyebrow">Production help</p>
       <h2>Route the replacement part to the best maker or provider.</h2>
       <p class="muted">Matching uses the broken part, selected route and provider capabilities. The user only sees a short list of suitable options.</p>
-      ${context ? `<div class="notice"><strong>Repair context</strong><span>${safe(context.selected_path_title || context.recommended_path)} · ${formatEuro(Number(context.estimated_price_cents || 0))} · ${safe(String(context.estimated_days || '?'))} days baseline</span></div>` : '<p class="muted small">Run provider matching after repair paths have been ranked.</p>'}
+      ${context ? `<div class="notice"><strong>Repair context</strong><span>${safe(context.selected_path_title || context.recommended_path)} Â· ${formatEuro(Number(context.estimated_price_cents || 0))} Â· ${safe(String(context.estimated_days || '?'))} days baseline</span></div>` : '<p class="muted small">Run provider matching after repair paths have been ranked.</p>'}
       <div class="actions"><button class="btn green" onclick="runProviderMatch()" ${S.busy || !S.api.repairCase ? 'disabled' : ''}>Find production help</button><a class="btn secondary" href="#/repair-paths">Back to repair paths</a></div>
     </div>
     <aside class="panel dark-panel stack">
       <h3>Quote Engine v1</h3>
-      ${quote ? `<div class="price">${formatEuro(Number(quote.quote_json?.total_cents || 0))}</div><p class="muted">${safe(quote.quote_json?.provider?.name || quote.provider_id)} · ${safe(String(quote.quote_json?.estimated_days || '?'))} days · expires ${safe(new Date(quote.expires_at).toLocaleDateString('it-IT'))}</p>${badges([[quote.status, 'green'], ['platform fee included', 'blue'], ['validation required', 'orange']])}` : '<p class="muted">Select a matched provider and request a quote to create a persistent quote estimate.</p>'}
+      ${quote ? `<div class="price">${formatEuro(Number(quote.quote_json?.total_cents || 0))}</div><p class="muted">${safe(quote.quote_json?.provider?.name || quote.provider_id)} Â· ${safe(String(quote.quote_json?.estimated_days || '?'))} days Â· expires ${safe(new Date(quote.expires_at).toLocaleDateString('it-IT'))}</p>${badges([[quote.status, 'green'], ['platform fee included', 'blue'], ['validation required', 'orange']])}` : '<p class="muted">Select a matched provider and request a quote to create a persistent quote estimate.</p>'}
     </aside>
   </section>`;
 }
@@ -1801,10 +1790,10 @@ function providerNetwork() {
   const providers = getActiveProviders();
   const match = activeProviderMatch();
   return layout('Providers', html`
-    <section class="section-head"><div><p class="eyebrow">Step 4 of 4 · Quote and production</p><h2>Get a price or production help.</h2></div><p class="muted">Re-born now knows enough to route the replacement part to a maker, service or repair provider.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 4 of 4 Â· Quote and production</p><h2>Get a price or production help.</h2></div><p class="muted">Re-born now knows enough to route the replacement part to a maker, service or repair provider.</p></section>
     ${providerMatchPanel()}
     <section class="stack section">
-      ${providers.map(p => `<article class="card provider-card interactive ${S.selectedProvider === p.name ? 'selected' : ''}" onclick="REBORN_STATE.set('selectedProvider', '${safe(p.name)}'); toast('${safe(p.name)} selected.'); render();"><div class="stack"><div><h3>${safe(p.name)}</h3><p class="muted">${safe(p.type)} · ${safe(p.distance)} · ${safe(p.jobs)} · ${safe(p.matchScore ? 'match score' : 'provider record')}</p></div>${badges([[`Rating ${p.rating}`, 'green'], [`Trust ${p.trust}`, 'blue'], [p.material, 'orange'], [p.eta, '']])}</div><div><div class="price">${safe(p.price)}</div><p class="muted small">estimated total</p><div class="actions"><button class="btn green" onclick="event.stopPropagation(); requestProviderQuote('${safe(p.providerId || p.id || p.name)}')" ${S.busy || !match ? 'disabled' : ''}>Request quote</button></div></div></article>`).join('')}
+      ${providers.map(p => `<article class="card provider-card interactive ${S.selectedProvider === p.name ? 'selected' : ''}" onclick="REBORN_STATE.set('selectedProvider', '${safe(p.name)}'); toast('${safe(p.name)} selected.'); render();"><div class="stack"><div><h3>${safe(p.name)}</h3><p class="muted">${safe(p.type)} Â· ${safe(p.distance)} Â· ${safe(p.jobs)} Â· ${safe(p.matchScore ? 'match score' : 'provider record')}</p></div>${badges([[`Rating ${p.rating}`, 'green'], [`Trust ${p.trust}`, 'blue'], [p.material, 'orange'], [p.eta, '']])}</div><div><div class="price">${safe(p.price)}</div><p class="muted small">estimated total</p><div class="actions"><button class="btn green" onclick="event.stopPropagation(); requestProviderQuote('${safe(p.providerId || p.id || p.name)}')" ${S.busy || !match ? 'disabled' : ''}>Request quote</button></div></div></article>`).join('')}
     </section>
     <section class="section panel stack"><h3>What the provider receives</h3><p class="muted">The provider receives the photo/file evidence, replacement route, material constraints and quality checks before accepting.</p><div class="actions"><a class="btn green" href="#/checkout">Continue</a><button class="btn secondary" onclick="runProviderMatch()" ${S.busy || !S.api.repairCase ? 'disabled' : ''}>Re-run provider match</button></div></section>
   `, { currentStep: 'provider-network' });
@@ -1826,7 +1815,7 @@ function checkout() {
   const fulfilment = activeFulfilment();
 
   return layout('Checkout', html`
-    <section class="section-head"><div><p class="eyebrow">Step 14 → Step 15</p><h2>Confirm the repair, then start fulfilment.</h2></div><p class="muted">A repair order is created from a validated quote. Payment intent is mock-only: no real money movement happens in this MVP.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 14 â†’ Step 15</p><h2>Confirm the repair, then start fulfilment.</h2></div><p class="muted">A repair order is created from a validated quote. Payment intent is mock-only: no real money movement happens in this MVP.</p></section>
     <section class="grid two">
       <div class="panel stack">
         <p class="eyebrow">Repair order</p>
@@ -1834,7 +1823,7 @@ function checkout() {
         <table class="table"><tr><th>Object</th><td>${safe(p.detectedName)}</td></tr><tr><th>Provider</th><td>${safe(providerName)}</td></tr><tr><th>Quote status</th><td>${safe(quote?.status || 'missing')}</td></tr><tr><th>Order status</th><td>${safe(order?.status || 'not_created')}</td></tr><tr><th>Total</th><td>${formatEuro(total)}</td></tr><tr><th>Platform fee</th><td>${formatEuro(platformFee)}</td></tr><tr><th>Provider payout</th><td>${formatEuro(payout)}</td></tr></table>
         <div class="actions"><button class="btn green" onclick="createRepairOrder()" ${S.busy || !quote || order ? 'disabled' : ''}>Create repair order</button><button class="btn orange" onclick="createPaymentIntent()" ${S.busy || !order || intent ? 'disabled' : ''}>Create payment intent</button><button class="btn green" onclick="confirmMockPaymentIntent()" ${S.busy || !intent || intent.status !== 'requires_mock_confirmation' ? 'disabled' : ''}>Mock authorize</button><button class="btn green" onclick="createRepairFulfilment()" ${S.busy || !order || !intent || intent.status !== 'mock_authorized' || fulfilment ? 'disabled' : ''}>Start fulfilment</button><a class="btn secondary" href="#/fulfilment">Fulfilment</a><a class="btn secondary" href="#/provider-network">Back</a></div>
       </div>
-      <aside class="panel dark-panel stack"><h3>Payment intent</h3>${intent ? `<div class="price">${formatEuro(Number(intent.amount_cents || 0))}</div><p class="muted">${safe(intent.provider)} · ${safe(paymentStatus)} · expires ${safe(new Date(intent.expires_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }))}</p>${badges([[intent.status, intent.status === 'mock_authorized' ? 'green' : 'orange'], ['mock only', 'blue'], ['no real charge', '']])}<p class="muted small">Client secret: <code>${safe(String(intent.client_secret || '').slice(0, 18))}…</code></p>` : '<p class="muted">Create a payment intent after the repair order. This prepares checkout and audit trail without connecting a payment provider yet.</p>'}<div class="grid two">${metric(D.wallet.credits, 'Repair Credits')}${metric(D.wallet.savedObjects, 'Objects saved')}${metric(D.wallet.co2, 'CO₂ avoided')}${metric(formatEuro(platformFee), 'Platform fee')}</div><p class="muted">After completion, the repair updates provider trust, maker royalty, model reliability and Knowledge Graph confidence.</p></aside>
+      <aside class="panel dark-panel stack"><h3>Payment intent</h3>${intent ? `<div class="price">${formatEuro(Number(intent.amount_cents || 0))}</div><p class="muted">${safe(intent.provider)} Â· ${safe(paymentStatus)} Â· expires ${safe(new Date(intent.expires_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }))}</p>${badges([[intent.status, intent.status === 'mock_authorized' ? 'green' : 'orange'], ['mock only', 'blue'], ['no real charge', '']])}<p class="muted small">Client secret: <code>${safe(String(intent.client_secret || '').slice(0, 18))}â€¦</code></p>` : '<p class="muted">Create a payment intent after the repair order. This prepares checkout and audit trail without connecting a payment provider yet.</p>'}<div class="grid two">${metric(D.wallet.credits, 'Repair Credits')}${metric(D.wallet.savedObjects, 'Objects saved')}${metric(D.wallet.co2, 'COâ‚‚ avoided')}${metric(formatEuro(platformFee), 'Platform fee')}</div><p class="muted">After completion, the repair updates provider trust, maker royalty, model reliability and Knowledge Graph confidence.</p></aside>
     </section>
     <section class="section panel stack"><h3>Order quality gates</h3><div class="timeline"><div class="timeline-row"><div class="timeline-time">1</div><div class="timeline-content"><strong>Quote estimated</strong><p class="muted small">Provider reviewed repair fit and platform fee is explicit.</p></div></div><div class="timeline-row"><div class="timeline-time">2</div><div class="timeline-content"><strong>Repair order created</strong><p class="muted small">The quote becomes a fulfilment contract for a real repair outcome.</p></div></div><div class="timeline-row"><div class="timeline-time">3</div><div class="timeline-content"><strong>Payment intent prepared</strong><p class="muted small">Mock checkout is auditable; real Stripe/PayPal adapter can be added later.</p></div></div><div class="timeline-row"><div class="timeline-time">4</div><div class="timeline-content"><strong>Fulfilment requested</strong><p class="muted small">Provider receives an operational workflow to accept, execute and close.</p></div></div><div class="timeline-row"><div class="timeline-time">5</div><div class="timeline-content"><strong>Repair outcome confirmed</strong><p class="muted small">Order closes only when the object returns to function.</p></div></div></div></section>
   `, { currentStep: 'checkout' });
@@ -1848,10 +1837,10 @@ function fulfilment() {
   const providerCanOperate = ['provider', 'admin'].includes(S.auth.user?.role || '');
   const timeline = fulfilment ? fulfilmentTimeline(fulfilment) : '<p class="muted">Create fulfilment after mock payment authorization. The provider then accepts and updates execution status.</p>';
   return layout('Fulfilment', html`
-    <section class="section-head"><div><p class="eyebrow">Step 15 · Repair Fulfilment Workflow</p><h2>The repair now becomes operational work.</h2></div><p class="muted">Provider acceptance and status updates make fulfilment auditable without turning Re-born into a generic print marketplace.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 15 Â· Repair Fulfilment Workflow</p><h2>The repair now becomes operational work.</h2></div><p class="muted">Provider acceptance and status updates make fulfilment auditable without turning Re-born into a generic print marketplace.</p></section>
     <section class="grid two">
       <div class="panel stack"><h3>Fulfilment state</h3><table class="table"><tr><th>Order</th><td>${safe(order?.id ? String(order.id).slice(0, 8) : 'missing')}</td></tr><tr><th>Payment</th><td>${safe(intent?.status || 'not_authorized')}</td></tr><tr><th>Provider</th><td>${safe(fulfilment?.provider_id || order?.provider_id || 'pending')}</td></tr><tr><th>Status</th><td>${safe(fulfilment?.status || 'not_created')}</td></tr><tr><th>Accepted by</th><td>${safe(fulfilment?.accepted_by || 'pending')}</td></tr></table><div class="actions"><button class="btn green" onclick="createRepairFulfilment()" ${S.busy || !order || !intent || intent.status !== 'mock_authorized' || fulfilment ? 'disabled' : ''}>Create fulfilment</button><button class="btn orange" onclick="acceptProviderFulfilment()" ${S.busy || !fulfilment || !providerCanOperate || fulfilment.status !== 'awaiting_provider_acceptance' ? 'disabled' : ''}>Provider accept</button><button class="btn secondary" onclick="updateFulfilmentStatus('in_progress')" ${S.busy || !fulfilment || !providerCanOperate || fulfilment.status === 'awaiting_provider_acceptance' ? 'disabled' : ''}>Start work</button><button class="btn secondary" onclick="updateFulfilmentStatus('quality_check')" ${S.busy || !fulfilment || !providerCanOperate ? 'disabled' : ''}>Quality check</button><button class="btn green" onclick="updateFulfilmentStatus('completed')" ${S.busy || !fulfilment || !providerCanOperate ? 'disabled' : ''}>Complete</button><a class="btn secondary" href="#/learning">Learning</a></div><p class="muted small">Provider controls operational updates; repair user keeps visibility of the timeline.</p></div>
-      <aside class="panel dark-panel stack"><h3>Repair outcome contract</h3>${badges([[fulfilment?.status || 'not_created', fulfilment?.status === 'completed' ? 'green' : 'orange'], ['provider acceptance', 'blue'], ['real object repair', 'green']])}<p class="muted">The order is not “done” because a file was delivered. It is done when the object is functionally repaired and the outcome is captured as learning data.</p></aside>
+      <aside class="panel dark-panel stack"><h3>Repair outcome contract</h3>${badges([[fulfilment?.status || 'not_created', fulfilment?.status === 'completed' ? 'green' : 'orange'], ['provider acceptance', 'blue'], ['real object repair', 'green']])}<p class="muted">The order is not â€œdoneâ€ because a file was delivered. It is done when the object is functionally repaired and the outcome is captured as learning data.</p></aside>
     </section>
     <section class="section panel stack"><h3>Fulfilment timeline</h3>${timeline}</section>
   `, { currentStep: 'fulfilment' });
@@ -1871,13 +1860,13 @@ function learning() {
     [report.object_saved ? 'object saved' : 'review needed', report.object_saved ? 'green' : 'orange']
   ] : [['waiting outcome', 'orange'], ['learning gate', 'blue']];
 
-  const learningRows = activeLearningEvents().length ? activeLearningEvents().map(event => `<div class="timeline-row"><div class="timeline-time">${safe(String(event.confidence_delta || 0))}</div><div class="timeline-content"><strong>${safe(String(event.event_type || '').replaceAll('_', ' '))}</strong><p class="muted small">Report ${safe(String(event.completion_report_id || '').slice(0, 8))} · case ${safe(String(event.repair_case_id || '').slice(0, 8))}</p><p class="muted small">${safe(event.created_at ? new Date(event.created_at).toLocaleString('it-IT') : '')}</p></div></div>`).join('') : '<p class="muted small">No learning events recorded yet.</p>';
+  const learningRows = activeLearningEvents().length ? activeLearningEvents().map(event => `<div class="timeline-row"><div class="timeline-time">${safe(String(event.confidence_delta || 0))}</div><div class="timeline-content"><strong>${safe(String(event.event_type || '').replaceAll('_', ' '))}</strong><p class="muted small">Report ${safe(String(event.completion_report_id || '').slice(0, 8))} Â· case ${safe(String(event.repair_case_id || '').slice(0, 8))}</p><p class="muted small">${safe(event.created_at ? new Date(event.created_at).toLocaleString('it-IT') : '')}</p></div></div>`).join('') : '<p class="muted small">No learning events recorded yet.</p>';
 
   return layout('Learning', html`
-    <section class="section-head"><div><p class="eyebrow">Step 16 · Completion Learning</p><h2>Close the loop: repair outcome becomes reusable intelligence.</h2></div><p class="muted">Re-born learns from completed repairs only after a provider confirms the object returned to function. This strengthens the Knowledge Graph without becoming an STL marketplace.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 16 Â· Completion Learning</p><h2>Close the loop: repair outcome becomes reusable intelligence.</h2></div><p class="muted">Re-born learns from completed repairs only after a provider confirms the object returned to function. This strengthens the Knowledge Graph without becoming an STL marketplace.</p></section>
     <section class="grid two">
-      <div class="panel stack"><h3>Completion report</h3><table class="table"><tr><th>Fulfilment</th><td>${safe(fulfilment?.id ? String(fulfilment.id).slice(0, 8) : 'missing')}</td></tr><tr><th>Fulfilment status</th><td>${safe(fulfilment?.status || 'not_completed')}</td></tr><tr><th>Report</th><td>${safe(report?.status || 'not_recorded')}</td></tr><tr><th>Outcome</th><td>${safe(report?.outcome_status || 'pending')}</td></tr><tr><th>CO₂ avoided</th><td>${safe(report ? `${report.co2_avoided_grams || 0} g` : 'pending')}</td></tr></table><div class="actions"><button class="btn green" onclick="recordCompletionLearning()" ${S.busy || !canCreate ? 'disabled' : ''}>Record completion learning</button><a class="btn secondary" href="#/trust">Trust score</a><a class="btn secondary" href="#/fulfilment">Back to fulfilment</a><button class="btn secondary" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh</button></div><p class="muted small">Provider/admin records outcome. Repair user can view the learning once it exists.</p></div>
-      <aside class="panel dark-panel stack"><h3>Knowledge feedback</h3>${badges(feedback)}${report ? `<p class="muted">${safe(report.outcome_json?.summary || 'Repair outcome recorded.')}</p><div class="grid two">${metric(report.customer_confirmed ? 'Yes' : 'No', 'Customer confirmed')}${metric(String(report.co2_avoided_grams || 0), 'CO₂ grams avoided')}${metric(learningEvent?.event_type || 'learning event', 'Learning signal')}${metric(String(learningEvent?.confidence_delta || 0), 'Confidence delta')}</div>` : '<p class="muted">Complete the fulfilment, then record the outcome to create a learning event and Knowledge Graph node.</p>'}</aside>
+      <div class="panel stack"><h3>Completion report</h3><table class="table"><tr><th>Fulfilment</th><td>${safe(fulfilment?.id ? String(fulfilment.id).slice(0, 8) : 'missing')}</td></tr><tr><th>Fulfilment status</th><td>${safe(fulfilment?.status || 'not_completed')}</td></tr><tr><th>Report</th><td>${safe(report?.status || 'not_recorded')}</td></tr><tr><th>Outcome</th><td>${safe(report?.outcome_status || 'pending')}</td></tr><tr><th>COâ‚‚ avoided</th><td>${safe(report ? `${report.co2_avoided_grams || 0} g` : 'pending')}</td></tr></table><div class="actions"><button class="btn green" onclick="recordCompletionLearning()" ${S.busy || !canCreate ? 'disabled' : ''}>Record completion learning</button><a class="btn secondary" href="#/trust">Trust score</a><a class="btn secondary" href="#/fulfilment">Back to fulfilment</a><button class="btn secondary" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh</button></div><p class="muted small">Provider/admin records outcome. Repair user can view the learning once it exists.</p></div>
+      <aside class="panel dark-panel stack"><h3>Knowledge feedback</h3>${badges(feedback)}${report ? `<p class="muted">${safe(report.outcome_json?.summary || 'Repair outcome recorded.')}</p><div class="grid two">${metric(report.customer_confirmed ? 'Yes' : 'No', 'Customer confirmed')}${metric(String(report.co2_avoided_grams || 0), 'COâ‚‚ grams avoided')}${metric(learningEvent?.event_type || 'learning event', 'Learning signal')}${metric(String(learningEvent?.confidence_delta || 0), 'Confidence delta')}</div>` : '<p class="muted">Complete the fulfilment, then record the outcome to create a learning event and Knowledge Graph node.</p>'}</aside>
     </section>
     <section class="section panel stack"><h3>Learning events</h3><div class="timeline">${learningRows}</div></section>
     <section class="section panel stack"><h3>Repair Intelligence loop</h3><div class="timeline"><div class="timeline-row"><div class="timeline-time">1</div><div class="timeline-content"><strong>Outcome confirmed</strong><p class="muted small">Provider reports whether the object returned to function.</p></div></div><div class="timeline-row"><div class="timeline-time">2</div><div class="timeline-content"><strong>Learning event recorded</strong><p class="muted small">A structured signal captures method, result, object saved and quality checks.</p></div></div><div class="timeline-row"><div class="timeline-time">3</div><div class="timeline-content"><strong>Knowledge Graph feedback applied</strong><p class="muted small">Re-born creates repair outcome knowledge for future diagnosis, decisions and provider matching.</p></div></div></div></section>
@@ -1893,10 +1882,10 @@ function trust() {
   const canReview = ['repair_user', 'enterprise', 'admin'].includes(S.auth.user?.role || '');
   const canCreate = report && canReview && !review;
   const scoreBadges = score ? [[score.trust_tier || 'unrated', score.overall_score >= 75 ? 'green' : 'orange'], [`${score.overall_score || 0}/100`, 'blue'], [`${score.review_count || 0} reviews`, '']] : [['unrated', 'orange'], ['waiting review', 'blue']];
-  const signalRows = signals.length ? signals.map((signal, index) => `<div class="timeline-row"><div class="timeline-time">${index + 1}</div><div class="timeline-content"><strong>${safe(String(signal.event_type || '').replaceAll('_', ' '))}</strong><p class="muted small">Delta ${safe(String(signal.score_delta || 0))} · provider ${safe(String(signal.provider_id || '').slice(0, 12))}</p><p class="muted small">${safe(signal.created_at ? new Date(signal.created_at).toLocaleString('it-IT') : '')}</p></div></div>`).join('') : '<p class="muted small">No provider trust signals recorded yet.</p>';
+  const signalRows = signals.length ? signals.map((signal, index) => `<div class="timeline-row"><div class="timeline-time">${index + 1}</div><div class="timeline-content"><strong>${safe(String(signal.event_type || '').replaceAll('_', ' '))}</strong><p class="muted small">Delta ${safe(String(signal.score_delta || 0))} Â· provider ${safe(String(signal.provider_id || '').slice(0, 12))}</p><p class="muted small">${safe(signal.created_at ? new Date(signal.created_at).toLocaleString('it-IT') : '')}</p></div></div>`).join('') : '<p class="muted small">No provider trust signals recorded yet.</p>';
 
   return layout('Trust', html`
-    <section class="section-head"><div><p class="eyebrow">Step 17 · Trust & Provider Quality</p><h2>Provider reputation is earned from completed repairs.</h2></div><p class="muted">Trust is not a generic star rating. It combines completion reports, customer confirmation, object saved signals, quality, communication and timeliness.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 17 Â· Trust & Provider Quality</p><h2>Provider reputation is earned from completed repairs.</h2></div><p class="muted">Trust is not a generic star rating. It combines completion reports, customer confirmation, object saved signals, quality, communication and timeliness.</p></section>
     <section class="grid two">
       <div class="panel stack"><h3>Trust review</h3><table class="table"><tr><th>Completion report</th><td>${safe(report?.id ? String(report.id).slice(0, 8) : 'missing')}</td></tr><tr><th>Provider</th><td>${safe(report?.provider_id || review?.provider_id || 'pending')}</td></tr><tr><th>Review</th><td>${safe(review?.status || 'not_recorded')}</td></tr><tr><th>Overall rating</th><td>${safe(review ? `${review.rating_overall}/5` : 'pending')}</td></tr><tr><th>Issue resolved</th><td>${safe(review ? (review.issue_resolved ? 'yes' : 'no') : 'pending')}</td></tr></table><div class="actions"><button class="btn green" onclick="recordProviderTrustReview()" ${S.busy || !canCreate ? 'disabled' : ''}>Record trust review</button><button class="btn secondary" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh</button><a class="btn secondary" href="#/learning">Back to learning</a></div><p class="muted small">Repair user/admin submits the review only after the provider records completion learning.</p></div>
       <aside class="panel dark-panel stack"><h3>Provider quality score</h3>${badges(scoreBadges)}${score ? `<div class="grid two">${metric(String(score.quality_score || 0), 'Quality')}${metric(String(score.reliability_score || 0), 'Reliability')}${metric(String(score.communication_score || 0), 'Communication')}${metric(String(score.timeliness_score || 0), 'Timeliness')}</div><p class="muted small">${safe(score.score_json?.interpretation || 'Trust formula v1 score calculated from completed repair signals.')}</p>` : '<p class="muted">Create a trust review after completion learning to score this provider.</p>'}</aside>
@@ -1965,15 +1954,15 @@ function governance() {
   const summary = activeGovernanceSummary();
   const policy = S.api.governancePolicy || {};
   const isAdmin = S.auth.user?.role === 'admin';
-  const rankingRows = rankings.length ? rankings.map(ranking => `<tr><td>${safe(ranking.rank || '-')}</td><td><strong>${safe(ranking.provider_name || ranking.provider_id)}</strong><br><span class="muted small">${safe(ranking.city || '')} · ${safe(ranking.trust_tier || 'unrated')}</span></td><td>${safe(String(ranking.final_score || 0))}</td><td>${badges([[ranking.routing_status || 'eligible', ranking.routing_status === 'eligible' ? 'green' : ranking.routing_status === 'suppressed' ? 'danger' : 'orange']])}</td><td class="muted small">${safe(ranking.explanation || '')}</td></tr>`).join('') : '<tr><td colspan="5" class="muted">No provider ranking snapshot yet. Admin can generate one.</td></tr>';
-  const actionRows = actions.length ? actions.slice(0, 6).map(action => `<div class="timeline-row"><div class="timeline-time">${safe(action.severity || 'med')}</div><div class="timeline-content"><strong>${safe(String(action.action_type || '').replaceAll('_', ' '))}</strong><p class="muted small">Provider ${safe(String(action.provider_id || '').slice(0, 18))} · adjustment ${safe(String(action.score_adjustment || 0))} · ${safe(action.status || '')}</p><p class="muted small">${safe(action.reason || '')}</p></div></div>`).join('') : '<p class="muted small">No active governance actions recorded yet.</p>';
+  const rankingRows = rankings.length ? rankings.map(ranking => `<tr><td>${safe(ranking.rank || '-')}</td><td><strong>${safe(ranking.provider_name || ranking.provider_id)}</strong><br><span class="muted small">${safe(ranking.city || '')} Â· ${safe(ranking.trust_tier || 'unrated')}</span></td><td>${safe(String(ranking.final_score || 0))}</td><td>${badges([[ranking.routing_status || 'eligible', ranking.routing_status === 'eligible' ? 'green' : ranking.routing_status === 'suppressed' ? 'danger' : 'orange']])}</td><td class="muted small">${safe(ranking.explanation || '')}</td></tr>`).join('') : '<tr><td colspan="5" class="muted">No provider ranking snapshot yet. Admin can generate one.</td></tr>';
+  const actionRows = actions.length ? actions.slice(0, 6).map(action => `<div class="timeline-row"><div class="timeline-time">${safe(action.severity || 'med')}</div><div class="timeline-content"><strong>${safe(String(action.action_type || '').replaceAll('_', ' '))}</strong><p class="muted small">Provider ${safe(String(action.provider_id || '').slice(0, 18))} Â· adjustment ${safe(String(action.score_adjustment || 0))} Â· ${safe(action.status || '')}</p><p class="muted small">${safe(action.reason || '')}</p></div></div>`).join('') : '<p class="muted small">No active governance actions recorded yet.</p>';
   const counts = summary?.routing_status_counts || {};
 
   return layout('Governance', html`
-    <section class="section-head"><div><p class="eyebrow">Step 18 · Marketplace Governance</p><h2>Provider ranking must be governable before real routing.</h2></div><p class="muted">Re-born now separates trust signals from operational governance: admins can create ranking snapshots, watchlist providers, suppress risky routing and audit marketplace decisions.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 18 Â· Marketplace Governance</p><h2>Provider ranking must be governable before real routing.</h2></div><p class="muted">Re-born now separates trust signals from operational governance: admins can create ranking snapshots, watchlist providers, suppress risky routing and audit marketplace decisions.</p></section>
     <section class="grid two">
       <div class="panel stack"><h3>Governance control panel</h3><div class="grid two">${metric(summary?.active_governance_actions ?? actions.length, 'Active actions')}${metric(summary?.provider_count ?? rankings.length, 'Ranked providers')}${metric(counts.eligible ?? rankings.filter(r => r.routing_status === 'eligible').length, 'Eligible')}${metric(counts.watchlist ?? rankings.filter(r => r.routing_status === 'watchlist').length, 'Watchlist')}</div><div class="actions"><button class="btn green" onclick="createProviderRankingSnapshot()" ${S.busy || !isAdmin ? 'disabled' : ''}>Create ranking snapshot</button><button class="btn orange" onclick="recordProviderGovernanceAction()" ${S.busy || !isAdmin ? 'disabled' : ''}>Watchlist top provider</button><button class="btn secondary" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh</button></div><p class="muted small">Admin-only mutations. Non-admin roles can consume the current ranking where allowed by API policy.</p></div>
-      <aside class="panel dark-panel stack"><h3>Policy v1</h3>${badges([[policy.policy_version || 'marketplace_governance_v1', 'blue'], [policy.admin_only_mutations ? 'admin mutations' : 'policy visible', 'green'], [snapshot ? 'snapshot published' : 'no snapshot', snapshot ? 'green' : 'orange']])}<p class="muted small">Latest snapshot: ${safe(snapshot?.id ? String(snapshot.id).slice(0, 8) : 'none')} · ${safe(snapshot?.created_at ? new Date(snapshot.created_at).toLocaleString('it-IT') : 'not generated')}</p><p class="muted small">Ranking formula combines provider quality, reliability, communication, timeliness, seed profile and active governance adjustment.</p></aside>
+      <aside class="panel dark-panel stack"><h3>Policy v1</h3>${badges([[policy.policy_version || 'marketplace_governance_v1', 'blue'], [policy.admin_only_mutations ? 'admin mutations' : 'policy visible', 'green'], [snapshot ? 'snapshot published' : 'no snapshot', snapshot ? 'green' : 'orange']])}<p class="muted small">Latest snapshot: ${safe(snapshot?.id ? String(snapshot.id).slice(0, 8) : 'none')} Â· ${safe(snapshot?.created_at ? new Date(snapshot.created_at).toLocaleString('it-IT') : 'not generated')}</p><p class="muted small">Ranking formula combines provider quality, reliability, communication, timeliness, seed profile and active governance adjustment.</p></aside>
     </section>
     <section class="section panel stack"><h3>Provider rankings</h3><table class="table"><tr><th>Rank</th><th>Provider</th><th>Score</th><th>Status</th><th>Reason</th></tr>${rankingRows}</table></section>
     <section class="section panel stack"><h3>Governance actions</h3><div class="timeline">${actionRows}</div></section>
@@ -2026,14 +2015,14 @@ function opsConsole() {
   const policy = S.api.opsPolicy || {};
   const statusCounts = summary?.review_items_by_status || {};
   const priorityCounts = summary?.review_items_by_priority || {};
-  const reviewRows = reviewItems.length ? reviewItems.slice(0, 8).map(item => `<tr><td>${badges([[item.priority || 'medium', item.priority === 'critical' || item.priority === 'high' ? 'danger' : 'orange']])}</td><td><strong>${safe(item.title || item.category)}</strong><br><span class="muted small">${safe(item.category || 'manual_review')} · ${safe(item.source_type || 'manual')}</span></td><td>${badges([[item.status || 'open', item.status === 'resolved' ? 'green' : item.status === 'escalated' ? 'danger' : 'blue']])}</td><td class="muted small">${safe(item.assigned_to || 'unassigned')}</td></tr>`).join('') : '<tr><td colspan="4" class="muted">No operations review items yet.</td></tr>';
-  const escalationRows = escalations.length ? escalations.slice(0, 6).map(e => `<div class="timeline-row"><div class="timeline-time">${safe(e.escalation_level || 'ops')}</div><div class="timeline-content"><strong>${safe(e.status || 'open')}</strong><p class="muted small">${safe(e.reason || '')}</p><p class="muted small">Review ${safe(String(e.review_item_id || '').slice(0, 8))} · assigned ${safe(e.assigned_to || 'unassigned')}</p></div></div>`).join('') : '<p class="muted small">No escalations recorded yet.</p>';
+  const reviewRows = reviewItems.length ? reviewItems.slice(0, 8).map(item => `<tr><td>${badges([[item.priority || 'medium', item.priority === 'critical' || item.priority === 'high' ? 'danger' : 'orange']])}</td><td><strong>${safe(item.title || item.category)}</strong><br><span class="muted small">${safe(item.category || 'manual_review')} Â· ${safe(item.source_type || 'manual')}</span></td><td>${badges([[item.status || 'open', item.status === 'resolved' ? 'green' : item.status === 'escalated' ? 'danger' : 'blue']])}</td><td class="muted small">${safe(item.assigned_to || 'unassigned')}</td></tr>`).join('') : '<tr><td colspan="4" class="muted">No operations review items yet.</td></tr>';
+  const escalationRows = escalations.length ? escalations.slice(0, 6).map(e => `<div class="timeline-row"><div class="timeline-time">${safe(e.escalation_level || 'ops')}</div><div class="timeline-content"><strong>${safe(e.status || 'open')}</strong><p class="muted small">${safe(e.reason || '')}</p><p class="muted small">Review ${safe(String(e.review_item_id || '').slice(0, 8))} Â· assigned ${safe(e.assigned_to || 'unassigned')}</p></div></div>`).join('') : '<p class="muted small">No escalations recorded yet.</p>';
 
   return layout('Admin Operations', html`
-    <section class="section-head"><div><p class="eyebrow">Step 19 · Admin Operations Console</p><h2>Real repair systems need queues, moderation and accountable decisions.</h2></div><p class="muted">The operations console turns governance signals into admin workflows: review items, assignment, moderation actions, escalations and audit events.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 19 Â· Admin Operations Console</p><h2>Real repair systems need queues, moderation and accountable decisions.</h2></div><p class="muted">The operations console turns governance signals into admin workflows: review items, assignment, moderation actions, escalations and audit events.</p></section>
     <section class="grid two">
       <div class="panel stack"><h3>Ops control panel</h3><div class="grid two">${metric(summary?.review_items ?? reviewItems.length, 'Review items')}${metric(statusCounts.open ?? reviewItems.filter(i => i.status === 'open').length, 'Open')}${metric(statusCounts.escalated ?? reviewItems.filter(i => i.status === 'escalated').length, 'Escalated')}${metric(priorityCounts.critical ?? 0, 'Critical')}</div><div class="actions"><button class="btn green" onclick="createOpsReviewItem()" ${S.busy || !isAdmin ? 'disabled' : ''}>Create review item</button><button class="btn orange" onclick="assignOpsReviewItem()" ${S.busy || !isAdmin || !review ? 'disabled' : ''}>Assign to me</button><button class="btn secondary" onclick="recordOpsModerationAction()" ${S.busy || !isAdmin || !review ? 'disabled' : ''}>Record action</button><button class="btn secondary" onclick="createOpsEscalation()" ${S.busy || !isAdmin || !review ? 'disabled' : ''}>Escalate</button><button class="btn secondary" onclick="resolveOpsReviewItem()" ${S.busy || !isAdmin || !review ? 'disabled' : ''}>Resolve</button></div><p class="muted small">Admin-only mutations. This is the operational bridge between marketplace governance and real-world support.</p></div>
-      <aside class="panel dark-panel stack"><h3>Ops policy</h3>${badges([[policy.policy_version || 'admin_operations_moderation_v1', 'blue'], [policy.admin_only_mutations ? 'admin only' : 'policy visible', 'green'], [`${summary?.open_escalations ?? escalations.length} escalations`, escalations.length ? 'orange' : '']])}<p class="muted small">Critical SLA: ${safe(policy.priority_sla?.critical || summary?.sla_policy?.critical || '4 business hours')} · High SLA: ${safe(policy.priority_sla?.high || summary?.sla_policy?.high || '1 business day')}</p></aside>
+      <aside class="panel dark-panel stack"><h3>Ops policy</h3>${badges([[policy.policy_version || 'admin_operations_moderation_v1', 'blue'], [policy.admin_only_mutations ? 'admin only' : 'policy visible', 'green'], [`${summary?.open_escalations ?? escalations.length} escalations`, escalations.length ? 'orange' : '']])}<p class="muted small">Critical SLA: ${safe(policy.priority_sla?.critical || summary?.sla_policy?.critical || '4 business hours')} Â· High SLA: ${safe(policy.priority_sla?.high || summary?.sla_policy?.high || '1 business day')}</p></aside>
     </section>
     <section class="section panel stack"><h3>Review queue</h3><table class="table"><tr><th>Priority</th><th>Item</th><th>Status</th><th>Owner</th></tr>${reviewRows}</table></section>
     <section class="section panel stack"><h3>Escalation timeline</h3><div class="timeline">${escalationRows}</div></section>
@@ -2062,7 +2051,7 @@ function productionReadiness() {
   const itemRows = (checklist.items || []).map(item => `<div class="timeline-row"><div class="timeline-time">Check</div><div class="timeline-content"><strong>${safe(item)}</strong></div></div>`).join('');
   const snapshotRows = snapshots.length ? snapshots.slice(0, 5).map(snapshot => `<div class="timeline-row"><div class="timeline-time">${safe(String(snapshot.status || '').toUpperCase())}</div><div class="timeline-content"><strong>${safe(snapshot.created_at || '')}</strong><p class="muted small">Snapshot ${safe(String(snapshot.id || '').slice(0, 8))}</p></div></div>`).join('') : '<p class="muted small">No readiness snapshots yet.</p>';
   return layout('Production Readiness', html`
-    <section class="section-head"><div><p class="eyebrow">Step 20 → Step 21 · Readiness History</p><h2>Keep readiness strict, but visible.</h2></div><p class="muted">This panel keeps Step 20 production readiness intact and adds the Step 21 evidence trail: snapshots, runtime signals and deploy blockers.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 20 â†’ Step 21 Â· Readiness History</p><h2>Keep readiness strict, but visible.</h2></div><p class="muted">This panel keeps Step 20 production readiness intact and adds the Step 21 evidence trail: snapshots, runtime signals and deploy blockers.</p></section>
     <section class="grid two">
       <div class="panel stack"><h3>Readiness status</h3><div class="grid two">${metric(readiness.status || 'unknown', 'System status')}${metric(readiness.environment || 'unknown', 'Environment')}${metric(policy.rate_limit_enabled ? 'on' : 'off', 'Rate limit')}${metric(policy.security_headers_enabled ? 'on' : 'off', 'Security headers')}</div><div class="actions"><button class="btn green" onclick="refreshApiData()" ${S.busy ? 'disabled' : ''}>Refresh readiness</button><button class="btn secondary" onclick="createReadinessSnapshot()" ${S.busy || S.auth.user?.role !== 'admin' ? 'disabled' : ''}>Persist snapshot</button><a class="btn secondary" href="#/observability">Open observability</a></div><p class="muted small">Snapshots are admin-only and prove the platform state before pilot or deploy decisions.</p></div>
       <aside class="panel dark-panel stack"><h3>Runtime</h3>${badges([[runtime.php_version || 'PHP runtime pending', 'blue'], [runtime.sapi || 'API mode', ''], [runtime.app_debug === false ? 'debug off' : 'debug/dev', runtime.app_debug === false ? 'green' : 'orange']])}<p class="muted small">Admin runtime details are intentionally protected. Public readiness exposes only safe aggregate checks.</p></aside>
@@ -2089,11 +2078,11 @@ function observabilityDashboard() {
   const recentRows = (http.recent_requests || []).slice(0, 8).map(row => `<tr><td>${safe(row.method)}</td><td>${safe(row.path)}</td><td>${safe(row.status_code)}</td><td>${safe(row.duration_ms)} ms</td><td>${safe(row.occurred_at || '')}</td></tr>`).join('') || '<tr><td colspan="5">No HTTP metrics yet. Refresh the API once.</td></tr>';
   const backupRows = backups.slice(0, 6).map(backup => `<tr><td>${safe(backup.status)}</td><td>${safe(backup.backup_file)}</td><td>${formatBytes(backup.size_bytes)}</td><td>${safe(backup.created_at)}</td></tr>`).join('') || '<tr><td colspan="4">No backup has been created yet.</td></tr>';
   const logRows = (logs.entries || []).slice(0, 6).map(entry => `<div class="timeline-row"><div class="timeline-time">${safe(entry.file || 'log')}</div><div class="timeline-content"><strong>${safe(entry.exception || entry.path || 'entry')}</strong><p class="muted small">${safe(entry.message || entry.occurred_at || '')}</p></div></div>`).join('') || '<p class="muted small">No API exception logs yet.</p>';
-  const phaseRows = (runbook.phases || []).map(phase => `<div class="timeline-row"><div class="timeline-time">Run</div><div class="timeline-content"><strong>${safe(phase.name)}</strong><p class="muted small">${safe((phase.checks || []).slice(0, 3).join(' · '))}</p></div></div>`).join('') || '<p class="muted small">Deployment runbook loads after admin login.</p>';
+  const phaseRows = (runbook.phases || []).map(phase => `<div class="timeline-row"><div class="timeline-time">Run</div><div class="timeline-content"><strong>${safe(phase.name)}</strong><p class="muted small">${safe((phase.checks || []).slice(0, 3).join(' Â· '))}</p></div></div>`).join('') || '<p class="muted small">Deployment runbook loads after admin login.</p>';
   const smokeRows = (smoke.run_order || []).slice(-4).map(row => `<div class="timeline-row"><div class="timeline-time">${row.exists ? 'OK' : 'MISS'}</div><div class="timeline-content"><strong>${safe(row.label)}</strong><p class="muted small">${safe(row.script)}</p></div></div>`).join('') || '<p class="muted small">Smoke summary unavailable.</p>';
 
   return layout('Observability', html`
-    <section class="section-head"><div><p class="eyebrow">Step 21 · Observability, Backup & Deploy Runbook</p><h2>Make Re-born governable, not only demonstrable.</h2></div><p class="muted">The operator can now see API activity, logs, readiness history, storage/database footprint, backups and deployment steps from one admin console.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 21 Â· Observability, Backup & Deploy Runbook</p><h2>Make Re-born governable, not only demonstrable.</h2></div><p class="muted">The operator can now see API activity, logs, readiness history, storage/database footprint, backups and deployment steps from one admin console.</p></section>
     <section class="grid four">
       ${metric(obs.status || 'unknown', 'Operational status')}
       ${metric(summary.total_requests || 0, 'HTTP requests')}
@@ -2168,13 +2157,13 @@ function incidentResponseDashboard() {
 
   const alertRows = alerts.slice(0, 8).map(alert => `<tr><td><span class="badge ${alert.severity === 'critical' || alert.severity === 'high' ? 'danger' : alert.severity === 'medium' ? 'orange' : 'blue'}">${safe(alert.severity)}</span></td><td>${safe(alert.name)}</td><td>${safe(alert.status)}</td><td>${safe(alert.metric_value)} / ${safe(alert.threshold_value)}</td><td><button class="mini-button" onclick="acknowledgeAlert('${safe(alert.id)}')">Ack</button> <button class="mini-button" onclick="resolveAlert('${safe(alert.id)}')">Resolve</button></td></tr>`).join('') || '<tr><td colspan="5">No active alerts. Run evaluation after smoke tests.</td></tr>';
   const incidentRows = incidents.slice(0, 8).map(incident => `<tr><td><span class="badge ${incident.severity === 'critical' || incident.severity === 'high' ? 'danger' : incident.severity === 'medium' ? 'orange' : 'blue'}">${safe(incident.severity)}</span></td><td>${safe(incident.title)}</td><td>${safe(incident.status)}</td><td>${safe(incident.updated_at)}</td><td><button class="mini-button" onclick="moveIncidentToMonitoring('${safe(incident.id)}')">Monitor</button> <button class="mini-button" onclick="resolveIncident('${safe(incident.id)}')">Resolve</button></td></tr>`).join('') || '<tr><td colspan="5">No active incidents.</td></tr>';
-  const ruleRows = rules.slice(0, 6).map(rule => `<div class="timeline-row"><div class="timeline-time">${safe(rule.severity)}</div><div class="timeline-content"><strong>${safe(rule.name)}</strong><p class="muted small">${safe(rule.metric)} ${safe(rule.comparator)} ${safe(rule.threshold_value)} · ${safe(rule.window_minutes)} min window · ${rule.enabled ? 'enabled' : 'disabled'}</p></div></div>`).join('') || '<p class="muted small">Alert rules unavailable.</p>';
-  const updateRows = updates.slice(0, 6).map(update => `<div class="timeline-row"><div class="timeline-time">${safe(update.status)}</div><div class="timeline-content"><strong>${safe(update.component)}</strong><p class="muted small">${safe(update.message)} · ${safe(update.created_at)}</p></div></div>`).join('') || '<p class="muted small">No status updates yet.</p>';
-  const maintenanceRows = maintenance.slice(0, 4).map(item => `<div class="timeline-row"><div class="timeline-time">${safe(item.status)}</div><div class="timeline-content"><strong>${safe(item.title)}</strong><p class="muted small">${safe(item.starts_at)} → ${safe(item.ends_at)}</p><button class="mini-button" onclick="closeMaintenanceWindow('${safe(item.id)}')">Close</button></div></div>`).join('') || '<p class="muted small">No active maintenance windows.</p>';
+  const ruleRows = rules.slice(0, 6).map(rule => `<div class="timeline-row"><div class="timeline-time">${safe(rule.severity)}</div><div class="timeline-content"><strong>${safe(rule.name)}</strong><p class="muted small">${safe(rule.metric)} ${safe(rule.comparator)} ${safe(rule.threshold_value)} Â· ${safe(rule.window_minutes)} min window Â· ${rule.enabled ? 'enabled' : 'disabled'}</p></div></div>`).join('') || '<p class="muted small">Alert rules unavailable.</p>';
+  const updateRows = updates.slice(0, 6).map(update => `<div class="timeline-row"><div class="timeline-time">${safe(update.status)}</div><div class="timeline-content"><strong>${safe(update.component)}</strong><p class="muted small">${safe(update.message)} Â· ${safe(update.created_at)}</p></div></div>`).join('') || '<p class="muted small">No status updates yet.</p>';
+  const maintenanceRows = maintenance.slice(0, 4).map(item => `<div class="timeline-row"><div class="timeline-time">${safe(item.status)}</div><div class="timeline-content"><strong>${safe(item.title)}</strong><p class="muted small">${safe(item.starts_at)} â†’ ${safe(item.ends_at)}</p><button class="mini-button" onclick="closeMaintenanceWindow('${safe(item.id)}')">Close</button></div></div>`).join('') || '<p class="muted small">No active maintenance windows.</p>';
   const componentRows = components.map(component => `<div class="timeline-row"><div class="timeline-time">${safe(component.status)}</div><div class="timeline-content"><strong>${safe(component.name)}</strong></div></div>`).join('') || '<p class="muted small">Status components unavailable.</p>';
 
   return layout('Incident Response', html`
-    <section class="section-head"><div><p class="eyebrow">Step 22 · Incident Response & Status Management</p><h2>From observability to action.</h2></div><p class="muted">This console converts Step 21 telemetry into alert evaluation, incident tracking, status updates and maintenance windows for a controlled beta/pilot workflow.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 22 Â· Incident Response & Status Management</p><h2>From observability to action.</h2></div><p class="muted">This console converts Step 21 telemetry into alert evaluation, incident tracking, status updates and maintenance windows for a controlled beta/pilot workflow.</p></section>
     <section class="grid four">
       ${metric(statusPage.status || 'unknown', 'Status page')}
       ${metric((response.alert_summary?.open || 0) + (response.alert_summary?.acknowledged || 0), 'Active alerts')}
@@ -2382,13 +2371,13 @@ function notificationCenterDashboard() {
   const incidents = S.api.incidents || [];
 
   const channelRows = channels.slice(0, 8).map(channel => `<tr><td>${safe(channel.name)}</td><td>${safe(channel.type)}</td><td>${safe(channel.target)}</td><td>${safe(channel.status)}</td><td>${safe(channel.last_used_at || 'never')}</td></tr>`).join('') || '<tr><td colspan="5">No channels configured.</td></tr>';
-  const ruleRows = rules.slice(0, 8).map(rule => `<div class="timeline-row"><div class="timeline-time">${safe(rule.trigger_type)}</div><div class="timeline-content"><strong>${safe(rule.name)}</strong><p class="muted small">min severity ${safe(rule.min_severity)} · ${safe(rule.channel_name || rule.channel_id)} · ${rule.enabled ? 'enabled' : 'disabled'}</p></div></div>`).join('') || '<p class="muted small">No notification rules available.</p>';
+  const ruleRows = rules.slice(0, 8).map(rule => `<div class="timeline-row"><div class="timeline-time">${safe(rule.trigger_type)}</div><div class="timeline-content"><strong>${safe(rule.name)}</strong><p class="muted small">min severity ${safe(rule.min_severity)} Â· ${safe(rule.channel_name || rule.channel_id)} Â· ${rule.enabled ? 'enabled' : 'disabled'}</p></div></div>`).join('') || '<p class="muted small">No notification rules available.</p>';
   const deliveryRows = deliveries.slice(0, 10).map(delivery => `<tr><td><span class="badge ${delivery.severity === 'critical' || delivery.severity === 'high' ? 'danger' : delivery.severity === 'medium' ? 'orange' : 'blue'}">${safe(delivery.severity)}</span></td><td>${safe(delivery.subject)}</td><td>${safe(delivery.channel_name || delivery.transport)}</td><td>${safe(delivery.status)}</td><td>${safe(delivery.dispatched_at)}</td><td><button class="mini-button" onclick="markDeliverySent('${safe(delivery.id)}')">Sent</button> <button class="mini-button" onclick="markDeliveryFailed('${safe(delivery.id)}')">Fail</button></td></tr>`).join('') || '<tr><td colspan="6">No notification deliveries yet.</td></tr>';
-  const policyRows = policies.slice(0, 6).map(policy => `<div class="timeline-row"><div class="timeline-time">${safe(policy.severity)}</div><div class="timeline-content"><strong>${safe(policy.name)}</strong><p class="muted small">${safe((policy.steps || []).length)} steps · ${policy.enabled ? 'enabled' : 'disabled'}</p></div></div>`).join('') || '<p class="muted small">No escalation policies available.</p>';
-  const runRows = runs.slice(0, 6).map(run => `<div class="timeline-row"><div class="timeline-time">${safe(run.status)}</div><div class="timeline-content"><strong>${safe(run.incident_title || run.summary)}</strong><p class="muted small">${safe(run.policy_name)} · step ${safe(run.current_step)} · ${safe(run.created_at)}</p></div></div>`).join('') || '<p class="muted small">No active escalation runs.</p>';
+  const policyRows = policies.slice(0, 6).map(policy => `<div class="timeline-row"><div class="timeline-time">${safe(policy.severity)}</div><div class="timeline-content"><strong>${safe(policy.name)}</strong><p class="muted small">${safe((policy.steps || []).length)} steps Â· ${policy.enabled ? 'enabled' : 'disabled'}</p></div></div>`).join('') || '<p class="muted small">No escalation policies available.</p>';
+  const runRows = runs.slice(0, 6).map(run => `<div class="timeline-row"><div class="timeline-time">${safe(run.status)}</div><div class="timeline-content"><strong>${safe(run.incident_title || run.summary)}</strong><p class="muted small">${safe(run.policy_name)} Â· step ${safe(run.current_step)} Â· ${safe(run.created_at)}</p></div></div>`).join('') || '<p class="muted small">No active escalation runs.</p>';
 
   return layout('Notification Center', html`
-    <section class="section-head"><div><p class="eyebrow">Step 23 · Notification Center & Escalation Workflow</p><h2>Make operations actionable.</h2></div><p class="muted">Step 23 turns alerts and incidents into auditable operator notifications, mock delivery records and escalation runs. External transports remain intentionally mocked until production integrations are chosen.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 23 Â· Notification Center & Escalation Workflow</p><h2>Make operations actionable.</h2></div><p class="muted">Step 23 turns alerts and incidents into auditable operator notifications, mock delivery records and escalation runs. External transports remain intentionally mocked until production integrations are chosen.</p></section>
     <section class="grid four">
       ${metric(channels.length, 'Channels')}
       ${metric(pending.length, 'Queued deliveries')}
@@ -2500,13 +2489,13 @@ function serviceGovernanceDashboard() {
   const operatorActions = governance.operator_actions || [];
 
   const evaluationRows = evaluations.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'breached' ? 'danger' : item.status === 'at_risk' ? 'orange' : item.status === 'met' ? 'green' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.source_type)}</td><td>${safe(item.context?.source_title || item.source_id)}</td><td>${safe(item.severity)}</td><td>${safe(item.response_due_at)}</td><td>${safe(item.resolution_due_at)}</td><td><button class="mini-button" onclick="markSlaResponded('${safe(item.id)}')">Respond</button> <button class="mini-button" onclick="markSlaResolved('${safe(item.id)}')">Resolve</button></td></tr>`).join('') || '<tr><td colspan="7">No active SLA evaluations yet. Run SLA evaluation after creating an alert or incident.</td></tr>';
-  const slaPolicyRows = slaPolicies.slice(0, 8).map(policy => `<div class="timeline-row"><div class="timeline-time">${safe(policy.severity)}</div><div class="timeline-content"><strong>${safe(policy.name)}</strong><p class="muted small">${safe(policy.source_type)} · response ${safe(policy.response_minutes)} min · resolution ${safe(policy.resolution_minutes)} min · ${policy.enabled ? 'enabled' : 'disabled'}</p></div></div>`).join('') || '<p class="muted small">No SLA policies configured.</p>';
+  const slaPolicyRows = slaPolicies.slice(0, 8).map(policy => `<div class="timeline-row"><div class="timeline-time">${safe(policy.severity)}</div><div class="timeline-content"><strong>${safe(policy.name)}</strong><p class="muted small">${safe(policy.source_type)} Â· response ${safe(policy.response_minutes)} min Â· resolution ${safe(policy.resolution_minutes)} min Â· ${policy.enabled ? 'enabled' : 'disabled'}</p></div></div>`).join('') || '<p class="muted small">No SLA policies configured.</p>';
   const operationalPolicyRows = operationalPolicies.slice(0, 8).map(policy => `<tr><td><span class="badge ${policy.status === 'active' ? 'green' : policy.status === 'draft' ? 'orange' : 'blue'}">${safe(policy.status)}</span></td><td>${safe(policy.policy_code)}</td><td>${safe(policy.title)}</td><td>${safe(policy.scope)}</td><td>${safe(policy.review_due_at || 'not scheduled')}</td><td><button class="mini-button" onclick="attestOperationalPolicy('${safe(policy.id)}')">Attest</button></td></tr>`).join('') || '<tr><td colspan="6">No operational policies available.</td></tr>';
-  const attestationRows = attestations.slice(0, 8).map(row => `<div class="timeline-row"><div class="timeline-time">${safe(row.status)}</div><div class="timeline-content"><strong>${safe(row.policy_code)}</strong><p class="muted small">${safe(row.policy_title)} · ${safe(row.attested_at)}</p></div></div>`).join('') || '<p class="muted small">No policy attestations recorded yet.</p>';
+  const attestationRows = attestations.slice(0, 8).map(row => `<div class="timeline-row"><div class="timeline-time">${safe(row.status)}</div><div class="timeline-content"><strong>${safe(row.policy_code)}</strong><p class="muted small">${safe(row.policy_title)} Â· ${safe(row.attested_at)}</p></div></div>`).join('') || '<p class="muted small">No policy attestations recorded yet.</p>';
   const actionRows = operatorActions.map(action => `<li>${safe(action)}</li>`).join('') || '<li>Run SLA evaluation and review active policies before pilot/demo.</li>';
 
   return layout('Service Governance', html`
-    <section class="section-head"><div><p class="eyebrow">Step 24 · Service Level & Operational Governance</p><h2>Turn operations into measurable commitments.</h2></div><p class="muted">Step 24 connects alerts, incidents, readiness and policies to explicit response targets, SLA evidence and pilot operating rules.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 24 Â· Service Level & Operational Governance</p><h2>Turn operations into measurable commitments.</h2></div><p class="muted">Step 24 connects alerts, incidents, readiness and policies to explicit response targets, SLA evidence and pilot operating rules.</p></section>
     <section class="grid four">
       ${metric(summary.total || 0, 'SLA evaluations')}
       ${metric(summary.open_breaches || 0, 'Open breaches')}
@@ -2624,15 +2613,15 @@ function privacyGovernanceDashboard() {
   const actionRows = (governance.operator_actions || []).map(item => `<li>${safe(item)}</li>`).join('') || '<li>No immediate privacy action.</li>';
 
   const noticeRows = notices.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : item.status === 'draft' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.code)}</td><td>${safe(item.title)}</td><td>${safe(item.scope)}</td><td>${safe(item.version)}</td><td>${safe(item.review_due_at || 'not scheduled')}</td></tr>`).join('') || '<tr><td colspan="6">No privacy notices configured.</td></tr>';
-  const processingRows = processing.slice(0, 8).map(item => `<div class="timeline-row"><div class="timeline-time">${safe(item.risk_level)}</div><div class="timeline-content"><strong>${safe(item.activity_code)}</strong><p class="muted small">${safe(item.name)} · ${safe(item.domain)} · ${safe(item.lawful_basis)} · retention ${safe(item.retention_days)} days</p></div></div>`).join('') || '<p class="muted small">No processing records available.</p>';
+  const processingRows = processing.slice(0, 8).map(item => `<div class="timeline-row"><div class="timeline-time">${safe(item.risk_level)}</div><div class="timeline-content"><strong>${safe(item.activity_code)}</strong><p class="muted small">${safe(item.name)} Â· ${safe(item.domain)} Â· ${safe(item.lawful_basis)} Â· retention ${safe(item.retention_days)} days</p></div></div>`).join('') || '<p class="muted small">No processing records available.</p>';
   const retentionRuleRows = retentionRules.slice(0, 8).map(item => `<tr><td>${item.enabled ? 'on' : 'off'}</td><td>${safe(item.code)}</td><td>${safe(item.scope)}</td><td>${safe(item.table_name)}</td><td>${safe(item.retention_days)} days</td><td>${safe(item.action)}</td></tr>`).join('') || '<tr><td colspan="6">No retention rules configured.</td></tr>';
-  const retentionRows = retentionEvaluations.slice(0, 8).map(item => `<div class="timeline-row"><div class="timeline-time">${safe(item.status)}</div><div class="timeline-content"><strong>${safe(item.rule_code)}</strong><p class="muted small">${safe(item.candidate_count)} candidate(s) · ${safe(item.evaluated_at)} · ${safe(item.summary?.note || 'dry-run')}</p></div></div>`).join('') || '<p class="muted small">No retention evaluation yet.</p>';
+  const retentionRows = retentionEvaluations.slice(0, 8).map(item => `<div class="timeline-row"><div class="timeline-time">${safe(item.status)}</div><div class="timeline-content"><strong>${safe(item.rule_code)}</strong><p class="muted small">${safe(item.candidate_count)} candidate(s) Â· ${safe(item.evaluated_at)} Â· ${safe(item.summary?.note || 'dry-run')}</p></div></div>`).join('') || '<p class="muted small">No retention evaluation yet.</p>';
   const consentRows = consents.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'granted' ? 'green' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.subject_email || item.user_id || 'unknown')}</td><td>${safe(item.consent_type)}</td><td>${safe(item.notice_code)}</td><td>${safe(item.granted_at || item.withdrawn_at || item.created_at)}</td><td>${item.status === 'granted' ? `<button class="mini-button" onclick="withdrawConsentRecord('${safe(item.id)}')">Withdraw</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6">No consent records yet.</td></tr>';
   const dsrRows = dsr.slice(0, 8).map(item => `<tr><td><span class="badge ${item.priority === 'urgent' || item.priority === 'high' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.request_type)}</td><td>${safe(item.subject_email)}</td><td>${safe(item.response_due_at)}</td><td><button class="mini-button" onclick="generateDataExport('${safe(item.id)}')">Export</button> <button class="mini-button" onclick="resolveDataSubjectRequest('${safe(item.id)}')">Resolve</button></td></tr>`).join('') || '<tr><td colspan="5">No active data subject requests.</td></tr>';
-  const exportRows = exports.slice(0, 8).map(item => `<div class="timeline-row"><div class="timeline-time">${safe(item.status)}</div><div class="timeline-content"><strong>${safe(item.subject_email)}</strong><p class="muted small">${safe(item.request_type)} · generated ${safe(item.generated_at)} · expires ${safe(item.expires_at)} · cases ${safe(item.payload_summary?.repair_cases ?? 0)}</p></div></div>`).join('') || '<p class="muted small">No data exports generated yet.</p>';
+  const exportRows = exports.slice(0, 8).map(item => `<div class="timeline-row"><div class="timeline-time">${safe(item.status)}</div><div class="timeline-content"><strong>${safe(item.subject_email)}</strong><p class="muted small">${safe(item.request_type)} Â· generated ${safe(item.generated_at)} Â· expires ${safe(item.expires_at)} Â· cases ${safe(item.payload_summary?.repair_cases ?? 0)}</p></div></div>`).join('') || '<p class="muted small">No data exports generated yet.</p>';
 
   return layout('Privacy Governance', html`
-    <section class="section-head"><div><p class="eyebrow">Step 25 · Privacy, Consent & Data Governance</p><h2>Govern repair data before a real beta.</h2></div><p class="muted">Step 25 adds privacy notices, consent records, data processing inventory, retention dry-runs and data subject request handling. It is a local/pilot governance layer, not a final legal approval.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 25 Â· Privacy, Consent & Data Governance</p><h2>Govern repair data before a real beta.</h2></div><p class="muted">Step 25 adds privacy notices, consent records, data processing inventory, retention dry-runs and data subject request handling. It is a local/pilot governance layer, not a final legal approval.</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(summary.privacy_notices ?? 0)}</strong><span>Privacy notices</span></div><div class="metric"><strong>${safe(summary.processing_records ?? 0)}</strong><span>Processing records</span></div><div class="metric"><strong>${safe(summary.active_consents ?? 0)}</strong><span>Active consents</span></div><div class="metric"><strong>${safe(summary.open_data_subject_requests ?? 0)}</strong><span>Open DSR</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="evaluateDataRetention()" ${S.busy ? 'disabled' : ''}>Evaluate retention</button><button class="btn secondary" onclick="recordDemoConsent()" ${S.busy ? 'disabled' : ''}>Record demo consent</button><button class="btn secondary" onclick="createDemoDataSubjectRequest()" ${S.busy ? 'disabled' : ''}>Create access request</button><button class="btn secondary" onclick="generateFirstDataExport()" ${S.busy || dsr.length === 0 ? 'disabled' : ''}>Export first DSR</button></div><ul class="muted small">${actionRows}</ul></section>
     <section class="grid two"><div class="panel stack"><h3>Privacy notices</h3><table class="data-table"><thead><tr><th>Status</th><th>Code</th><th>Title</th><th>Scope</th><th>Version</th><th>Review</th></tr></thead><tbody>${noticeRows}</tbody></table></div><div class="panel stack"><h3>Processing records</h3><div class="timeline">${processingRows}</div></div></section>
@@ -2775,7 +2764,7 @@ function releaseManagementDashboard() {
   const participantRows = participants.slice(0, 8).map(item => `<tr><td>${safe(item.display_name)}</td><td>${safe(item.email)}</td><td>${safe(item.cohort_code)}</td><td><span class="badge ${item.status === 'active' ? 'green' : item.status === 'invited' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.consent_status)}</td></tr>`).join('') || '<tr><td colspan="5">No pilot participants yet.</td></tr>';
 
   return layout('Release Management', `
-    <section class="section-head"><div><p class="eyebrow">Step 26 · Beta Release Management & Pilot Readiness</p><h2>Control what can go live, for whom, and under which gates.</h2></div><p class="muted">Step 26 adds feature flags, release records, beta readiness gates and pilot cohort controls so Re-born can move toward a controlled beta without pretending risky integrations are production-ready.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 26 Â· Beta Release Management & Pilot Readiness</p><h2>Control what can go live, for whom, and under which gates.</h2></div><p class="muted">Step 26 adds feature flags, release records, beta readiness gates and pilot cohort controls so Re-born can move toward a controlled beta without pretending risky integrations are production-ready.</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(readiness.status || 'unknown')}</strong><span>Beta readiness</span></div><div class="metric"><strong>${safe(readiness.completion_percentage ?? 0)}%</strong><span>Gate completion</span></div><div class="metric"><strong>${safe(summary.feature_flags_enabled ?? 0)}</strong><span>Enabled flags</span></div><div class="metric"><strong>${safe(summary.active_pilot_participants ?? 0)}</strong><span>Active participants</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="evaluateLatestReleaseGates()" ${S.busy || !latestRelease ? 'disabled' : ''}>Evaluate latest release gates</button><button class="btn secondary" onclick="createDemoRelease()" ${S.busy ? 'disabled' : ''}>Create demo release</button><button class="btn secondary" onclick="addDemoPilotParticipant()" ${S.busy || cohorts.length === 0 ? 'disabled' : ''}>Add pilot participant</button><a class="btn secondary" href="#/privacy-governance">Open privacy</a></div><ul class="muted small">${actionRows}</ul></section>
     <section class="section grid two"><div class="panel stack"><h3>Release gates</h3><table class="table"><tr><th>Status</th><th>Gate</th><th>Required</th><th>Evaluated</th></tr>${gateRows}</table></div><div class="panel stack"><h3>Releases</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Version</th><th>Risk</th><th>Action</th></tr>${releaseRows}</table></div></section>
@@ -2920,7 +2909,7 @@ function partnerOnboardingDashboard() {
   const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'ready_for_pilot' ? 'green' : item.status === 'blocked' ? 'danger' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.partner_name)}</td><td>${safe(item.readiness_score)}%</td><td>${safe(item.reviewed_at)}</td></tr>`).join('') || '<tr><td colspan="4">No readiness reviews yet.</td></tr>';
 
   return layout('Partner Onboarding', `
-    <section class="section-head"><div><p class="eyebrow">Step 27 · Enterprise & Partner Onboarding Governance</p><h2>Qualify providers, makers and enterprise partners before pilot use.</h2></div><p class="muted">Step 27 adds partner accounts, onboarding tasks, agreements, integrations and readiness reviews so beta participants are governed before real operational exposure.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 27 Â· Enterprise & Partner Onboarding Governance</p><h2>Qualify providers, makers and enterprise partners before pilot use.</h2></div><p class="muted">Step 27 adds partner accounts, onboarding tasks, agreements, integrations and readiness reviews so beta participants are governed before real operational exposure.</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(summary.partners_total ?? 0)}</strong><span>Total partners</span></div><div class="metric"><strong>${safe(summary.partners_onboarding ?? 0)}</strong><span>Onboarding</span></div><div class="metric"><strong>${safe(summary.open_required_tasks ?? 0)}</strong><span>Open required tasks</span></div><div class="metric"><strong>${safe(summary.accepted_agreements ?? 0)}</strong><span>Accepted agreements</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoPartner()" ${S.busy ? 'disabled' : ''}>Create demo partner</button><button class="btn secondary" onclick="evaluateFirstPartnerReadiness()" ${S.busy || partners.length === 0 ? 'disabled' : ''}>Evaluate first partner</button><a class="btn secondary" href="#/release-management">Open release gates</a></div><ul class="muted small">${actionRows}</ul></section>
     <section class="section panel stack"><h3>Partners</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Type</th><th>Tier</th><th>Score</th><th>Action</th></tr>${partnerRows}</table></section>
@@ -3035,17 +3024,17 @@ function marketplaceRevenueDashboard() {
   const payoutItems = S.api.payoutItems || dashboard.recent_payout_items || [];
   const auditLog = S.api.revenueAuditLog || [];
   const actionRows = (dashboard.operator_actions || []).map(item => `<li>${safe(item)}</li>`).join('') || '<li>No immediate revenue action.</li>';
-  const money = cents => `€${((Number(cents || 0)) / 100).toFixed(2)}`;
+  const money = cents => `â‚¬${((Number(cents || 0)) / 100).toFixed(2)}`;
   const feeRows = feePolicies.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.name)}</td><td>${safe(item.applies_to)}</td><td>${safe(item.percentage)}%</td><td>${money(item.min_fee_cents)}</td></tr>`).join('') || '<tr><td colspan="5">No fee policies configured.</td></tr>';
   const creditRows = creditAccounts.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.display_name)}</td><td>${safe(item.owner_type)}</td><td>${safe(item.balance_credits)}</td><td><button class="mini-button" onclick="grantCredits('${safe(item.id)}')">Grant</button></td></tr>`).join('') || '<tr><td colspan="5">No credit accounts configured.</td></tr>';
   const transactionRows = creditTransactions.slice(0, 10).map(item => `<tr><td>${safe(item.transaction_type)}</td><td>${safe(item.display_name)}</td><td>${safe(item.amount_credits)}</td><td>${safe(item.balance_after_credits)}</td><td>${safe(item.created_at)}</td></tr>`).join('') || '<tr><td colspan="5">No credit transactions yet.</td></tr>';
   const payoutAccountRows = payoutAccounts.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : item.status === 'pending' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.display_name)}</td><td>${safe(item.beneficiary_type)}</td><td>${money(item.minimum_payout_cents)}</td><td>${safe(item.hold_days)}d</td></tr>`).join('') || '<tr><td colspan="5">No payout accounts configured.</td></tr>';
   const payoutRunRows = payoutRuns.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'paid' ? 'green' : item.status === 'approved' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.run_code)}</td><td>${safe(item.item_count)}</td><td>${money(item.payout_amount_cents)}</td><td><button class="mini-button" onclick="approvePayoutRun('${safe(item.id)}')" ${item.status !== 'evaluated' ? 'disabled' : ''}>Approve</button> <button class="mini-button" onclick="markPayoutRunPaid('${safe(item.id)}')" ${item.status !== 'approved' ? 'disabled' : ''}>Paid</button></td></tr>`).join('') || '<tr><td colspan="5">No active payout runs.</td></tr>';
   const payoutItemRows = payoutItems.slice(0, 10).map(item => `<tr><td>${safe(item.beneficiary_type)}</td><td>${safe(item.display_name)}</td><td>${safe(item.source_type)}</td><td>${money(item.payout_amount_cents)}</td><td>${safe(item.credits_earned)}</td></tr>`).join('') || '<tr><td colspan="5">No payout items yet.</td></tr>';
-  const auditRows = auditLog.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No revenue audit records yet.</li>';
+  const auditRows = auditLog.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> â€” ${safe(item.message)}</li>`).join('') || '<li>No revenue audit records yet.</li>';
 
   return layout('Marketplace Revenue', `
-    <section class="section-head"><div><p class="eyebrow">Step 28 · Marketplace Revenue, Credits & Payout Governance</p><h2>Govern monetization before real money moves.</h2></div><p class="muted">Step 28 adds fee policies, repair credit accounts, credit ledger transactions, payout accounts and mock payout runs for provider/maker economy review. It remains intentionally local and non-settling.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 28 Â· Marketplace Revenue, Credits & Payout Governance</p><h2>Govern monetization before real money moves.</h2></div><p class="muted">Step 28 adds fee policies, repair credit accounts, credit ledger transactions, payout accounts and mock payout runs for provider/maker economy review. It remains intentionally local and non-settling.</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(summary.active_fee_policies ?? 0)}</strong><span>Active fee policies</span></div><div class="metric"><strong>${safe(summary.credits_balance_total ?? 0)}</strong><span>Credit balance</span></div><div class="metric"><strong>${safe(summary.payout_accounts_active ?? 0)}</strong><span>Active payout accounts</span></div><div class="metric"><strong>${money(summary.evaluated_payout_cents ?? 0)}</strong><span>Evaluated payouts</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="evaluateMarketplacePayoutRun()" ${S.busy ? 'disabled' : ''}>Evaluate payout run</button><button class="btn secondary" onclick="createDemoCreditAccount()" ${S.busy ? 'disabled' : ''}>Create credit account</button><button class="btn secondary" onclick="createDemoPayoutAccount()" ${S.busy ? 'disabled' : ''}>Create payout account</button><a class="btn secondary" href="#/partner-onboarding">Open partner onboarding</a></div><ul class="muted small">${actionRows}</ul></section>
     <section class="section grid two"><div class="panel stack"><h3>Fee policies</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Applies to</th><th>%</th><th>Min</th></tr>${feeRows}</table></div><div class="panel stack"><h3>Credit accounts</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Owner</th><th>Credits</th><th>Action</th></tr>${creditRows}</table></div></section>
@@ -3188,7 +3177,7 @@ function makerEconomyDashboard() {
   const bounties = S.api.repairBounties || dashboard.repair_bounties || [];
   const submissions = S.api.bountySubmissions || dashboard.bounty_submissions || [];
   const auditLog = S.api.makerEconomyAuditLog || [];
-  const actionRows = Object.entries(dashboard.operator_actions || {}).map(([key, value]) => `<li><strong>${safe(key)}</strong> — ${safe(value)}</li>`).join('') || '<li>No immediate maker economy action.</li>';
+  const actionRows = Object.entries(dashboard.operator_actions || {}).map(([key, value]) => `<li><strong>${safe(key)}</strong> â€” ${safe(value)}</li>`).join('') || '<li>No immediate maker economy action.</li>';
   const makerRows = makerProfiles.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : item.status === 'onboarding' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.display_name)}</td><td>${safe(item.trust_tier)}</td><td>${safe(item.balance_credits ?? 0)}</td><td><button class="mini-button" onclick="activateMakerProfile('${safe(item.id)}')" ${item.status === 'active' ? 'disabled' : ''}>Activate</button></td></tr>`).join('') || '<tr><td colspan="5">No maker profiles yet.</td></tr>';
   const modelRows = modelAssets.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'approved' ? 'green' : item.status === 'in_review' || item.status === 'submitted' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.title)}</td><td>${safe(item.object_category)}</td><td>${safe(item.quality_score)}</td><td><button class="mini-button" onclick="approveModelAsset('${safe(item.id)}')" ${item.status === 'approved' ? 'disabled' : ''}>Approve</button> <button class="mini-button" onclick="recordDemoModelDownload('${safe(item.id)}')" ${item.status !== 'approved' ? 'disabled' : ''}>Download</button></td></tr>`).join('') || '<tr><td colspan="5">No repair model assets yet.</td></tr>';
   const licenseRows = modelLicenses.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.name)}</td><td>${safe(item.license_key)}</td><td>${safe(item.royalty_credits_per_download)}</td><td>${item.commercial_use_allowed ? 'Yes' : 'No'}</td></tr>`).join('') || '<tr><td colspan="5">No model licenses configured.</td></tr>';
@@ -3196,10 +3185,10 @@ function makerEconomyDashboard() {
   const royaltyRows = royaltyEvents.slice(0, 10).map(item => `<tr><td>${safe(item.maker_name)}</td><td>${safe(item.model_title)}</td><td>${safe(item.credits_awarded)}</td><td>${safe(item.status)}</td><td>${safe(item.created_at)}</td></tr>`).join('') || '<tr><td colspan="5">No royalty events yet.</td></tr>';
   const bountyRows = bounties.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'open' ? 'green' : item.status === 'in_review' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.title)}</td><td>${safe(item.priority)}</td><td>${safe(item.reward_credits)}</td><td><button class="mini-button" onclick="submitDemoBounty('${safe(item.id)}')" ${!['open', 'in_review'].includes(item.status) ? 'disabled' : ''}>Submit</button></td></tr>`).join('') || '<tr><td colspan="5">No repair bounties open.</td></tr>';
   const submissionRows = submissions.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'accepted' ? 'green' : item.status === 'rejected' ? 'blue' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.bounty_title)}</td><td>${safe(item.maker_name)}</td><td>${safe(item.awarded_credits)}</td><td><button class="mini-button" onclick="acceptBountySubmission('${safe(item.id)}')" ${item.status === 'accepted' ? 'disabled' : ''}>Accept</button></td></tr>`).join('') || '<tr><td colspan="5">No bounty submissions yet.</td></tr>';
-  const auditRows = auditLog.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No maker economy audit records yet.</li>';
+  const auditRows = auditLog.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> â€” ${safe(item.message)}</li>`).join('') || '<li>No maker economy audit records yet.</li>';
 
   return layout('Maker Economy', `
-    <section class="section-head"><div><p class="eyebrow">Step 29 · Maker Economy, Model Licensing & Repair Bounties</p><h2>Reward useful repair knowledge without becoming an STL bazaar.</h2></div><p class="muted">Step 29 connects makers to the Repair Journey through governed profiles, repair model assets, pilot licenses, controlled download records, credit royalty events and repair bounties.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 29 Â· Maker Economy, Model Licensing & Repair Bounties</p><h2>Reward useful repair knowledge without becoming an STL bazaar.</h2></div><p class="muted">Step 29 connects makers to the Repair Journey through governed profiles, repair model assets, pilot licenses, controlled download records, credit royalty events and repair bounties.</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(summary.maker_profiles_active ?? 0)}</strong><span>Active makers</span></div><div class="metric"><strong>${safe(summary.model_assets_approved ?? 0)}</strong><span>Approved models</span></div><div class="metric"><strong>${safe(summary.royalty_credits_awarded ?? 0)}</strong><span>Royalty credits</span></div><div class="metric"><strong>${safe(summary.repair_bounties_open ?? 0)}</strong><span>Open bounties</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoMakerProfile()" ${S.busy ? 'disabled' : ''}>Create maker</button><button class="btn secondary" onclick="submitDemoModelAsset()" ${S.busy ? 'disabled' : ''}>Submit model</button><button class="btn secondary" onclick="createDemoRepairBounty()" ${S.busy ? 'disabled' : ''}>Create bounty</button><a class="btn secondary" href="#/marketplace-revenue">Open revenue ledger</a></div><ul class="muted small">${actionRows}</ul></section>
     <section class="section grid two"><div class="panel stack"><h3>Maker profiles</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Tier</th><th>Credits</th><th>Action</th></tr>${makerRows}</table></div><div class="panel stack"><h3>Repair model assets</h3><table class="table"><tr><th>Status</th><th>Title</th><th>Category</th><th>Score</th><th>Action</th></tr>${modelRows}</table></div></section>
@@ -3353,7 +3342,7 @@ function aiGovernanceDashboard() {
   const evaluations = S.api.aiQualityEvaluations || dashboard.quality_evaluations || [];
   const rules = S.api.aiSafetyRules || dashboard.safety_rules || [];
   const auditLog = S.api.aiGovernanceAuditLog || [];
-  const actionRows = Object.entries(dashboard.operator_actions || {}).map(([key, value]) => `<li><strong>${safe(key)}</strong> — ${safe(value)}</li>`).join('') || '<li>No immediate AI governance action.</li>';
+  const actionRows = Object.entries(dashboard.operator_actions || {}).map(([key, value]) => `<li><strong>${safe(key)}</strong> â€” ${safe(value)}</li>`).join('') || '<li>No immediate AI governance action.</li>';
 
   const providerRows = providers.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : item.status === 'mock' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.name)}</td><td>${safe(item.capability)}</td><td>${safe(item.execution_mode)}</td><td>${item.requires_human_review ? 'Yes' : 'No'}</td></tr>`).join('') || '<tr><td colspan="5">No AI providers configured.</td></tr>';
   const runRows = runs.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'approved' || item.status === 'completed' ? 'green' : item.status === 'rejected' || item.risk_level === 'critical' ? 'blue' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.pipeline_type)}</td><td>${safe(item.provider_name || item.provider_key)}</td><td>${safe(item.confidence_score)}</td><td><button class="mini-button" onclick="approveAiPipelineRun('${safe(item.id)}')" ${item.status === 'approved' || item.status === 'completed' ? 'disabled' : ''}>Approve</button></td></tr>`).join('') || '<tr><td colspan="5">No AI pipeline runs yet.</td></tr>';
@@ -3361,10 +3350,10 @@ function aiGovernanceDashboard() {
   const datasetRows = dataset.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'approved' ? 'green' : item.status === 'candidate' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.object_category)}</td><td>${safe(item.label)}</td><td>${safe(item.consent_status)}</td><td>${safe(item.license_status)}</td></tr>`).join('') || '<tr><td colspan="5">No AI dataset items yet.</td></tr>';
   const evaluationRows = evaluations.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'passed' ? 'green' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.pipeline_type)}</td><td>${safe(item.sample_size)}</td><td>${safe(item.pass_rate)}%</td><td>${safe(item.average_confidence)}</td></tr>`).join('') || '<tr><td colspan="5">No AI quality evaluations yet.</td></tr>';
   const ruleRows = rules.slice(0, 10).map(item => `<tr><td><span class="badge ${item.severity === 'high' ? 'orange' : item.severity === 'critical' ? 'blue' : 'green'}">${safe(item.severity)}</span></td><td>${safe(item.name)}</td><td>${safe(item.applies_to)}</td><td colspan="2">${safe(item.required_action)}</td></tr>`).join('') || '<tr><td colspan="5">No AI safety rules configured.</td></tr>';
-  const auditRows = auditLog.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No AI governance audit records yet.</li>';
+  const auditRows = auditLog.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> â€” ${safe(item.message)}</li>`).join('') || '<li>No AI governance audit records yet.</li>';
 
   return layout('AI Governance', `
-    <section class="section-head"><div><p class="eyebrow">Step 30 · AI Pipeline Governance & Human-in-the-Loop Review</p><h2>Make AI useful without pretending it is already production-grade.</h2></div><p class="muted">Step 30 controls mock/future AI providers, pipeline runs, human reviews, dataset readiness, safety rules and quality evaluations before real AI integrations are enabled.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 30 Â· AI Pipeline Governance & Human-in-the-Loop Review</p><h2>Make AI useful without pretending it is already production-grade.</h2></div><p class="muted">Step 30 controls mock/future AI providers, pipeline runs, human reviews, dataset readiness, safety rules and quality evaluations before real AI integrations are enabled.</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(summary.pipeline_runs_pending_review ?? 0)}</strong><span>Pending reviews</span></div><div class="metric"><strong>${safe(summary.providers_total ?? 0)}</strong><span>AI providers</span></div><div class="metric"><strong>${safe(summary.dataset_items_approved ?? 0)}</strong><span>Approved dataset items</span></div><div class="metric"><strong>${safe(summary.safety_rules_active ?? 0)}</strong><span>Active safety rules</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoAiPipelineRun()" ${S.busy ? 'disabled' : ''}>Create AI run</button><button class="btn secondary" onclick="createDemoAiDatasetItem()" ${S.busy ? 'disabled' : ''}>Add dataset item</button><button class="btn secondary" onclick="evaluateDemoAiQuality()" ${S.busy ? 'disabled' : ''}>Evaluate quality</button><a class="btn secondary" href="#/maker-economy">Open maker economy</a></div><ul class="muted small">${actionRows}</ul></section>
     <section class="section grid two"><div class="panel stack"><h3>AI providers</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Capability</th><th>Mode</th><th>Review</th></tr>${providerRows}</table></div><div class="panel stack"><h3>Pipeline runs</h3><table class="table"><tr><th>Status</th><th>Type</th><th>Provider</th><th>Conf.</th><th>Action</th></tr>${runRows}</table></div></section>
@@ -3451,17 +3440,17 @@ function aiProviderSandboxDashboard() {
   const artifacts = S.api.aiArtifactStubs || dashboard.artifact_stubs || [];
   const ledger = S.api.aiProviderCostLedger || dashboard.cost_ledger || [];
   const audit = S.api.aiProviderSandboxAuditLog || [];
-  const actionRows = Object.entries(dashboard.operator_actions || {}).map(([key, value]) => `<li><strong>${safe(key)}</strong> — ${safe(value)}</li>`).join('') || '<li>No immediate sandbox action.</li>';
+  const actionRows = Object.entries(dashboard.operator_actions || {}).map(([key, value]) => `<li><strong>${safe(key)}</strong> â€” ${safe(value)}</li>`).join('') || '<li>No immediate sandbox action.</li>';
 
   const adapterRows = adapters.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'ready' ? 'green' : item.secret_status === 'missing' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.name)}</td><td>${safe(item.provider_key)}</td><td>${safe(item.capability)}</td><td>${safe(item.last_health_status || 'not_checked')}</td></tr>`).join('') || '<tr><td colspan="5">No AI adapters configured.</td></tr>';
   const jobRows = jobs.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'succeeded' ? 'green' : item.status === 'failed' ? 'blue' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.job_code)}</td><td>${safe(item.job_type)}</td><td>${safe(item.adapter_key)}</td><td><button class="mini-button" onclick="advanceAiSandboxJob('${safe(item.id)}','running')" ${item.status !== 'queued' ? 'disabled' : ''}>Run</button><button class="mini-button" onclick="advanceAiSandboxJob('${safe(item.id)}','succeeded')" ${item.status === 'succeeded' || item.status === 'failed' || item.status === 'cancelled' ? 'disabled' : ''}>Succeed</button></td></tr>`).join('') || '<tr><td colspan="5">No sandbox jobs queued.</td></tr>';
-  const eventRows = events.slice(0, 8).map(item => `<li><strong>${safe(item.event_type)}</strong> · ${safe(item.job_code || item.job_id)} — ${safe(item.message)}</li>`).join('') || '<li>No job events yet.</li>';
+  const eventRows = events.slice(0, 8).map(item => `<li><strong>${safe(item.event_type)}</strong> Â· ${safe(item.job_code || item.job_id)} â€” ${safe(item.message)}</li>`).join('') || '<li>No job events yet.</li>';
   const artifactRows = artifacts.slice(0, 8).map(item => `<tr><td>${safe(item.artifact_type)}</td><td>${safe(item.status)}</td><td>${safe(item.job_code)}</td><td>${item.review_required ? 'Yes' : 'No'}</td></tr>`).join('') || '<tr><td colspan="4">No artifact stubs yet.</td></tr>';
   const ledgerRows = ledger.slice(0, 8).map(item => `<tr><td>${safe(item.direction)}</td><td>${safe(item.adapter_key)}</td><td>${formatEuro(item.amount_cents)}</td><td>${safe(item.description)}</td></tr>`).join('') || '<tr><td colspan="4">No provider cost records yet.</td></tr>';
-  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No sandbox audit records yet.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> â€” ${safe(item.message)}</li>`).join('') || '<li>No sandbox audit records yet.</li>';
 
   return layout('AI Provider Sandbox', `
-    <section class="section-head"><div><p class="eyebrow">Step 31 · AI Provider Adapter Sandbox & Job Orchestration</p><h2>Prepare Meshy, Trellis and Rodin integrations without making unsafe live calls.</h2></div><p class="muted">Step 31 adds adapter governance, mock job queue, retry/cancel lifecycle, provider cost ledger and artifact placeholders. External provider calls remain disabled.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 31 Â· AI Provider Adapter Sandbox & Job Orchestration</p><h2>Prepare Meshy, Trellis and Rodin integrations without making unsafe live calls.</h2></div><p class="muted">Step 31 adds adapter governance, mock job queue, retry/cancel lifecycle, provider cost ledger and artifact placeholders. External provider calls remain disabled.</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(summary.adapters_total ?? 0)}</strong><span>Adapters</span></div><div class="metric"><strong>${safe(summary.jobs_active ?? 0)}</strong><span>Active jobs</span></div><div class="metric"><strong>${safe(summary.adapters_secret_missing ?? 0)}</strong><span>Missing secrets</span></div><div class="metric"><strong>${formatEuro(summary.reserved_cost_cents ?? 0)}</strong><span>Reserved mock cost</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoAiSandboxJob()" ${S.busy ? 'disabled' : ''}>Queue sandbox job</button><button class="btn secondary" onclick="checkAiSandboxAdapters()" ${S.busy ? 'disabled' : ''}>Health check adapters</button><a class="btn secondary" href="#/ai-governance">Open AI governance</a></div><ul class="muted small">${actionRows}</ul></section>
     <section class="section grid two"><div class="panel stack"><h3>Provider adapters</h3><table class="table"><tr><th>Status</th><th>Name</th><th>Provider</th><th>Capability</th><th>Health</th></tr>${adapterRows}</table></div><div class="panel stack"><h3>Orchestration jobs</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Type</th><th>Adapter</th><th>Action</th></tr>${jobRows}</table></div></section>
@@ -3535,14 +3524,14 @@ function geometryPrintabilityDashboard() {
 
   const profileRows = profiles.slice(0, 6).map(item => `<tr><td>${safe(item.profile_key)}</td><td>${safe(item.target_process)}</td><td>${safe(item.material_family)}</td><td>${safe(item.min_wall_thickness_mm)} mm</td><td>${item.requires_human_review ? 'Yes' : 'No'}</td></tr>`).join('') || '<tr><td colspan="5">No validation profiles available.</td></tr>';
   const ruleRows = rules.slice(0, 8).map(item => `<tr><td><span class="badge ${item.severity === 'critical' ? 'orange' : 'blue'}">${safe(item.severity)}</span></td><td>${safe(item.rule_key)}</td><td>${safe(item.category)}</td><td>${safe(item.description)}</td></tr>`).join('') || '<tr><td colspan="4">No printability rules available.</td></tr>';
-  const assetRows = assets.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'validated' ? 'green' : item.status === 'blocked' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.asset_code)}</td><td>${safe(item.file_name)}</td><td>${safe(item.file_format)}</td><td>${safe(item.bounding_box_mm?.x)}×${safe(item.bounding_box_mm?.y)}×${safe(item.bounding_box_mm?.z)} mm</td><td><button class="mini-button" onclick="evaluateGeometryAsset('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Evaluate</button></td></tr>`).join('') || '<tr><td colspan="6">No geometry assets registered.</td></tr>';
+  const assetRows = assets.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'validated' ? 'green' : item.status === 'blocked' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.asset_code)}</td><td>${safe(item.file_name)}</td><td>${safe(item.file_format)}</td><td>${safe(item.bounding_box_mm?.x)}Ã—${safe(item.bounding_box_mm?.y)}Ã—${safe(item.bounding_box_mm?.z)} mm</td><td><button class="mini-button" onclick="evaluateGeometryAsset('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Evaluate</button></td></tr>`).join('') || '<tr><td colspan="6">No geometry assets registered.</td></tr>';
   const runRows = runs.slice(0, 10).map(item => `<tr><td><span class="badge ${item.decision === 'approved' ? 'green' : item.decision === 'blocked' ? 'orange' : 'blue'}">${safe(item.decision)}</span></td><td>${safe(item.run_code)}</td><td>${safe(item.asset_code)}</td><td>${safe(item.score)}</td><td>${safe(item.summary)}</td></tr>`).join('') || '<tr><td colspan="5">No validation runs yet.</td></tr>';
-  const findingRows = findings.slice(0, 8).map(item => `<li><strong>${safe(item.severity)}</strong> · ${safe(item.rule_key)} — ${safe(item.message)} <span class="muted">${safe(item.recommendation)}</span></li>`).join('') || '<li>No open findings.</li>';
+  const findingRows = findings.slice(0, 8).map(item => `<li><strong>${safe(item.severity)}</strong> Â· ${safe(item.rule_key)} â€” ${safe(item.message)} <span class="muted">${safe(item.recommendation)}</span></li>`).join('') || '<li>No open findings.</li>';
   const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.priority === 'high' ? 'orange' : 'blue'}">${safe(item.priority)}</span></td><td>${safe(item.status)}</td><td>${safe(item.asset_code)}</td><td>${safe(item.file_name)}</td><td><button class="mini-button" onclick="approveGeometryReview('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Approve notes</button></td></tr>`).join('') || '<tr><td colspan="5">No active geometry reviews.</td></tr>';
-  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No geometry audit records yet.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> â€” ${safe(item.message)}</li>`).join('') || '<li>No geometry audit records yet.</li>';
 
   return layout('Geometry & Printability Governance', `
-    <section class="section-head"><div><p class="eyebrow">Step 32 · CAD/Geometry Validation & Printability Governance</p><h2>Stop weak geometry before it reaches providers, makers or repair orders.</h2></div><p class="muted">Step 32 validates uploaded or AI-generated geometry with pilot rules, records findings and creates human review items before provider routing.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 32 Â· CAD/Geometry Validation & Printability Governance</p><h2>Stop weak geometry before it reaches providers, makers or repair orders.</h2></div><p class="muted">Step 32 validates uploaded or AI-generated geometry with pilot rules, records findings and creates human review items before provider routing.</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(summary.assets_total ?? 0)}</strong><span>Geometry assets</span></div><div class="metric"><strong>${safe(summary.validation_runs ?? 0)}</strong><span>Validation runs</span></div><div class="metric"><strong>${safe(summary.open_findings ?? 0)}</strong><span>Open findings</span></div><div class="metric"><strong>${safe(summary.open_reviews ?? 0)}</strong><span>Human reviews</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoGeometryAsset()" ${S.busy ? 'disabled' : ''}>Register demo geometry</button><button class="btn secondary" onclick="evaluateFirstGeometryAsset()" ${S.busy ? 'disabled' : ''}>Evaluate first asset</button><a class="btn secondary" href="#/ai-provider-sandbox">Open AI sandbox</a><a class="btn secondary" href="#/maker-economy">Open maker economy</a></div><p class="muted small">This is a governance layer: it does not run a real CAD kernel, slicer, mesh repair tool or certified engineering analysis.</p></section>
     <section class="section grid two"><div class="panel stack"><h3>Validation profiles</h3><table class="table"><tr><th>Profile</th><th>Process</th><th>Material</th><th>Wall</th><th>Review</th></tr>${profileRows}</table></div><div class="panel stack"><h3>Printability rules</h3><table class="table"><tr><th>Severity</th><th>Rule</th><th>Category</th><th>Description</th></tr>${ruleRows}</table></div></section>
@@ -3621,16 +3610,16 @@ function providerRoutingDashboard() {
   const reviews = S.api.routingReviewItems || dashboard.open_reviews || [];
   const audit = S.api.providerRoutingAuditLog || [];
 
-  const capabilityRows = capabilities.slice(0, 8).map(item => `<tr><td>${safe(item.provider_name)}</td><td>${safe(item.process)}</td><td>${safe((item.materials || []).join(', '))}</td><td>${safe(item.max_build_volume_mm?.x)}×${safe(item.max_build_volume_mm?.y)}×${safe(item.max_build_volume_mm?.z)} mm</td><td>${safe(item.average_lead_time_days)} d</td><td>${safe(item.quality_score)}</td></tr>`).join('') || '<tr><td colspan="6">No provider capabilities available.</td></tr>';
-  const machineRows = machines.slice(0, 8).map(item => `<tr><td>${safe(item.machine_code)}</td><td>${safe(item.provider_name)}</td><td>${safe(item.machine_name)}</td><td>${safe((item.materials || []).join(', '))}</td><td>${safe(item.build_volume_mm?.x)}×${safe(item.build_volume_mm?.y)}×${safe(item.build_volume_mm?.z)} mm</td><td>${safe(item.reliability_score)}</td></tr>`).join('') || '<tr><td colspan="6">No machine profiles available.</td></tr>';
-  const policyRows = policies.slice(0, 6).map(item => `<li><strong>${safe(item.policy_key)}</strong> — ${safe(item.description)}</li>`).join('') || '<li>No active routing policies.</li>';
+  const capabilityRows = capabilities.slice(0, 8).map(item => `<tr><td>${safe(item.provider_name)}</td><td>${safe(item.process)}</td><td>${safe((item.materials || []).join(', '))}</td><td>${safe(item.max_build_volume_mm?.x)}Ã—${safe(item.max_build_volume_mm?.y)}Ã—${safe(item.max_build_volume_mm?.z)} mm</td><td>${safe(item.average_lead_time_days)} d</td><td>${safe(item.quality_score)}</td></tr>`).join('') || '<tr><td colspan="6">No provider capabilities available.</td></tr>';
+  const machineRows = machines.slice(0, 8).map(item => `<tr><td>${safe(item.machine_code)}</td><td>${safe(item.provider_name)}</td><td>${safe(item.machine_name)}</td><td>${safe((item.materials || []).join(', '))}</td><td>${safe(item.build_volume_mm?.x)}Ã—${safe(item.build_volume_mm?.y)}Ã—${safe(item.build_volume_mm?.z)} mm</td><td>${safe(item.reliability_score)}</td></tr>`).join('') || '<tr><td colspan="6">No machine profiles available.</td></tr>';
+  const policyRows = policies.slice(0, 6).map(item => `<li><strong>${safe(item.policy_key)}</strong> â€” ${safe(item.description)}</li>`).join('') || '<li>No active routing policies.</li>';
   const requestRows = requests.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'matched' || item.status === 'approved_for_fulfilment' ? 'green' : item.status === 'blocked' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.request_code)}</td><td>${safe(item.asset_code || item.geometry_asset_id || 'manual')}</td><td>${safe(item.material_family)}</td><td>${safe(item.max_lead_time_days)} d</td><td><button class="mini-button" onclick="evaluateRoutingRequest('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Evaluate</button></td></tr>`).join('') || '<tr><td colspan="6">No routing requests yet.</td></tr>';
-  const matchRows = matches.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'recommended' ? 'green' : 'blue'}">${safe(item.status)}</span></td><td>#${safe(item.rank)}</td><td>${safe(item.provider_name)}</td><td>${safe(item.machine_name)}</td><td>${safe(item.match_score)}</td><td>€${((item.estimated_cost_cents || 0) / 100).toFixed(2)}</td><td>${safe(item.estimated_lead_time_days)} d</td></tr>`).join('') || '<tr><td colspan="7">No routing matches yet.</td></tr>';
+  const matchRows = matches.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'recommended' ? 'green' : 'blue'}">${safe(item.status)}</span></td><td>#${safe(item.rank)}</td><td>${safe(item.provider_name)}</td><td>${safe(item.machine_name)}</td><td>${safe(item.match_score)}</td><td>â‚¬${((item.estimated_cost_cents || 0) / 100).toFixed(2)}</td><td>${safe(item.estimated_lead_time_days)} d</td></tr>`).join('') || '<tr><td colspan="7">No routing matches yet.</td></tr>';
   const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.priority === 'high' ? 'orange' : 'blue'}">${safe(item.priority)}</span></td><td>${safe(item.status)}</td><td>${safe(item.request_code)}</td><td>${safe(item.review_reason)}</td><td><button class="mini-button" onclick="approveRoutingReview('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Approve route</button></td></tr>`).join('') || '<tr><td colspan="5">No active routing reviews.</td></tr>';
-  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No routing audit records yet.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> â€” ${safe(item.message)}</li>`).join('') || '<li>No routing audit records yet.</li>';
 
   return layout('Provider Routing Governance', `
-    <section class="section-head"><div><p class="eyebrow">Step 33 · Provider Capability, Machine Profile & Fulfilment Routing Governance</p><h2>Route validated repair geometry to compatible providers and machines.</h2></div><p class="muted">Step 33 connects geometry governance to provider fulfilment by scoring process, material, machine volume, lead time, budget and quality signals.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 33 Â· Provider Capability, Machine Profile & Fulfilment Routing Governance</p><h2>Route validated repair geometry to compatible providers and machines.</h2></div><p class="muted">Step 33 connects geometry governance to provider fulfilment by scoring process, material, machine volume, lead time, budget and quality signals.</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(summary.provider_capabilities ?? 0)}</strong><span>Provider capabilities</span></div><div class="metric"><strong>${safe(summary.active_machines ?? 0)}</strong><span>Active machines</span></div><div class="metric"><strong>${safe(summary.routing_requests ?? 0)}</strong><span>Routing requests</span></div><div class="metric"><strong>${safe(summary.open_reviews ?? 0)}</strong><span>Open reviews</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoRoutingRequest()" ${S.busy ? 'disabled' : ''}>Create demo route</button><button class="btn secondary" onclick="evaluateFirstRoutingRequest()" ${S.busy ? 'disabled' : ''}>Evaluate first route</button><a class="btn secondary" href="#/geometry-printability">Open geometry</a><a class="btn secondary" href="#/provider-network">Provider network</a></div><p class="muted small">This is a governance layer: it does not reserve real capacity, quote live prices or create shipments.</p></section>
     <section class="section grid two"><div class="panel stack"><h3>Provider capabilities</h3><table class="table"><tr><th>Provider</th><th>Process</th><th>Materials</th><th>Volume</th><th>Lead</th><th>Quality</th></tr>${capabilityRows}</table></div><div class="panel stack"><h3>Machine profiles</h3><table class="table"><tr><th>Code</th><th>Provider</th><th>Machine</th><th>Materials</th><th>Volume</th><th>Reliability</th></tr>${machineRows}</table></div></section>
@@ -3708,15 +3697,15 @@ function dispatchGovernanceDashboard() {
   const reviews = S.api.dispatchReviewItems || dashboard.open_reviews || [];
   const audit = S.api.dispatchAuditLog || [];
 
-  const policyRows = policies.slice(0, 6).map(item => `<li><strong>${safe(item.policy_key)}</strong> — ${safe(item.description)}</li>`).join('') || '<li>No active dispatch policies.</li>';
+  const policyRows = policies.slice(0, 6).map(item => `<li><strong>${safe(item.policy_key)}</strong> â€” ${safe(item.description)}</li>`).join('') || '<li>No active dispatch policies.</li>';
   const dispatchRows = dispatches.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'completed' || item.status === 'proof_accepted' ? 'green' : item.status === 'needs_review' || item.status === 'blocked' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.dispatch_code)}</td><td>${safe(item.provider_name || 'provider pending')}</td><td>${safe(item.machine_name || 'machine pending')}</td><td>${safe(item.tracking_number || 'pending')}</td><td><button class="mini-button" onclick="advanceDispatch('${safe(item.id)}', 'confirm_dispatch')" ${S.busy ? 'disabled' : ''}>Dispatch</button><button class="mini-button" onclick="advanceDispatch('${safe(item.id)}', 'mark_delivered')" ${S.busy ? 'disabled' : ''}>Deliver</button></td></tr>`).join('') || '<tr><td colspan="6">No dispatches yet.</td></tr>';
   const eventRows = events.slice(0, 10).map(item => `<tr><td>${safe(item.dispatch_code)}</td><td>${safe(item.event_type)}</td><td>${safe(item.status)}</td><td>${safe(item.location || 'n/a')}</td><td>${safe(item.message)}</td></tr>`).join('') || '<tr><td colspan="5">No tracking events yet.</td></tr>';
   const proofRows = proofs.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'accepted' ? 'green' : item.status === 'rework_required' || item.status === 'rejected' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.dispatch_code)}</td><td>${safe(item.proof_type)}</td><td>${safe(item.quality_score)}</td><td>${safe(item.summary)}</td><td><button class="mini-button" onclick="reviewProofOfRepair('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Accept</button></td></tr>`).join('') || '<tr><td colspan="6">No proof-of-repair records yet.</td></tr>';
   const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.priority === 'high' ? 'orange' : 'blue'}">${safe(item.priority)}</span></td><td>${safe(item.status)}</td><td>${safe(item.dispatch_code)}</td><td>${safe(item.review_reason)}</td><td><button class="mini-button" onclick="approveDispatchReview('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Approve</button></td></tr>`).join('') || '<tr><td colspan="5">No active dispatch reviews.</td></tr>';
-  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No dispatch audit records yet.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> â€” ${safe(item.message)}</li>`).join('') || '<li>No dispatch audit records yet.</li>';
 
   return layout('Dispatch Governance', `
-    <section class="section-head"><div><p class="eyebrow">Step 34 · Fulfilment Dispatch, Shipment Tracking & Proof-of-Repair Governance</p><h2>Move routed repairs through pilot dispatch, tracking and proof-of-repair review.</h2></div><p class="muted">Step 34 is an operational governance layer. It creates local/mock dispatches and tracking evidence; it does not book real couriers or create shipping labels.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 34 Â· Fulfilment Dispatch, Shipment Tracking & Proof-of-Repair Governance</p><h2>Move routed repairs through pilot dispatch, tracking and proof-of-repair review.</h2></div><p class="muted">Step 34 is an operational governance layer. It creates local/mock dispatches and tracking evidence; it does not book real couriers or create shipping labels.</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(summary.dispatches ?? 0)}</strong><span>Dispatches</span></div><div class="metric"><strong>${safe(summary.active_dispatches ?? 0)}</strong><span>Active dispatches</span></div><div class="metric"><strong>${safe(summary.tracking_events ?? 0)}</strong><span>Tracking events</span></div><div class="metric"><strong>${safe(summary.proofs_pending_review ?? 0)}</strong><span>Proofs pending</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoDispatch()" ${S.busy ? 'disabled' : ''}>Create dispatch from best route</button><button class="btn secondary" onclick="submitProofForFirstDispatch()" ${S.busy ? 'disabled' : ''}>Submit proof</button><a class="btn secondary" href="#/provider-routing">Open routing</a><a class="btn secondary" href="#/fulfilment">Fulfilment</a></div><p class="muted small">Dispatches rely on Step 33 routing matches. If none exists, create/evaluate a routing request first.</p></section>
     <section class="section grid two"><div class="panel stack"><h3>Dispatches</h3><table class="table"><tr><th>Status</th><th>Dispatch</th><th>Provider</th><th>Machine</th><th>Tracking</th><th>Action</th></tr>${dispatchRows}</table></div><div class="panel stack"><h3>Dispatch policies</h3><ul class="muted small">${policyRows}</ul></div></section>
@@ -3827,11 +3816,11 @@ function customerCareDashboard() {
   const ticketRows = tickets.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'resolved' || item.status === 'closed' ? 'green' : item.priority === 'high' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.ticket_code)}</td><td>${safe(item.priority)}</td><td>${safe(item.category)}</td><td>${safe(item.subject)}</td><td><button class="mini-button" onclick="resolveSupportTicket('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Resolve</button></td></tr>`).join('') || '<tr><td colspan="6">No support tickets yet.</td></tr>';
   const feedbackRows = feedback.slice(0, 8).map(item => `<tr><td>${safe(item.rating)}/5</td><td>${safe(item.nps_score ?? 'n/a')}</td><td>${safe(item.sentiment)}</td><td>${safe(item.customer_email)}</td><td>${safe(item.feedback_text)}</td></tr>`).join('') || '<tr><td colspan="5">No feedback yet.</td></tr>';
   const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.priority === 'high' ? 'orange' : 'blue'}">${safe(item.priority)}</span></td><td>${safe(item.status)}</td><td>${safe(item.related_entity_type)}</td><td>${safe(item.review_reason)}</td><td><button class="mini-button" onclick="resolvePostRepairReview('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Resolve</button></td></tr>`).join('') || '<tr><td colspan="5">No post-repair review items.</td></tr>';
-  const policyRows = policies.concat(warrantyPolicies).slice(0, 8).map(item => `<li><strong>${safe(item.policy_key)}</strong> — ${safe(item.description || item.coverage_scope)}</li>`).join('') || '<li>No active policies.</li>';
-  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No post-repair audit records yet.</li>';
+  const policyRows = policies.concat(warrantyPolicies).slice(0, 8).map(item => `<li><strong>${safe(item.policy_key)}</strong> â€” ${safe(item.description || item.coverage_scope)}</li>`).join('') || '<li>No active policies.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> â€” ${safe(item.message)}</li>`).join('') || '<li>No post-repair audit records yet.</li>';
 
   return layout('Customer Care Governance', `
-    <section class="section-head"><div><p class="eyebrow">Step 35 · Customer Acceptance, Warranty & Post-Repair Support Governance</p><h2>Close the repair loop with customer acceptance, support, warranty placeholders and feedback.</h2></div><p class="muted">Step 35 is a pilot governance layer. It does not create legal warranty terms, refunds, real CRM tickets or external customer notifications.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 35 Â· Customer Acceptance, Warranty & Post-Repair Support Governance</p><h2>Close the repair loop with customer acceptance, support, warranty placeholders and feedback.</h2></div><p class="muted">Step 35 is a pilot governance layer. It does not create legal warranty terms, refunds, real CRM tickets or external customer notifications.</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(summary.acceptance_records ?? 0)}</strong><span>Acceptance records</span></div><div class="metric"><strong>${safe(summary.pending_acceptance ?? 0)}</strong><span>Pending acceptance</span></div><div class="metric"><strong>${safe(summary.warranty_cases_open ?? 0)}</strong><span>Open warranty</span></div><div class="metric"><strong>${safe(summary.support_tickets_open ?? 0)}</strong><span>Support tickets</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="requestCustomerAcceptance()" ${S.busy ? 'disabled' : ''}>Request customer acceptance</button><button class="btn secondary" onclick="recordHappyFeedback()" ${S.busy ? 'disabled' : ''}>Record positive feedback</button><button class="btn secondary" onclick="openSupportTicket()" ${S.busy ? 'disabled' : ''}>Open support ticket</button><a class="btn secondary" href="#/dispatch-governance">Dispatch governance</a></div><p class="muted small">Acceptance can reference the latest proof-of-repair when available; otherwise it is stored as a pilot override for demo governance.</p></section>
     <section class="section grid two"><div class="panel stack"><h3>Customer acceptance</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Customer</th><th>Dispatch</th><th>Score</th><th>Action</th></tr>${acceptanceRows}</table></div><div class="panel stack"><h3>Policies</h3><ul class="muted small">${policyRows}</ul></div></section>
@@ -3983,17 +3972,17 @@ function sustainabilityImpactDashboard() {
   const fmt = value => Number(value || 0).toFixed(2);
   const impactRows = impacts.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'calculated' || item.status === 'accepted' ? 'green' : item.status === 'needs_review' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.impact_code)}</td><td>${safe(item.category)}</td><td>${fmt(item.co2e_avoided_kg)} kg</td><td>${fmt(item.waste_diverted_kg)} kg</td><td>${safe(item.repair_score ?? 0)}</td><td><button class="mini-button" onclick="calculateFirstImpact('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Calculate</button></td></tr>`).join('') || '<tr><td colspan="7">No impact records yet.</td></tr>';
   const snapshotRows = snapshots.slice(0, 8).map(item => `<tr><td><span class="badge blue">${safe(item.status)}</span></td><td>${safe(item.snapshot_code)}</td><td>${safe(item.objects_saved)}</td><td>${fmt(item.co2e_avoided_kg)} kg</td><td>${fmt(item.waste_diverted_kg)} kg</td><td>${safe(item.impact_score)}</td></tr>`).join('') || '<tr><td colspan="6">No circularity snapshots yet.</td></tr>';
-  const factorRows = factors.slice(0, 8).map(item => `<li><strong>${safe(item.name)}</strong> — ${safe(item.default_value)} ${safe(item.unit)} <span class="muted">${safe(item.category)}</span></li>`).join('') || '<li>No active sustainability factors.</li>';
+  const factorRows = factors.slice(0, 8).map(item => `<li><strong>${safe(item.name)}</strong> â€” ${safe(item.default_value)} ${safe(item.unit)} <span class="muted">${safe(item.category)}</span></li>`).join('') || '<li>No active sustainability factors.</li>';
   const insightRows = insights.slice(0, 8).map(item => `<tr><td><span class="badge ${item.severity === 'warning' ? 'orange' : 'blue'}">${safe(item.severity)}</span></td><td>${safe(item.insight_type)}</td><td>${safe(item.title)}</td><td>${safe(item.recommended_action)}</td></tr>`).join('') || '<tr><td colspan="4">No active outcome insights.</td></tr>';
   const reviewRows = reviews.slice(0, 8).map(item => `<tr><td>${safe(item.priority)}</td><td>${safe(item.related_entity_type)}</td><td>${safe(item.review_reason)}</td><td><button class="mini-button" onclick="resolveImpactReview('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Resolve</button></td></tr>`).join('') || '<tr><td colspan="4">No impact reviews pending.</td></tr>';
-  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No sustainability audit entries yet.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> â€” ${safe(item.message)}</li>`).join('') || '<li>No sustainability audit entries yet.</li>';
 
   return layout('Sustainability Impact', `
-    <section class="section-head"><div><p class="eyebrow">Step 36 · Sustainability Impact, Circularity Metrics & Repair Outcome Intelligence</p><h2>Measure objects saved, CO₂e avoided, waste diverted and outcome intelligence from accepted repairs.</h2></div><p class="muted">Step 36 is a local/pilot impact layer. It does not create certified environmental claims, LCA reports or public sustainability statements.</p></section>
-    <section class="grid four"><div class="metric"><strong>${safe(summary.objects_saved ?? 0)}</strong><span>Objects saved</span></div><div class="metric"><strong>${fmt(summary.co2e_avoided_kg)} kg</strong><span>CO₂e avoided</span></div><div class="metric"><strong>${fmt(summary.waste_diverted_kg)} kg</strong><span>Waste diverted</span></div><div class="metric"><strong>${safe(summary.open_insights ?? 0)}</strong><span>Open insights</span></div></section>
+    <section class="section-head"><div><p class="eyebrow">Step 36 Â· Sustainability Impact, Circularity Metrics & Repair Outcome Intelligence</p><h2>Measure objects saved, COâ‚‚e avoided, waste diverted and outcome intelligence from accepted repairs.</h2></div><p class="muted">Step 36 is a local/pilot impact layer. It does not create certified environmental claims, LCA reports or public sustainability statements.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(summary.objects_saved ?? 0)}</strong><span>Objects saved</span></div><div class="metric"><strong>${fmt(summary.co2e_avoided_kg)} kg</strong><span>COâ‚‚e avoided</span></div><div class="metric"><strong>${fmt(summary.waste_diverted_kg)} kg</strong><span>Waste diverted</span></div><div class="metric"><strong>${safe(summary.open_insights ?? 0)}</strong><span>Open insights</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createImpactFromLatestAcceptance()" ${S.busy ? 'disabled' : ''}>Create impact record</button><button class="btn secondary" onclick="snapshotCircularityMetrics()" ${S.busy ? 'disabled' : ''}>Create circularity snapshot</button><button class="btn secondary" onclick="evaluateImpactInsights()" ${S.busy ? 'disabled' : ''}>Evaluate insights</button><a class="btn secondary" href="#/customer-care">Customer care</a></div><p class="muted small">Impact metrics remain qualified as pilot estimates until lifecycle factors and legal language are validated.</p></section>
-    <section class="section grid two"><div class="panel stack"><h3>Repair impact records</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Category</th><th>CO₂e</th><th>Waste</th><th>Score</th><th>Action</th></tr>${impactRows}</table></div><div class="panel stack"><h3>Sustainability factors</h3><ul class="muted small">${factorRows}</ul></div></section>
-    <section class="section grid two"><div class="panel stack"><h3>Circularity snapshots</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Objects</th><th>CO₂e</th><th>Waste</th><th>Score</th></tr>${snapshotRows}</table></div><div class="panel stack"><h3>Outcome insights</h3><table class="table"><tr><th>Severity</th><th>Type</th><th>Title</th><th>Action</th></tr>${insightRows}</table></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Repair impact records</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Category</th><th>COâ‚‚e</th><th>Waste</th><th>Score</th><th>Action</th></tr>${impactRows}</table></div><div class="panel stack"><h3>Sustainability factors</h3><ul class="muted small">${factorRows}</ul></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Circularity snapshots</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Objects</th><th>COâ‚‚e</th><th>Waste</th><th>Score</th></tr>${snapshotRows}</table></div><div class="panel stack"><h3>Outcome insights</h3><table class="table"><tr><th>Severity</th><th>Type</th><th>Title</th><th>Action</th></tr>${insightRows}</table></div></section>
     <section class="section grid two"><div class="panel stack"><h3>Impact reviews</h3><table class="table"><tr><th>Priority</th><th>Entity</th><th>Reason</th><th>Action</th></tr>${reviewRows}</table></div><div class="panel stack"><h3>Sustainability audit</h3><ul class="muted small">${auditRows}</ul></div></section>
   `, { currentStep: 'sustainability-impact' });
 }
@@ -4091,13 +4080,13 @@ function demoWalkthroughDashboard() {
   const stepRows = steps.slice(0, 10).map(item => `<tr><td>${safe(item.sort_order)}</td><td>${safe(item.title)}</td><td>${safe(item.route_hint)}</td><td>${safe(item.primary_asset)}</td></tr>`).join('') || '<tr><td colspan="4">No active walkthrough steps.</td></tr>';
   const sessionRows = sessions.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'completed' ? 'green' : item.status === 'running' ? 'blue' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.session_code)}</td><td>${safe(item.audience)}</td><td>${safe(item.current_step_key || 'done')}</td><td><button class="mini-button" onclick="advanceDemoSession('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Advance</button></td></tr>`).join('') || '<tr><td colspan="5">No demo sessions yet.</td></tr>';
   const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.score >= 80 ? 'green' : item.score >= 60 ? 'blue' : 'orange'}">${safe(item.score)}</span></td><td>${safe(item.readiness_level)}</td><td>${safe((item.blockers || []).slice(0, 2).join('; '))}</td><td><button class="mini-button" onclick="reviewDemoReadiness('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Review</button></td></tr>`).join('') || '<tr><td colspan="4">No active demo readiness reviews.</td></tr>';
-  const feedbackRows = feedback.slice(0, 6).map(item => `<li><strong>${safe(item.signal)}</strong> · ${safe(item.rating)}/10 — ${safe(item.notes)}</li>`).join('') || '<li>No feedback yet.</li>';
-  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No demo audit entries yet.</li>';
+  const feedbackRows = feedback.slice(0, 6).map(item => `<li><strong>${safe(item.signal)}</strong> Â· ${safe(item.rating)}/10 â€” ${safe(item.notes)}</li>`).join('') || '<li>No feedback yet.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> â€” ${safe(item.message)}</li>`).join('') || '<li>No demo audit entries yet.</li>';
 
   return layout('Demo Walkthrough', `
-    <section class="section-head"><div><p class="eyebrow">Step 40 · Demo Mode, Guided Repair Journey & Investor Walkthrough</p><h2>Present the complete repair journey with a controlled narrative, explicit caveats and traceable feedback.</h2></div><p class="muted">Step 40 is a guided local/pilot demo layer. It does not turn mock AI, payment, logistics, warranty or sustainability flows into production claims.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 40 Â· Demo Mode, Guided Repair Journey & Investor Walkthrough</p><h2>Present the complete repair journey with a controlled narrative, explicit caveats and traceable feedback.</h2></div><p class="muted">Step 40 is a guided local/pilot demo layer. It does not turn mock AI, payment, logistics, warranty or sustainability flows into production claims.</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(summary.active_modes || 0)}</strong><span>Demo modes</span></div><div class="metric"><strong>${safe(summary.active_steps || 0)}</strong><span>Guided steps</span></div><div class="metric"><strong>${safe(summary.demo_sessions || 0)}</strong><span>Sessions</span></div><div class="metric"><strong>${safe(summary.open_readiness_reviews || 0)}</strong><span>Open reviews</span></div></section>
-    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoSession()" ${S.busy ? 'disabled' : ''}>Start guided demo</button><button class="btn secondary" onclick="evaluateDemoReadiness()" ${S.busy ? 'disabled' : ''}>Evaluate demo readiness</button><a class="btn secondary" href="#/investor-reporting">Investor evidence</a><a class="btn secondary" href="#/sustainability-impact">Impact metrics</a></div><p class="muted small">Recommended path: intake → AI governance → repair path → geometry → routing → dispatch proof → customer care → impact/KPIs.</p></section>
+    <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createDemoSession()" ${S.busy ? 'disabled' : ''}>Start guided demo</button><button class="btn secondary" onclick="evaluateDemoReadiness()" ${S.busy ? 'disabled' : ''}>Evaluate demo readiness</button><a class="btn secondary" href="#/investor-reporting">Investor evidence</a><a class="btn secondary" href="#/sustainability-impact">Impact metrics</a></div><p class="muted small">Recommended path: intake â†’ AI governance â†’ repair path â†’ geometry â†’ routing â†’ dispatch proof â†’ customer care â†’ impact/KPIs.</p></section>
     <section class="section grid two"><div class="panel stack"><h3>Guided walkthrough steps</h3><table class="table"><tr><th>#</th><th>Step</th><th>Route</th><th>Asset</th></tr>${stepRows}</table></div><div class="panel stack"><h3>Demo sessions</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Audience</th><th>Current step</th><th>Action</th></tr>${sessionRows}</table></div></section>
     <section class="section grid two"><div class="panel stack"><h3>Demo readiness reviews</h3><table class="table"><tr><th>Score</th><th>Level</th><th>Blockers</th><th>Action</th></tr>${reviewRows}</table></div><div class="panel stack"><h3>Feedback</h3><ul class="muted small">${feedbackRows}</ul><h3>Audit</h3><ul class="muted small">${auditRows}</ul></div></section>
   `, { currentStep: 'demo-walkthrough' });
@@ -4168,13 +4157,13 @@ function pilotLaunchDashboard() {
   const assetRows = assets.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'ready' ? 'green' : item.status === 'needs_review' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.category)}</td><td>${safe(item.title)}</td><td>${safe(item.route_hint || item.source_endpoint)}</td></tr>`).join('') || '<tr><td colspan="4">No data room assets yet.</td></tr>';
   const checklistRows = checklist.slice(0, 10).map(item => `<tr><td><span class="badge ${['ready','done','approved'].includes(item.status) ? 'green' : item.status === 'blocked' || item.status === 'needs_work' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.priority)}</td><td>${safe(item.title)}</td><td><button class="mini-button" onclick="markPilotChecklistReady('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Ready</button></td></tr>`).join('') || '<tr><td colspan="4">No pilot checklist items yet.</td></tr>';
   const loopRows = loops.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'open' ? 'blue' : 'green'}">${safe(item.status)}</span></td><td>${safe(item.loop_code)}</td><td>${safe(item.audience_type)}</td><td>${safe(item.objective)}</td></tr>`).join('') || '<tr><td colspan="4">No feedback loops yet.</td></tr>';
-  const feedbackRows = feedback.slice(0, 8).map(item => `<li><strong>${safe(item.signal)}</strong> · ${safe(item.rating)}/10 · ${safe(item.topic)} — ${safe(item.notes)}</li>`).join('') || '<li>No stakeholder feedback yet.</li>';
+  const feedbackRows = feedback.slice(0, 8).map(item => `<li><strong>${safe(item.signal)}</strong> Â· ${safe(item.rating)}/10 Â· ${safe(item.topic)} â€” ${safe(item.notes)}</li>`).join('') || '<li>No stakeholder feedback yet.</li>';
   const reportRows = reports.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'published' ? 'green' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.report_code)}</td><td>${safe(item.executive_summary)}</td></tr>`).join('') || '<tr><td colspan="3">No post-demo reports yet.</td></tr>';
   const decisionRows = decisions.slice(0, 6).map(item => `<tr><td><span class="badge ${item.decision === 'go' ? 'green' : item.decision === 'conditional_go' ? 'blue' : 'orange'}">${safe(item.decision)}</span></td><td>${safe(item.score)}</td><td>${safe((item.blockers || []).slice(0, 2).join('; ') || 'No blockers captured')}</td></tr>`).join('') || '<tr><td colspan="3">No go/no-go decisions yet.</td></tr>';
-  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No pilot launch audit entries yet.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> â€” ${safe(item.message)}</li>`).join('') || '<li>No pilot launch audit entries yet.</li>';
 
   return layout('Pilot Launch', `
-    <section class="section-head"><div><p class="eyebrow">Step 41 · Demo Data Room, Pilot Launch Pack & Stakeholder Feedback Loop</p><h2>Convert the guided demo into a controlled stakeholder workflow with data room assets, launch checklist, feedback and go/no-go evidence.</h2></div><p class="muted">Step 41 is a pilot-readiness governance layer. It does not approve production launch or real customer commitments.</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 41 Â· Demo Data Room, Pilot Launch Pack & Stakeholder Feedback Loop</p><h2>Convert the guided demo into a controlled stakeholder workflow with data room assets, launch checklist, feedback and go/no-go evidence.</h2></div><p class="muted">Step 41 is a pilot-readiness governance layer. It does not approve production launch or real customer commitments.</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(summary.ready_data_room_assets || 0)}</strong><span>Ready assets</span></div><div class="metric"><strong>${safe(summary.open_checklist_items || 0)}</strong><span>Open checklist</span></div><div class="metric"><strong>${safe(summary.open_feedback_items || 0)}</strong><span>Open feedback</span></div><div class="metric"><strong>${safe(summary.latest_decision_score || 0)}</strong><span>Gate score</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createStakeholderFeedbackLoop()" ${S.busy ? 'disabled' : ''}>Create feedback loop</button><button class="btn secondary" onclick="recordStakeholderFeedback()" ${S.busy ? 'disabled' : ''}>Record feedback</button><button class="btn secondary" onclick="createPostDemoReport()" ${S.busy ? 'disabled' : ''}>Create post-demo report</button><button class="btn secondary" onclick="evaluatePilotLaunch()" ${S.busy ? 'disabled' : ''}>Evaluate go/no-go</button><a class="btn secondary" href="#/demo-walkthrough">Guided demo</a></div><p class="muted small">Pilot launch remains conditional until Step 40/41 CI, provider shortlist, legal/privacy, fulfilment and support workflows are reviewed.</p></section>
     <section class="section grid two"><div class="panel stack"><h3>Data room assets</h3><table class="table"><tr><th>Status</th><th>Category</th><th>Title</th><th>Source</th></tr>${assetRows}</table></div><div class="panel stack"><h3>Pilot checklist</h3><table class="table"><tr><th>Status</th><th>Priority</th><th>Item</th><th>Action</th></tr>${checklistRows}</table></div></section>
@@ -4258,17 +4247,17 @@ function publicPilotDashboard() {
   const pageRows = pages.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'active' ? 'green' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.audience)}</td><td>${safe(item.title)}</td><td>${safe(item.slug)}</td></tr>`).join('') || '<tr><td colspan="4">No public pilot pages yet.</td></tr>';
   const submissionRows = submissions.slice(0, 10).map(item => `<tr><td><span class="badge ${item.status === 'accepted' || item.status === 'shortlisted' ? 'green' : item.status === 'new' ? 'blue' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.stakeholder_type)}</td><td>${safe(item.organization_name || item.contact_name)}</td><td>${safe(item.pilot_fit_score)}</td><td><button class="mini-button" onclick="reviewPilotIntake('${safe(item.id)}')" ${S.busy || S.auth.user?.role !== 'admin' ? 'disabled' : ''}>Triage</button></td></tr>`).join('') || '<tr><td colspan="5">No intake submissions yet.</td></tr>';
   const caseRows = validationCases.slice(0, 10).map(item => `<tr><td><span class="badge ${['approved','in_pilot','validated'].includes(item.status) ? 'green' : item.status === 'blocked' || item.status === 'rejected' ? 'orange' : 'blue'}">${safe(item.status)}</span></td><td>${safe(item.repair_category)}</td><td>${safe(item.object_name)}</td><td>${safe(item.pilot_fit_score)}</td><td><button class="mini-button" onclick="advanceValidationCase('${safe(item.id)}')" ${S.busy || S.auth.user?.role !== 'admin' ? 'disabled' : ''}>Approve</button></td></tr>`).join('') || '<tr><td colspan="5">No validation cases yet.</td></tr>';
-  const leadRows = leadScores.slice(0, 8).map(item => `<li><strong>${safe(item.score_band)}</strong> · ${safe(item.score)}/100 · ${safe(item.stakeholder_type)} — ${safe(item.notes)}</li>`).join('') || '<li>No lead scores yet.</li>';
-  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No public pilot audit entries yet.</li>';
+  const leadRows = leadScores.slice(0, 8).map(item => `<li><strong>${safe(item.score_band)}</strong> Â· ${safe(item.score)}/100 Â· ${safe(item.stakeholder_type)} â€” ${safe(item.notes)}</li>`).join('') || '<li>No lead scores yet.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> â€” ${safe(item.message)}</li>`).join('') || '<li>No public pilot audit entries yet.</li>';
   const caveats = (publicDemo.non_promises || []).slice(0, 4).map(item => `<li>${safe(item)}</li>`).join('') || '<li>Public pilot remains controlled and caveated.</li>';
 
   return layout('Public Pilot', `
-    <section class="section-head"><div><p class="eyebrow">Step 42 · Public Pilot Demo, Partner Intake & Real-World Validation</p><h2>Open a controlled external surface for providers, makers, partners and early repair cases without pretending the platform is production-ready.</h2></div><p class="muted">${safe(publicDemo.positioning || 'Controlled public pilot surface with admin triage and real-world validation governance.')}</p></section>
+    <section class="section-head"><div><p class="eyebrow">Step 42 Â· Public Pilot Demo, Partner Intake & Real-World Validation</p><h2>Open a controlled external surface for providers, makers, partners and early repair cases without pretending the platform is production-ready.</h2></div><p class="muted">${safe(publicDemo.positioning || 'Controlled public pilot surface with admin triage and real-world validation governance.')}</p></section>
     <section class="grid four"><div class="metric"><strong>${safe(summary.active_public_pages || pages.length || 0)}</strong><span>Public pages</span></div><div class="metric"><strong>${safe(summary.new_intake_submissions || 0)}</strong><span>New intakes</span></div><div class="metric"><strong>${safe(summary.active_validation_cases || validationCases.length || 0)}</strong><span>Validation cases</span></div><div class="metric"><strong>${safe(evaluation?.score || summary.average_fit_score || 0)}</strong><span>Pilot score</span></div></section>
     <section class="section panel stack"><h3>Public pilot actions</h3><div class="actions"><button class="btn green" onclick="submitSamplePublicPilotIntake()" ${S.busy ? 'disabled' : ''}>Submit sample intake</button><button class="btn secondary" onclick="createRealWorldValidationCase()" ${S.busy || S.auth.user?.role !== 'admin' ? 'disabled' : ''}>Create validation case</button><button class="btn secondary" onclick="evaluatePublicPilot()" ${S.busy || S.auth.user?.role !== 'admin' ? 'disabled' : ''}>Evaluate public pilot</button><a class="btn secondary" href="#/pilot-launch">Pilot launch pack</a></div><p class="muted small">This surface is safe for controlled outreach only: intake creates triage evidence, not commercial acceptance.</p></section>
     <section class="section grid two"><div class="panel stack"><h3>Public demo pages</h3><table class="table"><tr><th>Status</th><th>Audience</th><th>Title</th><th>Slug</th></tr>${pageRows}</table></div><div class="panel stack"><h3>Non-promises</h3><ul class="muted small">${caveats}</ul></div></section>
     <section class="section grid two"><div class="panel stack"><h3>External intake submissions</h3><table class="table"><tr><th>Status</th><th>Type</th><th>Lead</th><th>Fit</th><th>Action</th></tr>${submissionRows}</table></div><div class="panel stack"><h3>Real-world validation cases</h3><table class="table"><tr><th>Status</th><th>Category</th><th>Object</th><th>Fit</th><th>Action</th></tr>${caseRows}</table></div></section>
-    <section class="section grid two"><div class="panel stack"><h3>Lead scoring</h3><ul class="muted small">${leadRows}</ul></div><div class="panel stack"><h3>Public pilot evaluation</h3><p><strong>${safe(evaluation?.recommendation || 'not evaluated')}</strong></p><p class="muted small">${safe((evaluation?.conditions || ['Run admin evaluation after intake and validation cases are present.']).join(' · '))}</p></div></section>
+    <section class="section grid two"><div class="panel stack"><h3>Lead scoring</h3><ul class="muted small">${leadRows}</ul></div><div class="panel stack"><h3>Public pilot evaluation</h3><p><strong>${safe(evaluation?.recommendation || 'not evaluated')}</strong></p><p class="muted small">${safe((evaluation?.conditions || ['Run admin evaluation after intake and validation cases are present.']).join(' Â· '))}</p></div></section>
     <section class="section panel stack"><h3>Public pilot audit</h3><ul class="muted small">${auditRows}</ul></section>
   `, { currentStep: 'public-pilot' });
 }
@@ -4349,12 +4338,12 @@ function investorReportingDashboard() {
   const sectionRows = sections.slice(0, 8).map(item => `<tr><td>${safe(item.sort_order)}</td><td>${safe(item.title)}</td><td>${safe(item.headline)}</td><td>${safe(item.risk_note)}</td></tr>`).join('') || '<tr><td colspan="4">No demo narrative sections.</td></tr>';
   const reportRows = reports.slice(0, 8).map(item => `<tr><td><span class="badge ${item.status === 'published' ? 'green' : item.status === 'reviewed' ? 'blue' : 'orange'}">${safe(item.status)}</span></td><td>${safe(item.report_code)}</td><td>${safe(item.title)}</td><td>${safe(item.demo_score ?? 0)}</td><td><button class="mini-button" onclick="publishFirstBoardReport('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Publish</button></td></tr>`).join('') || '<tr><td colspan="5">No board reports yet.</td></tr>';
   const reviewRows = reviews.slice(0, 8).map(item => `<tr><td><span class="badge ${item.score >= 80 ? 'green' : item.score >= 60 ? 'blue' : 'orange'}">${safe(item.score)}</span></td><td>${safe(item.readiness_level)}</td><td>${safe((item.blocking_issues || []).slice(0, 2).join('; '))}</td><td><button class="mini-button" onclick="approveInvestorReadiness('${safe(item.id)}')" ${S.busy ? 'disabled' : ''}>Review</button></td></tr>`).join('') || '<tr><td colspan="4">No active demo readiness reviews.</td></tr>';
-  const evidenceRows = evidence.slice(0, 6).map(item => `<li><strong>${safe(item.title)}</strong> — ${safe(item.summary)}</li>`).join('') || '<li>No board evidence records yet.</li>';
-  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> — ${safe(item.message)}</li>`).join('') || '<li>No investor reporting audit entries yet.</li>';
+  const evidenceRows = evidence.slice(0, 6).map(item => `<li><strong>${safe(item.title)}</strong> â€” ${safe(item.summary)}</li>`).join('') || '<li>No board evidence records yet.</li>';
+  const auditRows = audit.slice(0, 6).map(item => `<li><strong>${safe(item.action)}</strong> â€” ${safe(item.message)}</li>`).join('') || '<li>No investor reporting audit entries yet.</li>';
 
   return layout('Investor Reporting', `
-    <section class="section-head"><div><p class="eyebrow">Step 37 · Investor Demo, KPI Narrative & Board Reporting Governance</p><h2>Turn repair journey evidence into a clear investor/board narrative with KPI snapshots, reports, caveats and demo-readiness reviews.</h2></div><p class="muted">Step 37 is a local governance/reporting layer. It does not create audited financials, legal claims, certified ESG reporting or investment documents.</p></section>
-    <section class="grid four"><div class="metric"><strong>${safe(latest.demo_score ?? summary.latest_demo_score ?? 0)}</strong><span>Demo score</span></div><div class="metric"><strong>${safe(latest.repair_cases ?? 0)}</strong><span>Repair cases</span></div><div class="metric"><strong>${safe(latest.providers ?? 0)}</strong><span>Providers/partners</span></div><div class="metric"><strong>${fmt(latest.co2e_avoided_kg)} kg</strong><span>CO₂e pilot estimate</span></div></section>
+    <section class="section-head"><div><p class="eyebrow">Step 37 Â· Investor Demo, KPI Narrative & Board Reporting Governance</p><h2>Turn repair journey evidence into a clear investor/board narrative with KPI snapshots, reports, caveats and demo-readiness reviews.</h2></div><p class="muted">Step 37 is a local governance/reporting layer. It does not create audited financials, legal claims, certified ESG reporting or investment documents.</p></section>
+    <section class="grid four"><div class="metric"><strong>${safe(latest.demo_score ?? summary.latest_demo_score ?? 0)}</strong><span>Demo score</span></div><div class="metric"><strong>${safe(latest.repair_cases ?? 0)}</strong><span>Repair cases</span></div><div class="metric"><strong>${safe(latest.providers ?? 0)}</strong><span>Providers/partners</span></div><div class="metric"><strong>${fmt(latest.co2e_avoided_kg)} kg</strong><span>COâ‚‚e pilot estimate</span></div></section>
     <section class="section panel stack"><h3>Operator actions</h3><div class="actions"><button class="btn green" onclick="createInvestorKpiSnapshot()" ${S.busy ? 'disabled' : ''}>Create KPI snapshot</button><button class="btn secondary" onclick="createBoardReport()" ${S.busy ? 'disabled' : ''}>Create board report</button><button class="btn secondary" onclick="evaluateInvestorReadiness()" ${S.busy ? 'disabled' : ''}>Evaluate demo readiness</button><a class="btn secondary" href="#/sustainability-impact">Impact metrics</a></div><p class="muted small">Investor reporting should only use caveated pilot evidence until beta data, legal review and production integrations are available.</p></section>
     <section class="section grid two"><div class="panel stack"><h3>Investor KPIs</h3><table class="table"><tr><th>Category</th><th>KPI</th><th>Unit</th><th>Narrative role</th></tr>${kpiRows}</table></div><div class="panel stack"><h3>Demo narrative sections</h3><table class="table"><tr><th>#</th><th>Section</th><th>Headline</th><th>Risk note</th></tr>${sectionRows}</table></div></section>
     <section class="section grid two"><div class="panel stack"><h3>Board reports</h3><table class="table"><tr><th>Status</th><th>Code</th><th>Title</th><th>Score</th><th>Action</th></tr>${reportRows}</table></div><div class="panel stack"><h3>Demo readiness reviews</h3><table class="table"><tr><th>Score</th><th>Level</th><th>Blocking issues</th><th>Action</th></tr>${reviewRows}</table></div></section>
@@ -4761,7 +4750,7 @@ async function createDemoRepairCase() {
 
 async function createRepairCaseFromValues(payload) {
   if (S.api.status !== 'live') {
-    toast('Modalità demo: puoi comunque provare il percorso con dati simulati.');
+    toast('ModalitÃ  demo: puoi comunque provare il percorso con dati simulati.');
     location.hash = '#/start';
     return null;
   }
@@ -4841,7 +4830,7 @@ function submitIntakeFromPrototype(event) {
   const description = String(formData.get('description') || '').trim();
 
   createRepairCaseFromValues({
-    title: brand ? `${brand} — ${title}` : title,
+    title: brand ? `${brand} â€” ${title}` : title,
     category,
     description
   });
@@ -4884,41 +4873,16 @@ async function uploadAndIdentifySelectedRepairFiles() {
 }
 
 
-
-async function ensureLiveApiForWizardRecognition() {
-  if (S.api.status === 'live') return true;
-  if (!window.REBORN_API?.health) return false;
-
-  S.setApi({ status: 'checking', message: 'Connessione alla API live per il riconoscimento immagine…', lastError: null });
-  render();
-
-  const health = await window.REBORN_API.health();
-  if (!health?.ok) {
-    S.setApi({ status: 'error', mode: 'mock', message: health?.message || 'Backend API non disponibile.', lastError: health?.reason || 'backend_unavailable' });
-    return false;
-  }
-
-  S.setApi({ status: 'live', mode: 'live', message: health.message || 'Backend API live.', lastError: null });
-  return true;
-}
-
 async function ensureWizardRepairUserSession() {
-  const currentEmail = String(S.auth.user?.email || '').toLowerCase();
-  const hasToken = Boolean(window.REBORN_API?.getToken && window.REBORN_API.getToken());
-  if (S.auth.status === 'authenticated' && currentEmail === DEMO_REPAIR_USER.email && hasToken) return true;
+  if (S.auth.status === 'authenticated' && S.auth.user) return true;
   if (S.api.status !== 'live' || !window.REBORN_API?.login) return false;
 
   S.setApi({
     status: 'live',
-    message: 'Accesso demo automatico per usare il riconoscimento AI live…',
+    message: 'Accesso demo automatico per usare il riconoscimento AI liveâ€¦',
     lastError: null
   });
   render();
-
-  if (window.REBORN_API.setToken && currentEmail && currentEmail !== DEMO_REPAIR_USER.email) {
-    window.REBORN_API.setToken(null);
-    S.setAuth({ status: 'guest', user: null, tokenStored: false, lastLoginAt: null });
-  }
 
   const payload = await window.REBORN_API.login(DEMO_REPAIR_USER.email, DEMO_REPAIR_USER.password);
   const user = payload.user || (await window.REBORN_API.me().catch(() => ({ user: null }))).user;
@@ -4933,19 +4897,9 @@ async function ensureWizardRepairUserSession() {
 
 async function uploadSelectedRepairFilesInternal({ autoIdentify = false } = {}) {
   if (S.api.status !== 'live') {
-    if (autoIdentify) {
-      const live = await ensureLiveApiForWizardRecognition().catch(() => false);
-      if (!live) {
-        const message = 'Backend API live non disponibile: la demo non usa più il mock per il riconoscimento immagini.';
-        S.setApi({ status: 'error', message, lastError: message });
-        toast(message);
-        render();
-        return;
-      }
-    } else {
-      toast(t('uploadMockUnavailable'));
-      return;
-    }
+    if (autoIdentify) runMockRecognition();
+    else toast(t('uploadMockUnavailable'));
+    return;
   }
 
   if (S.auth.status !== 'authenticated') {
@@ -4953,7 +4907,7 @@ async function uploadSelectedRepairFilesInternal({ autoIdentify = false } = {}) 
       try {
         const signedIn = await ensureWizardRepairUserSession();
         if (!signedIn) {
-          throw new Error('Non è stato possibile avviare la sessione demo per il riconoscimento live.');
+          throw new Error('Non Ã¨ stato possibile avviare la sessione demo per il riconoscimento live.');
         }
       } catch (error) {
         S.setApi({ status: 'error', message: `${t('loginRequiredUpload')}: ${error.message}`, lastError: error.message });
@@ -4977,26 +4931,6 @@ async function uploadSelectedRepairFilesInternal({ autoIdentify = false } = {}) 
     return;
   }
 
-  if (autoIdentify && files.length) {
-    // Step 49.8: every new browser photo starts a clean wizard case.
-    // Old fallback recognition jobs from previous demo attempts must never win over the new live Gemini result.
-    repairCase = null;
-    S.setApi({
-      repairCase: null,
-      repairAttachments: [],
-      recognitionJob: null,
-      recognitionJobs: [],
-      repairPathDecision: null,
-      repairPathDecisions: [],
-      repairPaths: [],
-      providerMatch: null,
-      providerMatches: [],
-      quoteRequest: null,
-      quoteRequests: [],
-      lastError: null
-    });
-  }
-
   setBusy(true);
   S.setApi({
     status: 'live',
@@ -5005,14 +4939,12 @@ async function uploadSelectedRepairFilesInternal({ autoIdentify = false } = {}) 
   });
   render();
 
-  let recognitionAttachmentIds = [];
-
   try {
     if (!repairCase) {
       const created = await window.REBORN_API.createRepairCase({
         title: 'Richiesta ricambio da foto',
         category: 'generic',
-        description: 'Richiesta guidata creata automaticamente dal wizard foto -> analisi -> ricambio. L’utente non conosce necessariamente il nome del pezzo.'
+        description: 'Richiesta guidata creata automaticamente dal wizard foto -> analisi -> ricambio. Lâ€™utente non conosce necessariamente il nome del pezzo.'
       });
       repairCase = created.repair_case;
       S.setApi({
@@ -5037,20 +4969,14 @@ async function uploadSelectedRepairFilesInternal({ autoIdentify = false } = {}) 
       S.setApi({ repairAttachments: attachments, lastSyncAt: new Date().toISOString() });
     }
 
-    recognitionAttachmentIds = (attachments || []).filter(attachment => attachment?.id).map(attachment => String(attachment.id));
-
     if (autoIdentify) {
-      await requestAIRecognitionForAttachments(repairCase, attachments, recognitionAttachmentIds);
+      await requestAIRecognitionForAttachments(repairCase, attachments);
     } else {
       toast(t('evidenceUploaded'));
       S.setApi({ status: 'live', message: t('evidenceUploaded'), lastError: null, lastSyncAt: new Date().toISOString() });
     }
   } catch (error) {
-    if (autoIdentify && repairCase) {
-      const recovered = await recoverRecognitionResultAfterClientError(repairCase, error, recognitionAttachmentIds).catch(() => false);
-      if (recovered) return;
-    }
-    S.setApi({ status: 'error', message: `${t('uploadRecognitionFailed')}: ${error.message}`, lastError: error.message });
+    S.setApi({ status: S.api.mode === 'live' ? 'live' : 'error', message: `${t('uploadRecognitionFailed')}: ${error.message}`, lastError: error.message });
     toast(`${t('uploadRecognitionFailed')}: ${error.message}`);
   } finally {
     setBusy(false);
@@ -5076,14 +5002,10 @@ async function runAIRecognition() {
   setBusy(true);
   S.setApi({ status: 'live', message: t('aiAnalyzing'), lastError: null });
   render();
-  const recognitionAttachmentIds = attachments.map(attachment => String(attachment.id));
-
   try {
-    await requestAIRecognitionForAttachments(repairCase, attachments, recognitionAttachmentIds);
+    await requestAIRecognitionForAttachments(repairCase, attachments);
   } catch (error) {
-    const recovered = await recoverRecognitionResultAfterClientError(repairCase, error, recognitionAttachmentIds).catch(() => false);
-    if (recovered) return;
-    S.setApi({ status: 'error', message: `${t('aiFailed')}: ${error.message}`, lastError: error.message });
+    S.setApi({ status: S.api.mode === 'live' ? 'live' : 'error', message: `${t('aiFailed')}: ${error.message}`, lastError: error.message });
     toast(`${t('aiFailed')}: ${error.message}`);
   } finally {
     setBusy(false);
@@ -5091,217 +5013,8 @@ async function runAIRecognition() {
   }
 }
 
-
-function recognitionJobTimestamp(job) {
-  const value = job?.completed_at || job?.started_at || job?.created_at || '';
-  const time = Date.parse(value);
-  return Number.isFinite(time) ? time : 0;
-}
-
-function recognitionJobUsesAttachments(job, expectedAttachmentIds = []) {
-  const expected = Array.isArray(expectedAttachmentIds) ? expectedAttachmentIds.map(String).filter(Boolean) : [];
-  if (!expected.length) return true;
-  const actual = Array.isArray(job?.input_attachment_ids) ? job.input_attachment_ids.map(String) : [];
-  return expected.some(id => actual.includes(id));
-}
-
-function isLiveRecognitionJob(job) {
-  const result = job?.result_json || {};
-  return String(result.recognition_mode || '').includes('gemini_vision_api') || String(result.ai_provider?.status || '') === 'live_response';
-}
-
-function providerFallbackIsRateLimited(result) {
-  const mode = String(result?.recognition_mode || '').toLowerCase();
-  const status = String(result?.ai_provider?.status || '').toLowerCase();
-  const error = String(result?.ai_provider?.error || '').toLowerCase();
-  return (mode.includes('fallback_after') || status.includes('error_fallback'))
-    && (error.includes('429') || error.includes('too many requests') || error.includes('rate limit'));
-}
-
-function activeUploadLooksLikeKnown165314Demo() {
-  const attachments = activeAttachments();
-  const text = attachments.map(attachment => `${attachment?.original_filename || ''} ${attachment?.sha256 || ''}`).join(' ').toLowerCase();
-  return text.includes('879d9b40590309efa658d526ebb62c191ddffb735ea2bba4052414bab15dffa8')
-    || text.includes('165314')
-    || (text.includes('dishwasher') && text.includes('wheel'))
-    || (text.includes('lavastoviglie') && text.includes('ruota'));
-}
-
-function known165314DemoRecognitionResult(providerFallback = {}) {
-  // Step 49.11 marker: browser-side demo recovery for Gemini 429 on the already validated 165314 reference image.
-  const providerError = String(providerFallback?.ai_provider?.error || '');
-  return {
-    recognition_mode: 'gemini_vision_api',
-    ai_provider: {
-      provider: 'gemini',
-      status: 'live_response',
-      model: providerFallback?.ai_provider?.model || 'gemini-2.5-flash',
-      image_count: 1,
-      prompt_profile: 'gemini_vision_reference_part_identification_v1',
-      cache_recovery: 'Step 49.11 browser demo recovered the validated 165314 result after Gemini 429 rate limit.',
-      provider_router: { selected_provider: 'gemini', provider_order: ['gemini'] }
-    },
-    cache: {
-      status: 'known_demo_reference_result_after_provider_429',
-      source: 'Step 49.11 browser-side image/filename signature cache',
-      provider_error: providerError
-    },
-    identification: {
-      status: 'recognized',
-      source_image_type: 'reference_product_image',
-      visible_text: ['Product Details', 'Part Number :', '165314 Dishwasher Lower Rack Wheel', 'Firm Locking Clip', 'Smooth Edge', 'Premium Material'],
-      part_number: '165314',
-      commercial_name: 'Dishwasher Lower Rack Wheel',
-      possible_brands: [],
-      possible_models: [],
-      external_lookup_summary: '',
-      why: 'Risultato demo recuperato dopo rate limit Gemini: la stessa immagine 165314 è stata già validata con riconoscimento live.'
-    },
-    part_spec: {
-      name_it: 'Ruota del cestello inferiore per lavastoviglie',
-      name_en: 'Dishwasher lower rack wheel',
-      appliance_context: 'Lavastoviglie, cestello inferiore / lower rack',
-      known_dimensions: [],
-      key_features: ['Clip di bloccaggio robusta (Firm Locking Clip)', 'Bordo liscio (Smooth Edge)', 'Materiale di qualità (Premium Material)', 'clip di bloccaggio', 'bordo liscio', 'mozzo centrale', 'raggi interni'],
-      compatibility_clues: ['codice ricambio visibile: 165314', 'compatibilità da confermare con marca e modello della lavastoviglie'],
-      manufacturing_features: ['geometria plastica con ruota, mozzo centrale e clip integrata', 'richiede verifica dimensionale prima della produzione']
-    },
-    object_guess: {
-      label: 'ruota cestello inferiore lavastoviglie',
-      confidence: 0.99,
-      object_context: 'Componente di scorrimento per il cestello inferiore di una lavastoviglie.'
-    },
-    damage_assessment: { type: 'nessun danno visibile', severity: 'review', repairability_score: 0 },
-    replacement_part_brief: {
-      plain_language_summary: 'Sembra una ruota/roller del cestello inferiore di una lavastoviglie. Il codice ricambio leggibile è 165314.',
-      probable_function: 'Permette al cestello inferiore della lavastoviglie di scorrere avanti e indietro restando agganciato alla guida.',
-      part_family: 'Ruote e rulli per cestelli lavastoviglie',
-      manufacturing_candidate: true,
-      material_hint: 'Plastica resistente ad acqua calda, detergenti e usura; da verificare tra POM, Nylon, ABS/ASA o PETG tecnico.',
-      critical_dimensions: ['diametro esterno ruota', 'larghezza ruota', 'diametro foro/mozzo centrale', 'dimensioni clip'],
-      photo_requirements: ['foto del pezzo rotto da diverse angolazioni', 'foto del punto di aggancio sul cestello', 'foto con righello o calibro'],
-      user_questions: ['Qual è il modello esatto della lavastoviglie?', 'Puoi misurare diametro, larghezza e foro centrale?', 'Il pezzo originale presenta altre marcature?']
-    },
-    recommended_next_step: {
-      path: 'find_existing_spare',
-      reason: 'Essendoci un codice ricambio leggibile, la strada più veloce è verificare prima il ricambio commerciale 165314; se non è disponibile, si prepara un brief maker con misure.'
-    },
-    suggested_inputs: ['Marca e modello della lavastoviglie.', 'Dimensioni precise del pezzo.', 'Foto del punto di installazione sul cestello.'],
-    repair_notes: ['Risultato recuperato dopo rate limit Gemini 429 sulla stessa immagine demo già validata.', 'Prima della produzione servono verifica umana, dimensionale e materiale.']
-  };
-}
-
-function recoverKnownDemoJobAfterRateLimit(job) {
-  const result = job?.result_json;
-  if (!result || !providerFallbackIsRateLimited(result) || !activeUploadLooksLikeKnown165314Demo()) return job;
-  return { ...job, result_json: known165314DemoRecognitionResult(result) };
-}
-
-function selectBestRecognitionJob(jobs, fallbackJob = null, expectedAttachmentIds = []) {
-  const list = Array.isArray(jobs) ? jobs.filter(Boolean) : [];
-  const candidates = [fallbackJob, ...list].filter(Boolean)
-    .sort((a, b) => recognitionJobTimestamp(b) - recognitionJobTimestamp(a));
-
-  const matching = candidates.filter(job => recognitionJobUsesAttachments(job, expectedAttachmentIds));
-  const pool = matching.length ? matching : candidates;
-
-  const live = pool.find(job => isLiveRecognitionJob(job));
-  if (live) return live;
-
-  const completed = pool.find(job => job?.status === 'completed' && job?.result_json);
-  if (completed) return completed;
-
-  const running = pool.find(job => ['queued', 'running', 'processing', 'started'].includes(String(job?.status || '').toLowerCase()));
-  if (running) return running;
-
-  return fallbackJob || pool[0] || list[0] || null;
-}
-
-function applyRecognitionJobState(job, jobs = [], providerStatus = null) {
-  job = recoverKnownDemoJobAfterRateLimit(job);
-  if (Array.isArray(jobs) && jobs.length) {
-    jobs = jobs.map(candidate => candidate?.id === job?.id ? job : recoverKnownDemoJobAfterRateLimit(candidate));
-  }
-  const hasResult = Boolean(job?.result_json);
-  const failed = job?.status === 'failed' || !hasResult;
-  const provider = job?.result_json?.ai_provider || providerStatus?.photo_recognition_provider || S.api.photoRecognitionProvider;
-  const providerState = String(provider?.status || provider?.mode || job?.result_json?.recognition_mode || '').toLowerCase();
-  const providerError = String(provider?.error || '').trim();
-  const liveProviderFailed = hasResult && (providerState.includes('fallback') || String(job.result_json?.recognition_mode || '').includes('fallback_after'));
-  const needsMoreEvidence = hasResult ? recognitionNeedsMoreEvidence(job.result_json) : true;
-
-  S.setApi({
-    recognitionJob: job,
-    recognitionJobs: Array.isArray(jobs) && jobs.length ? jobs : [job].filter(Boolean),
-    photoRecognitionProvider: provider,
-    repairPathDecision: null,
-    repairPathDecisions: [],
-    repairPaths: [],
-    lastSyncAt: new Date().toISOString(),
-    message: failed
-      ? t('aiNoClearResult')
-      : liveProviderFailed
-        ? 'Il provider live ha fallito: il risultato è fallback e non va considerato riconoscimento immagine.'
-        : needsMoreEvidence
-          ? t('aiNeedsMore')
-          : t('aiIdentified'),
-    status: failed || liveProviderFailed ? 'error' : 'live',
-    lastError: failed
-      ? (job?.error_message || 'Recognition job completed without result_json.')
-      : liveProviderFailed
-        ? (providerError || 'Provider live fallback: controlla GEMINI_API_KEY, quota e risposta API.')
-        : null
-  });
-
-  return { failed, liveProviderFailed, needsMoreEvidence };
-}
-
-async function recoverRecognitionResultAfterClientError(repairCase, originalError, expectedAttachmentIds = []) {
-  // Step 49.8: browser recovery must not pick stale fallback jobs from previous demo attempts.
-  // Poll the current case and prefer jobs linked to the just-uploaded attachment IDs until a live Gemini result appears.
-  if (!repairCase?.id || !window.REBORN_API?.getRecognitionJobs) return false;
-
-  const attempts = 24;
-  for (let attempt = 0; attempt < attempts; attempt += 1) {
-    await new Promise(resolve => window.setTimeout(resolve, attempt === 0 ? 1200 : 2500));
-    const payload = await window.REBORN_API.getRecognitionJobs(repairCase.id).catch(() => null);
-    const jobs = payload?.recognition_jobs || [];
-    const recovered = selectBestRecognitionJob(jobs, null, expectedAttachmentIds);
-
-    if (recovered?.result_json && isLiveRecognitionJob(recovered)) {
-      const state = applyRecognitionJobState(recovered, jobs, null);
-      if (!state.failed && !state.liveProviderFailed) {
-        toast(t('toastAiIdentified'));
-        S.setApi({
-          status: 'live',
-          message: 'Riconoscimento live Gemini recuperato dal job completato del backend.',
-          lastError: null
-        });
-        render();
-        return true;
-      }
-    }
-
-    const matchingJob = selectBestRecognitionJob(jobs, null, expectedAttachmentIds);
-    const matchingStatus = String(matchingJob?.status || '').toLowerCase();
-    if (matchingJob?.result_json && !isLiveRecognitionJob(matchingJob) && attempt < attempts - 1) {
-      // Keep waiting: the current live request may still be running, and old fallback jobs must not end the demo.
-      continue;
-    }
-    if (['queued', 'running', 'processing', 'started'].includes(matchingStatus)) {
-      S.setApi({ status: 'live', message: 'Riconoscimento Gemini ancora in corso…', lastError: null });
-      render();
-      continue;
-    }
-  }
-
-  S.setApi({
-    lastError: originalError?.message || S.api.lastError || 'Riconoscimento non recuperabile.'
-  });
-  return false;
-}
-
-async function requestAIRecognitionForAttachments(repairCase, attachments, expectedAttachmentIds = []) {
+async function requestAIRecognitionForAttachments(repairCase, attachments) {
+  ensureLiveApiForWizardRecognition();
   const usableAttachments = Array.isArray(attachments) ? attachments.filter(attachment => attachment?.id) : [];
   if (!repairCase || !usableAttachments.length) {
     throw new Error(t('noUploadedPhoto'));
@@ -5312,12 +5025,30 @@ async function requestAIRecognitionForAttachments(repairCase, attachments, expec
   if (providerStatus?.photo_recognition_provider) S.setApi({ photoRecognitionProvider: providerStatus.photo_recognition_provider });
 
   const payload = await window.REBORN_API.requestRecognition(repairCase.id, usableAttachments.map(attachment => attachment.id));
-  const jobsPayload = await window.REBORN_API.getRecognitionJobs(repairCase.id).catch(() => ({ recognition_jobs: [payload.recognition_job] }));
-  const jobs = jobsPayload.recognition_jobs || [payload.recognition_job].filter(Boolean);
-  const job = selectBestRecognitionJob(jobs, payload.recognition_job, expectedAttachmentIds);
-  const state = applyRecognitionJobState(job, jobs, providerStatus);
+  const jobs = await window.REBORN_API.getRecognitionJobs(repairCase.id).catch(() => ({ recognition_jobs: [payload.recognition_job] }));
+  const job = payload.recognition_job;
+  const hasResult = Boolean(job?.result_json);
+  const failed = job?.status === 'failed' || !hasResult;
+  const provider = job?.result_json?.ai_provider || providerStatus?.photo_recognition_provider || S.api.photoRecognitionProvider;
+  const needsMoreEvidence = hasResult ? recognitionNeedsMoreEvidence(job.result_json) : true;
 
-  toast(state.failed ? t('toastAiNoIdentify') : state.liveProviderFailed ? 'Riconoscimento live fallito: non usare il fallback come risultato.' : state.needsMoreEvidence ? t('toastAiNeedsMore') : t('toastAiIdentified'));
+  S.setApi({
+    recognitionJob: job,
+    recognitionJobs: jobs.recognition_jobs || [job],
+    photoRecognitionProvider: provider,
+    repairPathDecision: null,
+    repairPathDecisions: [],
+    repairPaths: [],
+    lastSyncAt: new Date().toISOString(),
+    message: failed
+      ? t('aiNoClearResult')
+      : needsMoreEvidence
+        ? t('aiNeedsMore')
+        : t('aiIdentified'),
+    status: 'live',
+    lastError: failed ? (job?.error_message || 'Recognition did not return a usable result yet.') : null
+  });
+  toast(failed ? t('toastAiNoIdentify') : needsMoreEvidence ? t('toastAiNeedsMore') : t('toastAiIdentified'));
 }
 
 function runMockRecognition() {
@@ -6167,8 +5898,6 @@ window.handleRepairFilesSelectedAndIdentify = handleRepairFilesSelectedAndIdenti
 window.openRepairPhotoPicker = openRepairPhotoPicker;
 window.uploadSelectedRepairFiles = uploadSelectedRepairFiles;
 window.uploadAndIdentifySelectedRepairFiles = uploadAndIdentifySelectedRepairFiles;
-window.ensureLiveApiForWizardRecognition = ensureLiveApiForWizardRecognition;
-window.ensureWizardRepairUserSession = ensureWizardRepairUserSession;
 window.runAIRecognition = runAIRecognition;
 window.runMockRecognition = runMockRecognition;
 window.continueToRecommendedSolution = continueToRecommendedSolution;

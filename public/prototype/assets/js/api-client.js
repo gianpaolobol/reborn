@@ -1,8 +1,7 @@
 (function () {
   const DEFAULT_API_TIMEOUT_MS = 8000;
   const UPLOAD_API_TIMEOUT_MS = 45000;
-  // Step 49.7: live Gemini recognition can take longer than 90s on Windows/PHP; keep the browser from aborting before the backend finishes.
-  const AI_RECOGNITION_TIMEOUT_MS = 180000;
+  const AI_RECOGNITION_TIMEOUT_MS = 90000;
 
   function isHttpRuntime() {
     return window.location.protocol === 'http:' || window.location.protocol === 'https:';
@@ -21,62 +20,6 @@
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), ms);
     return { controller, done: () => window.clearTimeout(timer) };
-  }
-
-  function extractFirstJsonObject(text) {
-    const source = String(text || '').replace(/^\uFEFF/, '');
-    const start = source.indexOf('{');
-    if (start < 0) return '';
-
-    let depth = 0;
-    let inString = false;
-    let escaped = false;
-
-    for (let index = start; index < source.length; index += 1) {
-      const char = source[index];
-      if (inString) {
-        if (escaped) {
-          escaped = false;
-        } else if (char === '\\') {
-          escaped = true;
-        } else if (char === '"') {
-          inString = false;
-        }
-        continue;
-      }
-
-      if (char === '"') {
-        inString = true;
-        continue;
-      }
-      if (char === '{') depth += 1;
-      if (char === '}') {
-        depth -= 1;
-        if (depth === 0) return source.slice(start, index + 1);
-      }
-    }
-
-    return '';
-  }
-
-  function parseApiPayload(text) {
-    const raw = String(text || '').replace(/^\uFEFF/, '').trim();
-    if (!raw) return {};
-
-    try {
-      return JSON.parse(raw);
-    } catch (_directParseError) {
-      const jsonObject = extractFirstJsonObject(raw);
-      if (jsonObject) {
-        try {
-          const payload = JSON.parse(jsonObject);
-          payload._transport_recovered_from_mixed_output = true;
-          return payload;
-        } catch (_extractedParseError) {}
-      }
-    }
-
-    return { success: false, error: { code: 'NON_JSON_RESPONSE', message: raw || 'Empty non-JSON response' } };
   }
 
   class RebornApiClient {
@@ -111,7 +54,12 @@
         });
 
         const text = await response.text();
-        const payload = parseApiPayload(text);
+        let payload = {};
+        try {
+          payload = text ? JSON.parse(text) : {};
+        } catch (_parseError) {
+          payload = { success: false, error: { code: 'NON_JSON_RESPONSE', message: text || 'Empty non-JSON response' } };
+        }
 
         if (!response.ok) {
           const apiMessage = payload.error && payload.error.message ? payload.error.message : payload.message;
@@ -124,7 +72,10 @@
         return payload;
       } catch (error) {
         if (error && error.name === 'AbortError') {
-          throw new Error(`API request timed out after ${Math.round(timeoutMs / 1000)} seconds. The server may still be processing the AI request; check logs or try again.`);
+          const timeoutError = new Error(`Analisi ancora in corso dopo ${Math.round(timeoutMs / 1000)} secondi. Riprova tra poco o carica una foto piu leggera: la richiesta potrebbe essere ancora in elaborazione.`);
+          timeoutError.code = 'TIMEOUT';
+          timeoutError.timeoutMs = timeoutMs;
+          throw timeoutError;
         }
         throw error;
       } finally {
