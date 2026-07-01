@@ -385,3 +385,27 @@ Every feature must be judged against this question:
 > Does this help a broken object become repaired, or does it strengthen the intelligence needed to repair the next object?
 
 If the answer is no, it is not MVP-critical.
+
+
+Step 49.3 update: Gemini live recognition response parsing is now BOM-safe on Windows PowerShell transports, preventing valid Gemini `candidates` JSON from being rejected as invalid JSON.
+
+## Step 49.5 — Gemini live transport timeout fix
+
+Live Gemini recognition remains the source of truth for the public demo. The PHP gateway now extends execution time before long-running Gemini HTTP transports, preventing the Windows development server from stopping the request at 30 seconds.
+
+## Step 49.9 — Demo live recognition cache guard
+
+For repeated browser tests of the same uploaded image, Re-born reuses an existing successful Gemini/OpenAI live recognition by image SHA-256 before making another provider call. This prevents transient Gemini 429 rate limits from replacing a known-good result with “riconoscimento fallito”.
+
+
+### Step 49.10 — Demo rate-limit known reference recovery
+
+The browser demo can recover the canonical 165314 Dishwasher Lower Rack Wheel result when Gemini returns 429 Too Many Requests for the exact previously validated image hash. This keeps the demo useful while still marking the result as a rate-limit cache recovery.
+
+## Step 50 — Cloud Free Recognition Direction
+
+The Re-born public demo now prioritizes a multi-provider free-cloud chain instead of depending on Gemini alone. The product decision is: use OCR-first recognition for text/code-heavy part images, then use free cloud vision routers for visual understanding, while making Gemini/OpenAI optional premium/quota fallbacks.
+
+Primary order: OCR.space → Groq Vision → OpenRouter Free Vision.
+
+Rationale: a base user must not see a confusing generic failure just because a single provider is temporarily rate-limited. The platform should continue with the next provider, explain provider limits clearly, and preserve deterministic CI smoke behavior.

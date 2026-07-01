@@ -9,6 +9,9 @@ use Reborn\AI\Application\RequestRecognitionJobService;
 use Reborn\AI\Application\GeminiGooglePhotoRecognitionGateway;
 use Reborn\AI\Application\MultiProviderPhotoRecognitionGateway;
 use Reborn\AI\Application\OpenAIPhotoRecognitionGateway;
+use Reborn\AI\Application\OcrSpacePhotoRecognitionGateway;
+use Reborn\AI\Application\GroqVisionPhotoRecognitionGateway;
+use Reborn\AI\Application\OpenRouterVisionPhotoRecognitionGateway;
 use Reborn\AI\Infrastructure\SqliteRecognitionJobRepository;
 use Reborn\AI\Presentation\RecognitionJobController;
 use Reborn\Dashboard\Application\UserDashboardService;
@@ -194,7 +197,13 @@ $fileStorage = new LocalFileStorage($uploadsRoot);
 $aiPhotoRecognitionConfig = $config['ai']['photo_recognition'] ?? [];
 $openAiPhotoRecognitionGateway = new OpenAIPhotoRecognitionGateway($aiPhotoRecognitionConfig, $uploadsRoot);
 $geminiPhotoRecognitionGateway = new GeminiGooglePhotoRecognitionGateway($aiPhotoRecognitionConfig, $uploadsRoot);
+$ocrSpacePhotoRecognitionGateway = new OcrSpacePhotoRecognitionGateway($aiPhotoRecognitionConfig, $uploadsRoot);
+$groqVisionPhotoRecognitionGateway = new GroqVisionPhotoRecognitionGateway($aiPhotoRecognitionConfig, $uploadsRoot);
+$openRouterVisionPhotoRecognitionGateway = new OpenRouterVisionPhotoRecognitionGateway($aiPhotoRecognitionConfig, $uploadsRoot);
 $photoRecognitionGateway = new MultiProviderPhotoRecognitionGateway($aiPhotoRecognitionConfig, [
+    'ocrspace' => $ocrSpacePhotoRecognitionGateway,
+    'groq' => $groqVisionPhotoRecognitionGateway,
+    'openrouter' => $openRouterVisionPhotoRecognitionGateway,
     'gemini' => $geminiPhotoRecognitionGateway,
     'openai' => $openAiPhotoRecognitionGateway,
 ]);

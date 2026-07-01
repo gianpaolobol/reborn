@@ -25,8 +25,14 @@ final class MultiProviderPhotoRecognitionGateway implements PhotoRecognitionGate
             $providerStatuses[$name] = $gateway->status();
         }
 
+        $selectedProviderNames = $provider === 'auto' ? $this->providerOrder() : [$provider];
         $missing = [];
+        $configuredSelectedProvider = false;
         foreach ($providerStatuses as $name => $status) {
+            if (!in_array($name, $selectedProviderNames, true)) {
+                continue;
+            }
+            $configuredSelectedProvider = $configuredSelectedProvider || (bool) ($status['configured'] ?? false);
             foreach (($status['missing_configuration'] ?? []) as $item) {
                 $missing[] = $name . ':' . (string) $item;
             }
@@ -36,7 +42,7 @@ final class MultiProviderPhotoRecognitionGateway implements PhotoRecognitionGate
             'provider' => $provider,
             'capability' => 'photo_to_replacement_part_brief',
             'enabled' => (bool) ($this->config['enabled'] ?? true),
-            'configured' => (bool) array_filter($providerStatuses, static fn(array $status): bool => (bool) ($status['configured'] ?? false)),
+            'configured' => $configuredSelectedProvider,
             'mode' => $provider === 'auto' ? 'auto_provider_router' : 'single_provider_router',
             'provider_order' => $this->providerOrder(),
             'quality_profile' => 'max_vision_ocr_reference_part_identification_v2',
@@ -46,7 +52,7 @@ final class MultiProviderPhotoRecognitionGateway implements PhotoRecognitionGate
             'reasoning_effort' => (string) ($this->config['reasoning_effort'] ?? ''),
             'max_images' => (int) ($this->config['max_images'] ?? 8),
             'max_image_bytes' => (int) ($this->config['max_image_bytes'] ?? 20971520),
-            'billing_note' => 'ChatGPT Plus, Google AI Pro and Claude Pro do not automatically include backend API usage. Re-born requires provider API keys with active quota/billing where required.',
+            'billing_note' => 'Step 50 uses OCR.space, Groq and OpenRouter as free-cloud first providers. All cloud free tiers still have provider-side limits; Re-born now routes across providers and falls back gracefully.',
             'missing_configuration' => array_values(array_unique($missing)),
             'providers' => $providerStatuses,
         ];
@@ -103,26 +109,29 @@ final class MultiProviderPhotoRecognitionGateway implements PhotoRecognitionGate
     {
         $provider = strtolower(trim((string) ($this->config['provider'] ?? 'auto')));
         if ($provider === 'gemini_google') { return 'gemini'; }
-        return in_array($provider, ['auto', 'gemini', 'openai'], true) ? $provider : 'auto';
+        if ($provider === 'ocr_space') { return 'ocrspace'; }
+        if ($provider === 'cloud_free') { return 'auto'; }
+        return in_array($provider, ['auto', 'ocrspace', 'groq', 'openrouter', 'gemini', 'openai'], true) ? $provider : 'auto';
     }
 
     /** @return list<string> */
     private function providerOrder(): array
     {
-        $order = $this->config['provider_order'] ?? ['gemini', 'openai'];
+        $order = $this->config['provider_order'] ?? ['ocrspace', 'groq', 'openrouter'];
         if (!is_array($order)) {
-            $order = ['gemini', 'openai'];
+            $order = ['ocrspace', 'groq', 'openrouter'];
         }
 
         $out = [];
         foreach ($order as $name) {
             $name = strtolower(trim((string) $name));
             if ($name === 'gemini_google') { $name = 'gemini'; }
+            if ($name === 'ocr_space') { $name = 'ocrspace'; }
             if (isset($this->providers[$name]) && !in_array($name, $out, true)) {
                 $out[] = $name;
             }
         }
 
-        return $out !== [] ? $out : ['gemini', 'openai'];
+        return $out !== [] ? $out : ['ocrspace', 'groq', 'openrouter'];
     }
 }

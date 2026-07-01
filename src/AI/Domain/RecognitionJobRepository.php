@@ -20,4 +20,12 @@ interface RecognitionJobRepository
 
     /** @return list<RecognitionJob> */
     public function listByRepairCase(string $repairCaseId): array;
+
+    /**
+     * Step 49.9: reuse the most recent successful live Vision result for the
+     * same uploaded image hash before spending another provider call.
+     *
+     * @param list<string> $sha256s
+     */
+    public function findReusableLiveResultByAttachmentSha256(array $sha256s): ?RecognitionJob;
 }

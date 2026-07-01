@@ -8,10 +8,12 @@ use Reborn\Repair\Domain\RepairAttachment;
 use Reborn\Repair\Domain\RepairCase;
 
 /**
- * Step 48.2 — Gemini-only vision provider with Windows external curl HTTP-0 acceptance.
+ * Step 49.5 — Gemini-only vision provider with Windows-safe transport timeout handling.
  *
  * This class intentionally does not call Google Cloud Vision API. Gemini receives
  * the original image and performs OCR + product/part reasoning in a single call.
+ * Step 49.5 makes live demo calls resilient on Windows/PHP by extending
+ * max_execution_time before external curl/PowerShell transports are invoked.
  * The historical class filename is kept to make full-overwrite upgrades safe on
  * existing installations that already contain this file.
  */
@@ -49,6 +51,7 @@ final class GeminiGooglePhotoRecognitionGateway implements PhotoRecognitionGatew
 
     public function analyze(RepairCase $case, array $attachments): ?array
     {
+        $this->extendPhpExecutionTime($this->geminiTimeoutSeconds() + 60);
         $status = $this->status();
         if (($status['enabled'] ?? false) !== true) {
             return null;
@@ -63,7 +66,7 @@ final class GeminiGooglePhotoRecognitionGateway implements PhotoRecognitionGatew
             $raw = $this->postJson($this->geminiEndpoint(), $this->geminiPayload($case, $attachments, $images, false), 'Gemini');
             $parsed = $this->extractGeminiJson($raw);
             if (!is_array($parsed)) {
-                throw new \RuntimeException('Gemini response did not contain valid JSON.');
+                throw new \RuntimeException('Gemini response did not contain valid JSON after Step 49.4 candidates extraction.');
             }
 
             $result = $this->normalizeResult($parsed, 'gemini_vision_api', [
@@ -226,7 +229,7 @@ final class GeminiGooglePhotoRecognitionGateway implements PhotoRecognitionGatew
     private function geminiEndpoint(): string
     {
         $base = rtrim((string) ($this->geminiConfig()['base_url'] ?? 'https://generativelanguage.googleapis.com/v1beta'), '/');
-        return $base . '/models/' . rawurlencode($this->geminiModel()) . ':generateContent?key=' . rawurlencode($this->geminiApiKey());
+        return $base . '/models/' . rawurlencode($this->geminiModel()) . ':generateContent';
     }
 
     /** @return array<string, mixed>|null */
@@ -244,12 +247,20 @@ final class GeminiGooglePhotoRecognitionGateway implements PhotoRecognitionGatew
             }
         }
         foreach ($candidates as $candidate) {
+            $candidate = $this->normalizeGeminiTextJson($candidate);
             $decoded = json_decode($candidate, true);
+            if (!is_array($decoded)) {
+                $decoded = $this->decodeJsonLeniently($candidate);
+            }
             if (is_array($decoded)) {
                 return $decoded;
             }
             if (preg_match('/\{.*\}/s', $candidate, $matches)) {
-                $decoded = json_decode($matches[0], true);
+                $snippet = $this->normalizeGeminiTextJson($matches[0]);
+                $decoded = json_decode($snippet, true);
+                if (!is_array($decoded)) {
+                    $decoded = $this->decodeJsonLeniently($snippet);
+                }
                 if (is_array($decoded)) {
                     return $decoded;
                 }
@@ -386,21 +397,48 @@ final class GeminiGooglePhotoRecognitionGateway implements PhotoRecognitionGatew
         if ($json === false) {
             throw new \RuntimeException('Failed to encode ' . $providerName . ' payload.');
         }
-        $headers = ['Content-Type: application/json'];
-        $timeout = $timeout ?? max(5, (int) ($this->geminiConfig()['timeout_seconds'] ?? 90));
-        $response = $this->postJsonWithPhpCurl($url, $json, $headers, $timeout);
-        if ($response === null) {
-            $response = $this->postJsonWithPhpStreams($url, $json, $headers, $timeout);
+
+        $apiKey = $this->geminiApiKey();
+        $headers = ['Content-Type: application/json', 'x-goog-api-key: ' . $apiKey];
+        $timeout = $timeout ?? $this->geminiTimeoutSeconds();
+        // Step 49.5: the PHP built-in server often has max_execution_time=30s on Windows.
+        // Live Gemini calls can legitimately take longer, especially when the PowerShell
+        // transport fallback is used. Extend the request budget before trying transports.
+        $this->extendPhpExecutionTime($timeout + 60);
+        $transportErrors = [];
+
+        $transports = [
+            'PHP cURL' => fn(): ?string => $this->postJsonWithPhpCurl($url, $json, $headers, $timeout),
+            'PHP HTTPS streams' => fn(): ?string => $this->postJsonWithPhpStreams($url, $json, $headers, $timeout),
+            'external curl direct command' => fn(): ?string => $this->postJsonWithExternalCurl($url, $json, $headers, $timeout),
+            'PowerShell Invoke-RestMethod transport fallback' => fn(): ?string => $this->postJsonWithPowerShellInvokeRestMethod($url, $json, $apiKey, $timeout),
+        ];
+
+        $response = null;
+        foreach ($transports as $transportName => $transport) {
+            try {
+                $candidate = $transport();
+                if (is_string($candidate) && $candidate !== '') {
+                    $response = $candidate;
+                    break;
+                }
+            } catch (\Throwable $transportException) {
+                $transportErrors[] = $transportName . ': ' . $this->sanitizeProviderError($transportException->getMessage());
+            }
         }
+
         if ($response === null) {
-            $response = $this->postJsonWithExternalCurl($url, $json, $headers, $timeout);
+            $details = $transportErrors === [] ? 'no usable HTTP transport available' : implode(' | ', $transportErrors);
+            throw new \RuntimeException($providerName . ' request could not be sent. Transports attempted: ' . $details);
         }
-        if ($response === null) {
-            throw new \RuntimeException($providerName . ' request could not be sent: PHP cURL unavailable, https wrapper unavailable and curl.exe/curl unavailable.');
-        }
+
+        $response = $this->normalizeJsonTransportResponse($response);
         $decoded = json_decode($response, true);
         if (!is_array($decoded)) {
-            throw new \RuntimeException($providerName . ' response was not valid JSON.');
+            $decoded = $this->decodeJsonLeniently($response);
+        }
+        if (!is_array($decoded)) {
+            throw new \RuntimeException($providerName . ' response was not valid JSON after Step 49.4 UTF-8/BOM cleanup. Raw response: ' . $this->safeSubstring($response, 0, 700));
         }
         if (isset($decoded['error']) && is_array($decoded['error'])) {
             throw new \RuntimeException($providerName . ' error: ' . $this->safeSubstring(json_encode($decoded['error'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: 'unknown error', 0, 700));
@@ -438,7 +476,8 @@ final class GeminiGooglePhotoRecognitionGateway implements PhotoRecognitionGatew
         if (!in_array('https', stream_get_wrappers(), true)) {
             return null;
         }
-        $context = stream_context_create(['http' => ['method' => 'POST', 'header' => implode("\r\n", $headers), 'content' => $json, 'timeout' => $timeout, 'ignore_errors' => true]]);
+        $context = stream_context_create(['http' => ['method' => 'POST', 'header' => implode("
+", $headers), 'content' => $json, 'timeout' => $timeout, 'ignore_errors' => true]]);
         $http_response_header = [];
         $response = @file_get_contents($url, false, $context);
         if ($response === false || $response === '') {
@@ -463,43 +502,122 @@ final class GeminiGooglePhotoRecognitionGateway implements PhotoRecognitionGatew
         }
         $payloadPath = $this->temporaryFile('reborn_gemini_payload_', '.json');
         $responsePath = $this->temporaryFile('reborn_gemini_response_', '.json');
-        $configPath = $this->temporaryFile('reborn_gemini_curl_', '.conf');
+        $headerPath = $this->temporaryFile('reborn_gemini_headers_', '.txt');
         try {
             file_put_contents($payloadPath, $json);
-            $lines = ['url = ' . $this->curlConfigQuote($url), 'request = POST', 'location', 'silent', 'show-error', 'max-time = ' . $timeout, 'connect-timeout = ' . min(15, $timeout), 'user-agent = ' . $this->curlConfigQuote('Re-born Gemini Vision Gateway/1.0'), 'header = ' . $this->curlConfigQuote('Content-Type: application/json'), 'data-binary = ' . $this->curlConfigQuote('@' . $this->normalizePathForCurl($payloadPath))];
-            file_put_contents($configPath, implode(PHP_EOL, $lines) . PHP_EOL);
-            $command = escapeshellarg($binary) . ' --config ' . escapeshellarg($configPath) . ' --output ' . escapeshellarg($responsePath) . ' --write-out ' . escapeshellarg('%{http_code}') . ' 2>&1';
-            $output = shell_exec($command);
+            $parts = [
+                escapeshellarg($binary),
+                '--silent',
+                '--show-error',
+                '--location',
+                '--request', 'POST',
+                '--url', escapeshellarg($url),
+                '--header', escapeshellarg('Content-Type: application/json'),
+                '--header', escapeshellarg('x-goog-api-key: ' . $this->geminiApiKey()),
+                '--data-binary', escapeshellarg('@' . $this->normalizePathForCurl($payloadPath)),
+                '--output', escapeshellarg($responsePath),
+                '--dump-header', escapeshellarg($headerPath),
+                '--max-time', (string) $timeout,
+                '--connect-timeout', (string) min(15, $timeout),
+                '--user-agent', escapeshellarg('Re-born Gemini Vision Gateway/1.0'),
+                '2>&1',
+            ];
+            $this->extendPhpExecutionTime($timeout + 60);
+            $output = shell_exec(implode(' ', $parts));
             if (!is_string($output)) {
                 return null;
             }
-            $status = 0;
-            if (preg_match('/(\d{3})\s*$/', trim($output), $matches)) {
-                $status = (int) $matches[1];
-            }
-            $response = is_file($responsePath) ? (string) file_get_contents($responsePath) : '';
+            $response = is_file($responsePath) ? $this->normalizeJsonTransportResponse((string) file_get_contents($responsePath)) : '';
+            $headersText = is_file($headerPath) ? (string) file_get_contents($headerPath) : '';
+            $status = $this->httpStatusFromHeaders($headersText);
             if ($response === '') {
-                throw new \RuntimeException('request failed via external curl: ' . $this->sanitizeProviderError((string) $output));
+                throw new \RuntimeException('request failed via external curl direct command: ' . $this->sanitizeProviderError((string) $output));
             }
 
-            // Step 48.3 smoke marker: returned HTTP 0 can still contain a valid Gemini JSON body when curl.exe cannot report the HTTP status in this Windows/PHP environment.
+            // Step 49.2 smoke marker: returned HTTP 0 is accepted only when curl produced a successful Gemini JSON body.
             if ($status === 0 && $this->looksLikeSuccessfulJsonResponse($response)) {
                 return $response;
             }
 
             if ($status < 200 || $status >= 300) {
-                throw new \RuntimeException('returned HTTP ' . $status . ' via external curl: ' . $this->safeSubstring($response, 0, 700));
+                throw new \RuntimeException('returned HTTP ' . $status . ' via external curl direct command: ' . $this->safeSubstring($response, 0, 700));
             }
             return $response;
         } finally {
-            @unlink($payloadPath); @unlink($responsePath); @unlink($configPath);
+            @unlink($payloadPath);
+            @unlink($responsePath);
+            @unlink($headerPath);
         }
     }
 
+    private function postJsonWithPowerShellInvokeRestMethod(string $url, string $json, string $apiKey, int $timeout): ?string
+    {
+        if (PHP_OS_FAMILY !== 'Windows' || !function_exists('shell_exec')) {
+            return null;
+        }
+        $binary = $this->powershellBinary();
+        if ($binary === null) {
+            return null;
+        }
+        $payloadPath = $this->temporaryFile('reborn_gemini_ps_payload_', '.json');
+        $responsePath = $this->temporaryFile('reborn_gemini_ps_response_', '.json');
+        $errorPath = $this->temporaryFile('reborn_gemini_ps_error_', '.txt');
+        $scriptPath = $this->temporaryFile('reborn_gemini_ps_transport_', '.ps1');
+        try {
+            file_put_contents($payloadPath, $json);
+            $script = implode(PHP_EOL, [
+                '$ErrorActionPreference = ' . $this->powershellQuote('Stop'),
+                '$body = Get-Content -LiteralPath ' . $this->powershellQuote($payloadPath) . ' -Raw',
+                '$headers = @{ ' . $this->powershellQuote('x-goog-api-key') . ' = ' . $this->powershellQuote($apiKey) . '; ' . $this->powershellQuote('Content-Type') . ' = ' . $this->powershellQuote('application/json') . ' }',
+                'try {',
+                '  # Step 49.4: use Invoke-WebRequest and persist the raw Gemini JSON body, not a PowerShell re-serialized object.',
+                '  # Re-serializing with Invoke-RestMethod | ConvertTo-Json can prepend BOM/formatting and break PHP json_decode on Windows.',
+                '  $response = Invoke-WebRequest -UseBasicParsing -Method Post -Uri ' . $this->powershellQuote($url) . ' -Headers $headers -Body $body -ContentType ' . $this->powershellQuote('application/json') . ' -TimeoutSec ' . max(5, $timeout),
+                '  $raw = [string]$response.Content',
+                '  [System.IO.File]::WriteAllText(' . $this->powershellQuote($responsePath) . ', $raw, (New-Object System.Text.UTF8Encoding($false)))',
+                '  exit 0',
+                '} catch {',
+                '  $_.Exception.Message | Set-Content -LiteralPath ' . $this->powershellQuote($errorPath) . ' -Encoding UTF8',
+                '  if ($_.ErrorDetails -and $_.ErrorDetails.Message) { $_.ErrorDetails.Message | Add-Content -LiteralPath ' . $this->powershellQuote($errorPath) . ' -Encoding UTF8 }',
+                '  exit 1',
+                '}',
+            ]) . PHP_EOL;
+            file_put_contents($scriptPath, $script);
+            $command = escapeshellarg($binary) . ' -NoProfile -ExecutionPolicy Bypass -File ' . escapeshellarg($scriptPath) . ' 2>&1';
+            $this->extendPhpExecutionTime($timeout + 60);
+            $output = shell_exec($command);
+            $response = is_file($responsePath) ? $this->normalizeJsonTransportResponse((string) file_get_contents($responsePath)) : '';
+            if ($response !== '') {
+                return $response;
+            }
+            $error = is_file($errorPath) ? trim((string) file_get_contents($errorPath)) : trim((string) $output);
+            throw new \RuntimeException('request failed via PowerShell Invoke-RestMethod transport fallback: ' . $this->sanitizeProviderError($error));
+        } finally {
+            @unlink($payloadPath);
+            @unlink($responsePath);
+            @unlink($errorPath);
+            @unlink($scriptPath);
+        }
+    }
+
+    private function httpStatusFromHeaders(string $headersText): int
+    {
+        $status = 0;
+        foreach (preg_split('/\r?\n/', $headersText) ?: [] as $line) {
+            if (preg_match('/^HTTP\/\S+\s+(\d+)/', trim($line), $matches)) {
+                $status = (int) $matches[1];
+            }
+        }
+        return $status;
+    }
 
     private function looksLikeSuccessfulJsonResponse(string $response): bool
     {
+        $response = $this->normalizeJsonTransportResponse($response);
         $decoded = json_decode($response, true);
+        if (!is_array($decoded)) {
+            $decoded = $this->decodeJsonLeniently($response);
+        }
         if (!is_array($decoded)) {
             return false;
         }
@@ -515,8 +633,116 @@ final class GeminiGooglePhotoRecognitionGateway implements PhotoRecognitionGatew
         return false;
     }
 
+    private function normalizeJsonTransportResponse(string $response): string
+    {
+        // Step 49.4: Windows transports can return a valid Gemini JSON body with UTF BOM,
+        // UTF-16 bytes, NULL bytes or leading invisible control characters. Normalize before
+        // json_decode so a good Vision result is never discarded as fallback_after_gemini_error.
+        if (str_starts_with($response, "\xFF\xFE")) {
+            $converted = @iconv('UTF-16LE', 'UTF-8//IGNORE', $response);
+            if (is_string($converted) && $converted !== '') {
+                $response = $converted;
+            }
+        } elseif (str_starts_with($response, "\xFE\xFF")) {
+            $converted = @iconv('UTF-16BE', 'UTF-8//IGNORE', $response);
+            if (is_string($converted) && $converted !== '') {
+                $response = $converted;
+            }
+        }
+
+        $response = str_replace(["\xEF\xBB\xBF", "\u{FEFF}", "\x00"], '', $response);
+        $response = preg_replace('/^[\x00-\x1F\x7F]+/', '', $response) ?? $response;
+        $response = trim($response);
+
+        // Some HTTP transports may prepend warnings or status text. Keep the first complete
+        // JSON object if the response is wrapped by non-JSON output.
+        if ($response !== '' && $response[0] !== '{') {
+            $extracted = $this->extractJsonObject($response);
+            if ($extracted !== null) {
+                return $extracted;
+            }
+        }
+
+        return $response;
+    }
+
+    private function normalizeGeminiTextJson(string $candidate): string
+    {
+        $candidate = $this->normalizeJsonTransportResponse($candidate);
+        $candidate = preg_replace('/^```(?:json)?\s*/i', '', $candidate) ?? $candidate;
+        $candidate = preg_replace('/\s*```$/', '', $candidate) ?? $candidate;
+        return trim($candidate);
+    }
+
+    /** @return array<string, mixed>|null */
+    private function decodeJsonLeniently(string $json): ?array
+    {
+        $json = $this->normalizeJsonTransportResponse($json);
+        foreach ([$json, $this->extractJsonObject($json)] as $candidate) {
+            if (!is_string($candidate) || trim($candidate) === '') {
+                continue;
+            }
+            $candidate = $this->normalizeJsonTransportResponse($candidate);
+            $decoded = json_decode($candidate, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+        return null;
+    }
+
+    private function extractJsonObject(string $text): ?string
+    {
+        $start = strpos($text, '{');
+        if ($start === false) {
+            return null;
+        }
+
+        $depth = 0;
+        $inString = false;
+        $escaped = false;
+        $length = strlen($text);
+
+        for ($i = $start; $i < $length; $i++) {
+            $char = $text[$i];
+            if ($inString) {
+                if ($escaped) {
+                    $escaped = false;
+                    continue;
+                }
+                if ($char === '\\') {
+                    $escaped = true;
+                    continue;
+                }
+                if ($char === '"') {
+                    $inString = false;
+                }
+                continue;
+            }
+
+            if ($char === '"') {
+                $inString = true;
+                continue;
+            }
+            if ($char === '{') {
+                $depth++;
+                continue;
+            }
+            if ($char === '}') {
+                $depth--;
+                if ($depth === 0) {
+                    return substr($text, $start, $i - $start + 1);
+                }
+            }
+        }
+
+        return null;
+    }
+
     private function externalCurlBinary(): ?string
     {
+        // Step 49.6: binary lookup must not reference request-local $timeout.
+        $this->extendPhpExecutionTime($this->geminiTimeoutSeconds() + 60);
         foreach (['curl.exe', 'curl'] as $binary) {
             $command = PHP_OS_FAMILY === 'Windows' ? 'where ' . escapeshellarg($binary) . ' 2>NUL' : 'command -v ' . escapeshellarg($binary) . ' 2>/dev/null';
             $output = shell_exec($command);
@@ -533,6 +759,31 @@ final class GeminiGooglePhotoRecognitionGateway implements PhotoRecognitionGatew
         return null;
     }
 
+    private function powershellBinary(): ?string
+    {
+        // Step 49.6: binary lookup must not reference request-local $timeout.
+        $this->extendPhpExecutionTime($this->geminiTimeoutSeconds() + 60);
+        foreach (['powershell.exe', 'powershell'] as $binary) {
+            $command = PHP_OS_FAMILY === 'Windows' ? 'where ' . escapeshellarg($binary) . ' 2>NUL' : 'command -v ' . escapeshellarg($binary) . ' 2>/dev/null';
+            $output = shell_exec($command);
+            if (!is_string($output) || trim($output) === '') {
+                continue;
+            }
+            foreach (preg_split('/\r?\n/', trim($output)) ?: [] as $line) {
+                $candidate = trim($line);
+                if ($candidate !== '') {
+                    return $candidate;
+                }
+            }
+        }
+        return null;
+    }
+
+    private function powershellQuote(string $value): string
+    {
+        return "'" . str_replace("'", "''", $value) . "'";
+    }
+
     private function temporaryFile(string $prefix, string $suffix): string
     {
         $base = tempnam(sys_get_temp_dir(), $prefix);
@@ -541,6 +792,19 @@ final class GeminiGooglePhotoRecognitionGateway implements PhotoRecognitionGatew
         }
         $path = $base . $suffix;
         return @rename($base, $path) ? $path : $base;
+    }
+
+    private function geminiTimeoutSeconds(): int { return max(10, (int) ($this->geminiConfig()['timeout_seconds'] ?? 90)); }
+
+    private function extendPhpExecutionTime(int $seconds): void
+    {
+        $seconds = max(30, $seconds);
+        // Step 49.6 marker: extend PHP max_execution_time for live Gemini Vision calls.
+        if (function_exists('set_time_limit')) {
+            @set_time_limit($seconds);
+        }
+        @ini_set('max_execution_time', (string) $seconds);
+        @ini_set('default_socket_timeout', (string) $seconds);
     }
 
     private function normalizePathForCurl(string $path): string { return str_replace('\\', '/', $path); }

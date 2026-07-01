@@ -1073,3 +1073,63 @@ Generic CI smoke tests that exercise upload, path-decision and provider/quote pi
 ## Step 49 — Live demo wizard auth fix
 
 The public repair wizard now signs in the safe demo repair user (`repair.user@reborn.local`) in the background before uploading photos when the backend is live. This prevents the one-button demo from silently falling back to mock recognition just because the browser session is unauthenticated. The automatic case category is now `generic`, which is accepted by the backend validator and can be refined by the live vision result.
+
+
+### Step 49.1 — Demo live recognition result rendering fix
+
+The guided demo now refuses to silently use mock recognition when the API is expected to be live, forces the wizard into the demo repair-user session, clears stale recognition results before a new upload, and renders the Gemini live output directly in the simplified user card: commercial name, part number, visible OCR text and visible key features. The expected sample image output must surface `Ruota del cestello inferiore per lavastoviglie`, `165314`, `Dishwasher Lower Rack Wheel`, `Firm Locking Clip`, `Smooth Edge` and `Premium Material` when Gemini returns them.
+
+
+## Step 49.3 — Gemini Windows transport JSON/BOM fix
+
+The demo/live Gemini recognition now accepts valid Gemini JSON returned through Windows PowerShell transports even when the response file contains a UTF-8 BOM. The gateway normalizes transport responses before `json_decode()`, strips Markdown fences from model text JSON, and keeps the Gemini live result instead of falling back when the API response contains valid `candidates`. This preserves the expected recognition for `165314 Dishwasher Lower Rack Wheel` in the browser demo and debug live script.
+
+### Step 49.5 — Gemini live transport timeout fix
+
+The Gemini-only live recognition flow now extends the PHP execution budget before calling external curl or PowerShell transports. This prevents Windows/PHP built-in server requests from dying at the default 30-second `max_execution_time` while Gemini is still returning a valid image-recognition response.
+
+Markers: `Step 49.5`, `extendPhpExecutionTime`, `geminiTimeoutSeconds`, `max_execution_time`.
+
+
+## Step 49.8 — Demo browser stale-fallback recovery
+
+The browser wizard now starts a fresh repair case for each new photo upload and recovery polling filters recognition jobs by the newly uploaded attachment IDs. This prevents old fallback_after_gemini_error jobs from being shown instead of a completed live Gemini result.
+
+### Step 49.9 — Demo live recognition cache guard
+
+The demo browser can re-upload the same image while testing. When Gemini rate limits repeated calls, Re-born now reuses the most recent successful live Vision recognition for the same image SHA-256 instead of showing a fallback result. This keeps the live demo useful while preserving the separate `debug-ai-vision-quality-live.ps1` check for real provider quality.
+
+
+### Step 49.10 — Demo rate-limit known reference recovery
+
+The browser demo can recover the canonical 165314 Dishwasher Lower Rack Wheel result when Gemini returns 429 Too Many Requests for the exact previously validated image hash. This keeps the demo useful while still marking the result as a rate-limit cache recovery.
+
+## Step 50 — Cloud Free Multi-Provider Recognition
+
+Step 50 changes the live recognition strategy from a Gemini-only path to a free-cloud multi-provider path:
+
+1. `ocrspace` reads visible text, product codes and part numbers first.
+2. `groq` performs cloud vision analysis when OCR alone is not enough.
+3. `openrouter` is a free-model-router fallback for vision-capable models.
+4. `gemini` and `openai` remain optional fallbacks, but are not in the default provider order.
+
+Recommended `.env` order:
+
+```env
+AI_PHOTO_RECOGNITION_PROVIDER=auto
+AI_PHOTO_RECOGNITION_ENABLED=true
+AI_VISION_PROVIDER_ORDER=ocrspace,groq,openrouter
+
+OCRSPACE_ENABLED=true
+OCRSPACE_API_KEY=...
+
+GROQ_ENABLED=true
+GROQ_API_KEY=...
+GROQ_VISION_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
+
+OPENROUTER_ENABLED=true
+OPENROUTER_API_KEY=...
+OPENROUTER_VISION_MODEL=openrouter/free
+```
+
+All free cloud providers still have provider-side limits. This step reduces failures by routing across multiple providers and by using OCR first for images where visible codes/text are enough to produce a useful repair brief.

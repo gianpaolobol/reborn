@@ -81,4 +81,16 @@ foreach ($marker in @(
     Ok "Step 49 live demo wizard marker present: $marker"
 }
 
-Write-Host "Step 46/49 user repair wizard simplification smoke test passed." -ForegroundColor Green
+foreach ($marker in @(
+    "ensureLiveApiForWizardRecognition",
+    "Backend API live non disponibile",
+    "visible_text",
+    "key_features",
+    "Provider live",
+    "Riconoscimento live fallito"
+)) {
+    if ($appText -notlike "*$marker*") { Fail "Missing Step 49.1 live demo result marker: $marker" }
+    Ok "Step 49.1 live demo result marker present: $marker"
+}
+
+Write-Host "Step 46/49.1 user repair wizard simplification smoke test passed." -ForegroundColor Green
