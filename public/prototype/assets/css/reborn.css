@@ -15,8 +15,8 @@
   --line-dark: rgba(246, 244, 239, 0.14);
   --shadow: 0 12px 36px rgba(17, 19, 21, 0.12);
   --radius: 4px;
-  --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-ui: "Segoe UI", Arial, Helvetica, sans-serif;
+  --font-display: "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -27,6 +27,10 @@ body {
   color: var(--graphite-950);
   font-family: var(--font-ui);
   line-height: 1.5;
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 button, input, select, textarea { font: inherit; }
 a { color: inherit; text-decoration: none; }
@@ -105,7 +109,7 @@ a:hover { text-decoration: underline; text-underline-offset: 4px; }
   font-size: 0.76rem;
 }
 .eyebrow::before { content: ""; width: 8px; height: 8px; background: var(--repair-green); border-radius: 50%; }
-h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.055em; line-height: 0.98; margin: 0; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.045em; line-height: 1; margin: 0; }
 h1 { font-size: clamp(3.1rem, 8vw, 6.8rem); max-width: 10ch; }
 h2 { font-size: clamp(2.1rem, 4vw, 3.65rem); }
 h3 { font-size: clamp(1.22rem, 2vw, 1.65rem); }
@@ -125,7 +129,7 @@ p { margin: 0; }
   border-radius: var(--radius);
   background: var(--graphite-950);
   color: var(--off-white);
-  font-weight: 750;
+  font-weight: 700;
   cursor: pointer;
   text-decoration: none;
 }
@@ -178,7 +182,7 @@ p { margin: 0; }
 
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .field { display: grid; gap: 7px; }
-label { font-weight: 750; font-size: .9rem; }
+label { font-weight: 700; font-size: .9rem; }
 input, select, textarea {
   width: 100%;
   padding: 12px;
@@ -283,7 +287,7 @@ textarea { min-height: 108px; resize: vertical; }
 }
 
 .provider-card { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: start; }
-.price { font-weight: 850; font-size: 1.45rem; letter-spacing: -.04em; }
+.price { font-weight: 800; font-size: 1.45rem; letter-spacing: -.04em; }
 .status-line { display: flex; align-items: center; gap: 8px; color: var(--graphite-700); }
 .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--repair-green); }
 
@@ -380,7 +384,7 @@ code {
   font-size: .9em;
 }
 body.is-busy::after {
-  content: "Syncing Re-born API…";
+  content: "Syncing Re-born API...";
   position: fixed;
   left: 18px;
   bottom: 18px;
@@ -398,7 +402,7 @@ body.is-busy::after {
   .api-banner-actions { justify-content: flex-start; }
 }
 
-/* Step 10 — Auth UI and role dashboards */
+/* Step 10 a" Auth UI and role dashboards */
 .auth-chip {
   display: inline-flex;
   align-items: center;
@@ -450,7 +454,7 @@ body.is-busy::after {
 .table thead th { background: rgba(17,19,21,.035); }
 .api-banner-actions .mini-button.link-button { color: inherit; }
 
-/* Step 11 — repair upload and AI recognition */
+/* Step 11 a" repair upload and AI recognition */
 .file-dropzone { min-height: 190px; }
 .file-dropzone input[type="file"] { margin-top: 14px; background: var(--paper); }
 .upload-preview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
@@ -504,7 +508,7 @@ body.is-busy::after {
 .diagnosis-timeline .timeline-row.done .timeline-content { border-left-color: var(--repair-green); }
 .diagnosis-timeline .timeline-row.done .timeline-time { color: #167243; font-weight: 800; }
 
-/* Step 43 — user-guided repair experience simplification */
+/* Step 43 a" user-guided repair experience simplification */
 .topnav .advanced-link {
   border: 1px solid var(--line);
   background: rgba(17, 19, 21, .035);
@@ -578,7 +582,7 @@ body.is-busy::after {
   border-radius: 999px;
   background: rgba(17, 19, 21, .08);
   color: var(--graphite-700);
-  font-weight: 850;
+  font-weight: 800;
 }
 .guided-step-card.done {
   border-color: rgba(47, 191, 113, .42);
@@ -601,7 +605,7 @@ body.is-busy::after {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: white;
-  font-weight: 750;
+  font-weight: 700;
 }
 .console-link-list a:hover { text-decoration: none; border-color: rgba(35,100,255,.4); }
 .footer-links { justify-content: flex-end; }
@@ -613,7 +617,7 @@ body.is-busy::after {
   .console-link-list { grid-template-columns: 1fr; }
 }
 
-/* Step 44 — repair-first offer architecture and replacement-part wizard */
+/* Step 44 a" repair-first offer architecture and replacement-part wizard */
 .simple-stepper { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .repair-first-hero h1 { max-width: 12ch; }
 .repair-first-offer { border-left: 5px solid var(--repair-green); }
@@ -639,7 +643,7 @@ body.is-busy::after {
   border-radius: 999px;
   background: var(--repair-green);
   color: var(--graphite-950);
-  font-weight: 850;
+  font-weight: 800;
 }
 .replacement-route-card p {
   margin-top: 4px;
@@ -650,12 +654,12 @@ body.is-busy::after {
   .replacement-route-cards { grid-template-columns: 1fr; }
 }
 
-/* Step 45 — AI photo recognition replacement brief */
+/* Step 45 a" AI photo recognition replacement brief */
 .ai-first-look-card { border-color: rgba(78, 121, 255, 0.24); }
 .compact-list { margin: 0.4rem 0 0; padding-left: 1.15rem; color: var(--muted); }
 .compact-list li { margin: 0.25rem 0; }
 
-/* Step 45.3 — one-button photo recognition UX */
+/* Step 45.3 a" one-button photo recognition UX */
 .hidden-upload-input {
   position: absolute;
   width: 1px;
@@ -683,7 +687,7 @@ body.is-busy::after {
   border-left: 5px solid var(--repair-green);
 }
 
-/* Step 45.4 — adaptive one-button recognition + bilingual selector */
+/* Step 45.4 a" adaptive one-button recognition + bilingual selector */
 .language-switch {
   display: inline-flex;
   gap: 4px;
@@ -711,7 +715,7 @@ body.is-busy::after {
   letter-spacing: -.01em;
 }
 
-/* STEP 46 — User Repair Wizard Simplification */
+/* STEP 46 a" User Repair Wizard Simplification */
 .user-status {
   display: flex;
   align-items: center;
@@ -726,9 +730,9 @@ body.is-busy::after {
   font-size: .92rem;
 }
 .user-status > span { font-weight: 800; }
-.user-status.live > span::before { content: '● '; color: var(--repair-green); }
-.user-status.mock > span::before { content: '● '; color: var(--safety-orange); }
-.user-status.error > span::before { content: '● '; color: #c2410c; }
+.user-status.live > span::before { content: '-a '; color: var(--repair-green); }
+.user-status.mock > span::before { content: '-a '; color: var(--safety-orange); }
+.user-status.error > span::before { content: '-a '; color: #c2410c; }
 .user-wizard-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
@@ -747,8 +751,9 @@ body.is-busy::after {
   max-width: 11ch;
   margin: 0;
   font-size: clamp(3rem, 9vw, 7rem);
-  line-height: .86;
-  letter-spacing: -.075em;
+  line-height: .94;
+  letter-spacing: -.055em;
+  overflow-wrap: normal;
 }
 .user-wizard-copy .lead {
   max-width: 720px;
@@ -856,7 +861,7 @@ body.is-busy::after {
 .background-card .muted,
 .background-card p,
 .background-card a { color: rgba(255, 255, 255, .78); }
-.background-card a { font-weight: 900; }
+.background-card a { font-weight: 800; }
 .solution-card .price { margin: 10px 0 16px; }
 .topnav a[data-nav="start"],
 .topnav a[data-nav="capture"],
@@ -868,4 +873,80 @@ body.is-busy::after {
   .user-wizard-copy h1 { max-width: 9ch; }
   .single-primary-action .large-cta { width: 100%; justify-content: center; }
   .user-status { align-items: flex-start; border-radius: 20px; flex-direction: column; }
+}
+
+/* makerfaire-status-cleanup */
+.status-dot,
+.api-dot,
+.status-indicator {
+  display: none !important;
+}
+/* Maker Faire static single-page hero */
+.makerfaire-single-page {
+  min-height: calc(100vh - 78px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+
+.makerfaire-hero-static {
+  width: min(1120px, 100%);
+  border: 1px solid rgba(16, 24, 40, 0.12);
+  border-radius: 36px;
+  background:
+    radial-gradient(circle at top left, rgba(47, 191, 113, 0.26), transparent 34%),
+    #fffdf8;
+  box-shadow: 0 24px 70px rgba(16, 24, 40, 0.08);
+  padding: clamp(40px, 7vw, 96px);
+}
+
+.makerfaire-copy {
+  max-width: 760px;
+}
+
+.makerfaire-copy h1 {
+  font-family: var(--font-display);
+  font-size: clamp(64px, 9vw, 128px);
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+  margin: 0 0 24px;
+  color: #111418;
+}
+
+.makerfaire-copy .lead {
+  font-size: clamp(22px, 2.2vw, 34px);
+  line-height: 1.28;
+  margin: 0 0 36px;
+  color: #263241;
+}
+
+.hidden-upload-input {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
+}
+
+.large-cta {
+  min-height: 64px;
+  padding: 0 32px;
+  font-size: 18px;
+  font-weight: 800;
+  border-radius: 8px;
+}
+
+@media (max-width: 760px) {
+  .makerfaire-single-page {
+    align-items: flex-start;
+    padding: 24px 16px;
+  }
+
+  .makerfaire-hero-static {
+    border-radius: 24px;
+    padding: 32px 24px;
+  }
+
+  .makerfaire-copy h1 {
+    font-size: 54px;
+  }
 }

@@ -1,11 +1,11 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="it">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Re-born â€” Dalla foto del pezzo rotto al ricambio funzionante</title>
-  <meta name="description" content="Demo Maker Faire di Re-born: carica una foto, riconosci il pezzo e ottieni un percorso semplice verso un ricambio funzionante." />
-  <link rel="stylesheet" href="assets/css/reborn.css" />
+  <title>Re-born a" Dalla foto del pezzo rotto al ricambio funzionante</title>
+  <meta name="description" content=" Maker Faire di Re-born: carica una foto, riconosci il pezzo e ottieni un percorso semplice verso un ricambio funzionante." />
+  <link rel="stylesheet" href="assets/css/reborn.css?v=static-hero-fix" />
 </head>
 <body data-demo-mode="makerfaire-public" data-step46-marker="makerfaire_public_wizard_v1">
   <a class="skip-link" href="#app">Vai alla demo</a>
@@ -13,35 +13,34 @@
     <div class="brand-lockup" aria-label="Re-born">
       <span class="brand-mark" aria-hidden="true">R</span>
       <span class="brand-name">Re-born</span>
-      <span class="brand-tag">Foto â†’ Analisi â†’ Ricambio</span>
+      <span class="brand-tag">Foto | Analisi | Ricambio</span>
     </div>
-    <nav class="topnav" aria-label="Navigazione principale">
-      <a href="#/capture" data-nav="repair-guide">Ripara il mio oggetto</a>
-      <a href="#/help" data-nav="help">Come funziona</a>
-      <a href="#/capture" data-nav="demo">Demo</a>
-    </nav>
-    <button class="menu-button" id="menuButton" type="button" aria-label="Apri menu" aria-expanded="false">Menu</button>
+    <!-- Navigation removed for single-page Maker Faire demo -->
   </header>
-<!-- Marker legacy non renderizzati: Repair my object Â· Ripara il mio oggetto Â· Ripara un pezzo Â· Le mie richieste Â· Aiuto Â· Accedi Â· Console avanzate Â· PRODUCT.md Â· 1. Problem Â· 1. Problema Â· 2. Photos & files Â· 2. Foto Â· 3. Generate part Â· 3. Genera ricambio Â· 4. Quote Â· 4. Preventivo Â· Advanced consoles -->
+<!-- Marker legacy non renderizzati: Repair my object -  - Ripara un pezzo - Le mie richieste - Aiuto - Accedi - Console avanzate - PRODUCT.md - 1. Problem - 1. Problema - 2. Photos & files - 2. Foto - 3. Generate part - 3. Genera ricambio - 4. Quote - 4. Preventivo - Advanced consoles -->
 
-  <main id="app" class="app-shell" tabindex="-1"></main>
+  <main id="app" class="makerfaire-single-page">
+  <section class="makerfaire-hero-static">
+    <div class="makerfaire-copy">
+      <p class="eyebrow">Demo Maker Faire</p>
+      <h1>Hai un pezzo rotto?</h1>
+      <p class="lead">Carica una foto. Re-born lo riconosce e ti guida verso il ricambio.</p>
 
-  <footer class="footer makerfaire-footer">
-    <div>
-      <strong>Re-born</strong><br />
-      Carichi una foto, Re-born legge ciÃ² che puÃ² e ti guida verso il modo piÃ¹ rapido per ottenere un ricambio funzionante.
+      <input id="repairFileInput" class="hidden-upload-input" type="file" multiple accept="image/jpeg,image/png,image/webp" />
+
+      <button class="btn green large-cta" type="button" onclick="document.getElementById('repairFileInput').click();">
+        Carica foto e identifica il pezzo
+      </button>
     </div>
-    <div class="footer-links">
-      <a href="#/capture">Ripara il mio oggetto</a>
-      <a href="#/help">Come funziona</a>
-      <a href="#/capture">Demo</a>
-    </div>
-  </footer>
+  </section>
+</main>
+
+  <footer class="site-footer" aria-hidden="true"></footer>
 
   <script src="assets/js/prototype-data.js"></script>
   <script src="assets/js/state.js"></script>
-  <script src="assets/js/api-client.js"></script>
-  <script src="assets/js/app.js"></script>
+  <script src="assets/js/api-client.js?v=static-hero-fix"></script>
+  <script src="assets/js/app.js?v=static-hero-fix"></script>
 
 <!-- Step 47 prototype marker: Riconoscimento live necessario -->
 </body>
