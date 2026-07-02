@@ -54,6 +54,7 @@ return [
 
         // Step 48.1 — Gemini-only Vision provider.
         'gemini' => [
+            'enabled' => Env::bool('GEMINI_ENABLED', false),
             'api_key' => Env::get('GEMINI_API_KEY', ''),
             'base_url' => Env::get('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
             'model' => Env::get('GEMINI_VISION_MODEL', 'gemini-2.5-flash'),

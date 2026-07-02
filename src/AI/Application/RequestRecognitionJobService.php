@@ -12,6 +12,7 @@ use Reborn\Repair\Domain\RepairAttachmentRepository;
 use Reborn\Repair\Domain\RepairCase;
 use Reborn\Repair\Domain\RepairCaseRepository;
 use Reborn\Shared\Domain\EventBus;
+use Reborn\Marketplace\Application\SearchReplacementModelService;
 use Reborn\Shared\Http\NotFoundException;
 use Reborn\Shared\Http\ValidationException;
 
@@ -23,6 +24,7 @@ final class RequestRecognitionJobService
         private readonly RecognitionJobRepository $recognitionJobs,
         private readonly EventBus $eventBus,
         private readonly PhotoRecognitionGateway $photoRecognitionGateway,
+        private readonly ?SearchReplacementModelService $marketplaceModelSearch = null,
     ) {
     }
 
@@ -67,39 +69,20 @@ final class RequestRecognitionJobService
         try {
             $this->recognitionJobs->markProcessing($job->id);
 
-            // Step 49.9: browser demo uploads often re-test the exact same image while
-            // debugging UI rendering. Reuse a recent successful live Vision result for
-            // the same SHA-256 before spending another Gemini/OpenAI call and risking
-            // provider 429 rate limits.
-            $cachedLiveResult = $deterministicSmoke ? null : $this->reusableLiveResultForAttachments($selectedAttachments);
-            if ($cachedLiveResult !== null) {
-                $result = $cachedLiveResult;
+            // Minimal Live UI: the normal browser flow must call the configured live
+            // provider through the PHP backend. Do not replace a provider miss with a
+            // mock or cached demo recognition that could look real to the user.
+            if ($deterministicSmoke) {
+                $result = $this->deterministicSmokeResult($case, $selectedAttachments);
             } else {
-                $result = $deterministicSmoke
-                    ? $this->deterministicSmokeResult($case, $selectedAttachments)
-                    : ($this->photoRecognitionGateway->analyze($case, $selectedAttachments) ?? $this->mockResult($case, $selectedAttachments));
-
-                // Step 49.9: if Gemini/OpenAI returns a provider fallback because of a
-                // transient 429/network issue, try cache one more time before showing a
-                // failure in the demo browser.
-                if (!$deterministicSmoke && $this->isProviderErrorFallback($result)) {
-                    $fallbackCachedLiveResult = $this->reusableLiveResultForAttachments($selectedAttachments);
-                    if ($fallbackCachedLiveResult !== null) {
-                        $result = $fallbackCachedLiveResult;
-                    } else {
-                        // Step 49.10: when the browser demo replays the canonical
-                        // 165314 dishwasher wheel image after a successful live validation,
-                        // Gemini may answer with 429 Too Many Requests. Do not replace a
-                        // verified recognition path with a generic fallback: recover the
-                        // known reference result for the identical image hash and mark it as
-                        // a demo rate-limit cache recovery. This keeps the UI useful while
-                        // still declaring that a provider limit was involved.
-                        $knownDemoResult = $this->knownDemoReferenceResultForAttachments($selectedAttachments, $result);
-                        if ($knownDemoResult !== null) {
-                            $result = $knownDemoResult;
-                        }
-                    }
+                $result = $this->photoRecognitionGateway->analyze($case, $selectedAttachments);
+                if ($result === null) {
+                    $result = $this->providerUnavailableResult($case, $selectedAttachments, 'No enabled and configured live provider returned a result.');
                 }
+            }
+
+            if ($this->marketplaceModelSearch !== null) {
+                $result = $this->appendMarketplaceSearch($case, $job->id, $result);
             }
 
             $completed = $this->recognitionJobs->complete($job->id, $result);
@@ -118,6 +101,28 @@ final class RequestRecognitionJobService
         }
     }
 
+
+    /** @param array<string, mixed> $result @return array<string, mixed> */
+    private function appendMarketplaceSearch(RepairCase $case, string $recognitionJobId, array $result): array
+    {
+        try {
+            $result['marketplace_search'] = $this->marketplaceModelSearch?->search($case->id, $recognitionJobId, $result) ?? [
+                'enabled' => false,
+                'status' => 'not_configured',
+            ];
+        } catch (\Throwable $exception) {
+            $result['marketplace_search'] = [
+                'enabled' => true,
+                'status' => 'search_error',
+                'message' => 'La ricerca dei file STL non ha risposto. Il flusso puo proseguire con Meshy.',
+                'error' => $exception->getMessage(),
+                'next_step' => 'continue_to_meshy_if_no_manual_match',
+            ];
+            $result['repair_notes'][] = 'Marketplace model search failed silently: ' . $exception->getMessage();
+        }
+
+        return $result;
+    }
 
     /** @param list<RepairAttachment> $attachments @return array<string, mixed>|null */
     private function reusableLiveResultForAttachments(array $attachments): ?array
@@ -324,6 +329,66 @@ final class RequestRecognitionJobService
             || str_contains($mode, 'provider_error');
     }
 
+
+    /** @param list<RepairAttachment> $attachments @return array<string, mixed> */
+    private function providerUnavailableResult(RepairCase $case, array $attachments, string $reason): array
+    {
+        return [
+            'recognition_mode' => 'live_provider_unavailable',
+            'ai_provider' => [
+                'provider' => 'configured_backend_provider',
+                'status' => 'error_fallback',
+                'error' => $reason,
+                'image_count' => count($attachments),
+            ],
+            'identification' => [
+                'status' => 'unclear',
+                'source_image_type' => 'unknown',
+                'visible_text' => [],
+                'part_number' => 'id non riconosciuta',
+                'commercial_name' => '',
+                'possible_brands' => [],
+                'possible_models' => [],
+                'external_lookup_summary' => '',
+                'why' => 'Il backend ha ricevuto le immagini ma il provider AI live non ha restituito un risultato utilizzabile.',
+            ],
+            'part_spec' => [
+                'name_it' => 'id non riconosciuta',
+                'name_en' => 'unrecognized id',
+                'appliance_context' => '',
+                'known_dimensions' => [],
+                'key_features' => [],
+                'compatibility_clues' => [],
+                'manufacturing_features' => [],
+            ],
+            'object_guess' => [
+                'label' => 'id non riconosciuta',
+                'confidence' => 0.0,
+                'object_context' => '',
+            ],
+            'damage_assessment' => [
+                'type' => 'unknown',
+                'severity' => 'review',
+                'repairability_score' => 0.0,
+            ],
+            'replacement_part_brief' => [
+                'plain_language_summary' => 'Riconoscimento non effettuato: il provider AI live non ha risposto con un risultato.',
+                'probable_function' => '',
+                'part_family' => '',
+                'manufacturing_candidate' => false,
+                'material_hint' => '',
+                'critical_dimensions' => [],
+                'photo_requirements' => ['foto laterale', 'foto del pezzo montato', 'foto con una misura visibile'],
+                'user_questions' => [],
+            ],
+            'recommended_next_step' => [
+                'path' => 'check_provider_configuration',
+                'reason' => 'Controllare .env, API key e modello configurato prima di presentare un risultato di riconoscimento.',
+            ],
+            'suggested_inputs' => ['Carica una foto laterale, del pezzo montato o con una misura visibile.'],
+            'repair_notes' => ['No mock recognition was used for the normal live UI flow.'],
+        ];
+    }
 
     /** @param list<RepairAttachment> $attachments @return array<string, mixed> */
     private function deterministicSmokeResult(RepairCase $case, array $attachments): array

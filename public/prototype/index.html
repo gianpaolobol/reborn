@@ -3,45 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Re-born a" Dalla foto del pezzo rotto al ricambio funzionante</title>
-  <meta name="description" content=" Maker Faire di Re-born: carica una foto, riconosci il pezzo e ottieni un percorso semplice verso un ricambio funzionante." />
-  <link rel="stylesheet" href="assets/css/reborn.css?v=static-hero-fix" />
+  <title>Re-born - Riconoscimento immagini</title>
+  <meta name="description" content="Demo minimale Re-born per caricare immagini e riconoscere un ricambio tramite backend locale." />
+  <link rel="stylesheet" href="assets/css/reborn.css?v=minimal-live-ui-v2" />
 </head>
-<body data-demo-mode="makerfaire-public" data-step46-marker="makerfaire_public_wizard_v1">
-  <a class="skip-link" href="#app">Vai alla demo</a>
-  <header class="topbar" data-component="topbar">
-    <div class="brand-lockup" aria-label="Re-born">
-      <span class="brand-mark" aria-hidden="true">R</span>
-      <span class="brand-name">Re-born</span>
-      <span class="brand-tag">Foto | Analisi | Ricambio</span>
-    </div>
-    <!-- Navigation removed for single-page Maker Faire demo -->
-  </header>
-<!-- Marker legacy non renderizzati: Repair my object -  - Ripara un pezzo - Le mie richieste - Aiuto - Accedi - Console avanzate - PRODUCT.md - 1. Problem - 1. Problema - 2. Photos & files - 2. Foto - 3. Generate part - 3. Genera ricambio - 4. Quote - 4. Preventivo - Advanced consoles -->
+<body class="minimal-live-ui">
+  <main id="app" class="app-shell" tabindex="-1"></main>
 
-  <main id="app" class="makerfaire-single-page">
-  <section class="makerfaire-hero-static">
-    <div class="makerfaire-copy">
-      <p class="eyebrow">Demo Maker Faire</p>
-      <h1>Hai un pezzo rotto?</h1>
-      <p class="lead">Carica una foto. Re-born lo riconosce e ti guida verso il ricambio.</p>
-
-      <input id="repairFileInput" class="hidden-upload-input" type="file" multiple accept="image/jpeg,image/png,image/webp" />
-
-      <button class="btn green large-cta" type="button" onclick="document.getElementById('repairFileInput').click();">
-        Carica foto e identifica il pezzo
-      </button>
-    </div>
-  </section>
-</main>
-
-  <footer class="site-footer" aria-hidden="true"></footer>
-
-  <script src="assets/js/prototype-data.js"></script>
-  <script src="assets/js/state.js"></script>
-  <script src="assets/js/api-client.js?v=static-hero-fix"></script>
-  <script src="assets/js/app.js?v=static-hero-fix"></script>
-
-<!-- Step 47 prototype marker: Riconoscimento live necessario -->
+  <script src="assets/js/api-client.js?v=minimal-live-ui-v2"></script>
+  <script src="assets/js/app.js?v=minimal-live-ui-v2"></script>
 </body>
 </html>
