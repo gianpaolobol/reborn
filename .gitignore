@@ -38,7 +38,6 @@ fix-demo-passwords.php
 login.json
 /storage/backups/
 
-# Keep upload folders out of git, except placeholders
-storage/uploads/*
-!storage/uploads/repair-recognition-images/
-!storage/uploads/repair-recognition-images/.gitkeep
+.env
+.env.*
+!*.example

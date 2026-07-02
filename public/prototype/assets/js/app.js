@@ -85,6 +85,24 @@
     return String(result && result.identification && result.identification.status ? result.identification.status : 'unclear');
   }
 
+  function isPreliminaryRecognition(result) {
+    const verification = result && result.verification ? result.verification : {};
+    const gate = result && result.quality_gate ? result.quality_gate : {};
+    const verificationStatus = String(verification.status || gate.verification_status || '');
+    return verificationStatus.indexOf('preliminary') >= 0 || verificationStatus === 'pending_verifier';
+  }
+
+  function qualityNoticeHtml(result) {
+    if (!isPreliminaryRecognition(result)) {
+      return '';
+    }
+    const gate = result && result.quality_gate ? result.quality_gate : {};
+    const score = gate.quality_score || gate.quality_score === 0 ? String(gate.quality_score) + '/100' : 'da verificare';
+    const reasons = Array.isArray(gate.verification_reasons) ? gate.verification_reasons.slice(0, 2) : [];
+    const reasonText = reasons.length ? reasons.join('. ') : 'Il riconoscimento e utile, ma non ancora confermato da un provider di verifica avanzata.';
+    return '<div class="quality-notice"><strong>Verifica avanzata non completata</strong><p>Affidabilita preliminare: ' + escapeHtml(score) + '. ' + escapeHtml(reasonText) + '</p><p>Prima di produrre o scaricare il pezzo, confermare con altre immagini, codice leggibile o provider avanzato disponibile.</p></div>';
+  }
+
   function field(label, value) {
     return '<p><strong>' + escapeHtml(label) + '</strong><span>' + escapeHtml(value || 'Non disponibile') + '</span></p>';
   }
@@ -211,8 +229,13 @@
     const nextReason = recommended.reason || 'trovare la soluzione migliore per sostituire il pezzo rotto.';
     const next = 'Passa allo step successivo per ' + nextReason;
 
-    return '<section id="recognitionResult" class="result-panel recognized" aria-live="polite">' +
-      '<h2>Immagine riconosciuta</h2>' +
+    const preliminary = isPreliminaryRecognition(result);
+    const title = preliminary ? 'Riconoscimento preliminare' : 'Immagine riconosciuta';
+    const panelClass = preliminary ? 'result-panel recognized preliminary' : 'result-panel recognized';
+
+    return '<section id="recognitionResult" class="' + panelClass + '" aria-live="polite">' +
+      '<h2>' + escapeHtml(title) + '</h2>' +
+      qualityNoticeHtml(result) +
       '<div class="result-fields">' +
       field('Pezzo:', part) +
       field('Funzione:', fn) +

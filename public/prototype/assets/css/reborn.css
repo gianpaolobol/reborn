@@ -181,6 +181,30 @@ body.minimal-live-ui {
   border-left: 10px solid #d9a514;
 }
 
+.result-panel.preliminary {
+  border-left-color: #d9a514;
+}
+
+.quality-notice {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid rgba(217, 165, 20, 0.35);
+  border-radius: 14px;
+  background: #fff8e6;
+}
+
+.quality-notice strong {
+  color: #6a4b00;
+  font-size: 18px;
+}
+
+.quality-notice p {
+  margin: 0;
+  color: #5f533b;
+  font-size: 15px;
+}
+
 .result-panel.error {
   border-left: 10px solid #d93a31;
 }
