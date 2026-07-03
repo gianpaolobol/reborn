@@ -31,6 +31,6 @@ git add .
 git status
 
 Write-Host "Commit manually if needed:" -ForegroundColor Green
-Write-Host "git commit -m \"docs: expand Re-born product operating system\"" -ForegroundColor Green
+Write-Host 'git commit -m "docs: expand Re-born product operating system"' -ForegroundColor Green
 Write-Host "Then push:" -ForegroundColor Green
 Write-Host "git push -u origin main" -ForegroundColor Green
