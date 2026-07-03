@@ -87,15 +87,22 @@ foreach ($marker in @(
 }
 
 foreach ($marker in @(
-    "Nome commerciale",
-    "Marche compatibili possibili",
-    "Indizi di compatibilit",
-    "Riconoscimento live necessario",
-    "Dettaglio immagine",
-    "web_search_enabled"
+    "Carica foto e riconosci",
+    "Analisi in corso",
+    "recognized-part-name",
+    "confidence-chip",
+    "Marca/Codice",
+    "Dimensioni",
+    "Criteri di ricerca",
+    "Ricerca composta",
+    "searchLibraryMatches",
+    "reborn_library_cache",
+    "libraryMatchesHtml",
+    "searchOtherModelsButtonHtml",
+    "Cerca altri modelli"
 )) {
-    if ($appText -notlike "*$marker*") { Fail "Missing Step 47 prototype marker: $marker" }
-    Ok "Prototype marker present: $marker"
+    if ($appText -notlike "*$marker*") { Fail "Missing Step 47 compact prototype marker: $marker" }
+    Ok "Compact prototype marker present: $marker"
 }
 
 foreach ($marker in @(

@@ -11,12 +11,6 @@ function Assert-Contains([string]$Text, [string]$Needle, [string]$Label) {
     if ($Text -notlike "*$Needle*") { Fail "Missing expected UX marker: $Label" }
     Ok "UX marker present: $Label"
 }
-function Assert-ContainsAny([string]$Text, [string[]]$Needles, [string]$Label) {
-    foreach ($Needle in $Needles) {
-        if ($Text -like "*$Needle*") { Ok "UX marker present: $Label"; return }
-    }
-    Fail "Missing expected UX marker: $Label"
-}
 function Assert-NotContains([string]$Text, [string]$Needle, [string]$Label) {
     if ($Text -like "*$Needle*") { Fail "Unexpected old UX marker still visible: $Label" }
     Ok "Old UX marker absent: $Label"
@@ -32,30 +26,47 @@ $index = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/index.html" -Use
 if ($index.StatusCode -ne 200) { Fail "Prototype index did not return HTTP 200." }
 $indexText = [string]$index.Content
 
-Assert-ContainsAny $indexText @("Repair my object", "Ripara il mio oggetto") "primary guided repair nav"
-Assert-ContainsAny $indexText @("Photos & files", "2. Foto") "plain-language evidence nav"
-Assert-ContainsAny $indexText @("Advanced consoles", "Console avanzate") "advanced console grouped entry"
-Assert-NotContains $indexText "AI Gov" "advanced AI Gov removed from primary nav"
-Assert-NotContains $indexText "Geometry</a>" "geometry removed from primary nav"
-Assert-NotContains $indexText "Marketplace revenue" "footer no longer exposes full admin list"
-
 $app = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/assets/js/app.js" -UseBasicParsing -TimeoutSec 15
 if ($app.StatusCode -ne 200) { Fail "app.js did not return HTTP 200." }
 $appText = [string]$app.Content
-Assert-Contains $appText "function repairGuide" "guided repair route function"
-Assert-Contains $appText "Generate the missing replacement part" "first-time user headline"
-Assert-Contains $appText "Four steps. One main action at a time" "linear journey copy"
-Assert-Contains $appText "advancedConsoleDirectory" "grouped advanced directory"
-Assert-Contains $appText "simple-stepper" "reduced four-step progress indicator"
-Assert-Contains $appText "UX rule after Step 44" "future navigation governance rule"
 
 $css = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/assets/css/reborn.css" -UseBasicParsing -TimeoutSec 15
 if ($css.StatusCode -ne 200) { Fail "reborn.css did not return HTTP 200." }
 $cssText = [string]$css.Content
-Assert-Contains $cssText ".guided-hero" "guided hero layout CSS"
-Assert-Contains $cssText ".guided-step-card" "large readable guided cards"
-Assert-Contains $cssText ".replacement-route-card" "replacement route cards"
-Assert-Contains $cssText ".advanced-mode-note" "advanced mode warning CSS"
+
+$source = $indexText + "`n" + $appText + "`n" + $cssText
+
+foreach ($marker in @(
+    "minimal-live-ui",
+    "serverStatus",
+    "imageUploadInput",
+    "uploadButton",
+    "Carica foto e riconosci",
+    "Analisi in corso",
+    "recognitionResult",
+    "associatedImagesHtml",
+    "libraryMatchesHtml",
+    "searchOtherModelsButtonHtml",
+    "Cerca altri modelli",
+    "criteriaSearchQuery(result)",
+    "data-action=\"save-library\""
+)) {
+    Assert-Contains $source $marker $marker
+}
+
+foreach ($marker in @(
+    "topnav",
+    "navbar",
+    "Repair my object",
+    "Ripara il mio oggetto",
+    "Advanced consoles",
+    "Console avanzate",
+    "AI Gov",
+    "Geometry</a>",
+    "Marketplace revenue"
+)) {
+    Assert-NotContains $source $marker $marker
+}
 
 $loginBody = @{ email = "repair.user@reborn.local"; password = "password" } | ConvertTo-Json -Compress
 $login = Invoke-RestMethod -Method POST -Uri "$BaseUrl/api/v1/auth/login" -ContentType "application/json" -Body $loginBody -TimeoutSec 15
@@ -64,12 +75,12 @@ $headers = @{ Authorization = "Bearer $($login.token.access_token)" }
 Ok "Repair user login: ok"
 
 $caseBody = @{
-    title = "Step 43 guided UX smoke case"
-    description = "Created by the guided user repair experience smoke test to verify that the simplified UI still connects to the real repair-case API."
+    title = "Step 43 compact guided UX smoke case"
+    description = "Created by the guided user repair experience smoke test to verify that the compact recognition UI still connects to the real repair-case API."
     category = "home_appliance"
 } | ConvertTo-Json -Compress
 $case = Invoke-RestMethod -Method POST -Uri "$BaseUrl/api/v1/repair-cases" -Headers $headers -ContentType "application/json" -Body $caseBody -TimeoutSec 15
 if (-not $case.success -or -not $case.repair_case.id) { Fail "Guided repair case creation failed." }
-Ok "Guided repair can create a real case: ok"
+Ok "Guided compact repair UI can create a real case: ok"
 
 Write-Host "Step 43 guided user repair experience smoke test passed." -ForegroundColor Green

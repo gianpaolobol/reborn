@@ -112,10 +112,27 @@ try {
 
     $app = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/assets/js/app.js" -UseBasicParsing -TimeoutSec 15
     $appText = [string]$app.Content
-    # Keep markers ASCII-safe for Windows PowerShell 5.1 encoding behavior.
-    foreach ($marker in @("Primo sguardo AI", "Carica foto e identifica il pezzo", "Carica altre immagini", "pezzo riconosciuto", "servono altre immagini", "Testo letto nell", "Codice pezzo", "Dimensioni lette", "sourceImageLabel", "openRepairPhotoPicker", "handleRepairFilesSelectedAndIdentify", "language-switch", "syncStaticChromeLanguage")) {
-        if ($appText -notlike "*$marker*") { Fail "Missing Step 45.4 prototype marker: $marker" }
-        Ok "Prototype marker present: $marker"
+    # Step 49.2: the public prototype is now the compact live model finder.
+    # Keep the smoke focused on current structural markers instead of legacy wizard/nav copy.
+    foreach ($marker in @(
+        "Carica foto e riconosci",
+        "Analisi in corso",
+        "recognitionResult",
+        "recognized-part-name",
+        "Servono altre immagini",
+        "Marca/Codice",
+        "Dimensioni",
+        "Criteri di ricerca",
+        "Ricerca composta",
+        "criteriaSearchQuery(result)",
+        "searchLibraryMatches",
+        "reborn_library_cache",
+        "libraryMatchesHtml",
+        "searchOtherModelsButtonHtml",
+        "Cerca altri modelli"
+    )) {
+        if ($appText -notlike "*$marker*") { Fail "Missing compact prototype marker: $marker" }
+        Ok "Compact prototype marker present: $marker"
     }
 } finally {
     if (Test-Path $tempPng) { Remove-Item $tempPng -Force }
