@@ -10,6 +10,7 @@ return [
     'rate_limit_max_requests' => (int) Env::get('RATE_LIMIT_MAX_REQUESTS', 240),
     'rate_limit_window_seconds' => (int) Env::get('RATE_LIMIT_WINDOW_SECONDS', 60),
     'rate_limit_excluded_paths' => [
+        '/',
         '/api/health',
         '/api/ready',
         '/api/v1/platform/readiness',

@@ -60,7 +60,10 @@ final class SqliteRecognitionJobRepository implements RecognitionJobRepository
             'completed_at' => gmdate('c'),
         ]);
 
-        return $this->require($id);
+        $job = $this->require($id);
+        $this->recordMinimalLiveOutput($job, $result);
+
+        return $job;
     }
 
     public function fail(string $id, string $message): RecognitionJob
@@ -73,7 +76,22 @@ final class SqliteRecognitionJobRepository implements RecognitionJobRepository
             'completed_at' => gmdate('c'),
         ]);
 
-        return $this->require($id);
+        $job = $this->require($id);
+        $this->recordMinimalLiveOutput($job, [
+            'recognition_mode' => 'job_failed',
+            'identification' => [
+                'status' => 'unclear',
+                'part_number' => 'id non riconosciuta',
+                'commercial_name' => '',
+            ],
+            'object_guess' => [
+                'label' => 'id non riconosciuta',
+                'confidence' => 0,
+            ],
+            'error_message' => $message,
+        ]);
+
+        return $job;
     }
 
     public function find(string $id): ?RecognitionJob
@@ -152,6 +170,55 @@ final class SqliteRecognitionJobRepository implements RecognitionJobRepository
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return is_array($row) ? RecognitionJob::fromRow($row) : null;
+    }
+
+    /** @param array<string, mixed> $result */
+    private function recordMinimalLiveOutput(RecognitionJob $job, array $result): void
+    {
+        $this->ensureMinimalLiveOutputTable();
+
+        $identifier = $this->recognizedIdentifier($result);
+        $status = (string) ($result['identification']['status'] ?? 'unclear');
+        if ($status !== 'recognized') {
+            $identifier = 'id non riconosciuta';
+        }
+
+        $stmt = $this->pdo->prepare('INSERT OR REPLACE INTO minimal_live_recognition_outputs (id, recognition_job_id, repair_case_id, input_attachment_ids, recognized_identifier, recognition_status, output_json, created_at) VALUES (:id, :recognition_job_id, :repair_case_id, :input_attachment_ids, :recognized_identifier, :recognition_status, :output_json, :created_at)');
+        $stmt->execute([
+            'id' => $job->id,
+            'recognition_job_id' => $job->id,
+            'repair_case_id' => $job->repairCaseId,
+            'input_attachment_ids' => json_encode($job->inputAttachmentIds, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            'recognized_identifier' => $identifier,
+            'recognition_status' => $status === 'recognized' ? 'recognized' : 'unrecognized',
+            'output_json' => json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            'created_at' => gmdate('c'),
+        ]);
+    }
+
+    private function ensureMinimalLiveOutputTable(): void
+    {
+        $this->pdo->exec("CREATE TABLE IF NOT EXISTS minimal_live_recognition_outputs (id TEXT PRIMARY KEY, recognition_job_id TEXT NOT NULL, repair_case_id TEXT NOT NULL, input_attachment_ids TEXT NOT NULL DEFAULT '[]', recognized_identifier TEXT NOT NULL DEFAULT 'id non riconosciuta', recognition_status TEXT NOT NULL DEFAULT 'unrecognized', output_json TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL)");
+    }
+
+    /** @param array<string, mixed> $result */
+    private function recognizedIdentifier(array $result): string
+    {
+        $candidates = [
+            $result['identification']['part_number'] ?? null,
+            $result['identification']['commercial_name'] ?? null,
+            $result['part_spec']['name_it'] ?? null,
+            $result['object_guess']['label'] ?? null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            $value = trim((string) $candidate);
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return 'id non riconosciuta';
     }
 
     private function require(string $id): RecognitionJob

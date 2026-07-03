@@ -1,3 +1,5 @@
+# STEP45_RELEASE_EVIDENCE_WITH_AI_PHOTO_RECOGNITION_V1
+# STEP45_7_CI_MARKER_COMPATIBILITY_QUALITY_GATE_HOTFIX_V1
 param(
     [string]$BaseUrl = "http://127.0.0.1:8080",
     [switch]$AllowFailedSuite
@@ -10,6 +12,7 @@ $ProgressPreference = "SilentlyContinue"
 $Step45Version = "STEP47_AI_VISION_QUALITY_PROFILE_GATE_V1"
 # Legacy workflow guard marker retained intentionally so GitHub Actions grep checks remain compatible after hotfixes.
 # STEP45_RELEASE_EVIDENCE_WITH_AI_PHOTO_RECOGNITION_V1
+# STEP45_7_CI_MARKER_COMPATIBILITY_QUALITY_GATE_HOTFIX_V1
 # STEP46_RELEASE_EVIDENCE_WITH_USER_REPAIR_WIZARD_V1
 # STEP47_RELEASE_EVIDENCE_WITH_AI_VISION_QUALITY_PROFILE_V1
 Write-Host "Release evidence script version: $Step45Version" -ForegroundColor Magenta

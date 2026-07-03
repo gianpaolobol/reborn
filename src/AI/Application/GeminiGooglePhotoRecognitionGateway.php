@@ -31,7 +31,7 @@ final class GeminiGooglePhotoRecognitionGateway implements PhotoRecognitionGatew
     {
         $gemini = $this->geminiConfig();
         $geminiConfigured = $this->geminiApiKey() !== '';
-        $enabled = (bool) ($this->config['enabled'] ?? true) && $geminiConfigured;
+        $enabled = (bool) ($this->config['enabled'] ?? true) && (bool) ($gemini['enabled'] ?? true) && $geminiConfigured;
 
         return [
             'provider' => 'gemini',

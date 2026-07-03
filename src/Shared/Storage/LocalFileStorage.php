@@ -23,7 +23,7 @@ final class LocalFileStorage
 
         $extension = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
         $safeExtension = preg_replace('/[^a-z0-9]/', '', $extension) ?: 'bin';
-        $directory = 'repair-cases/' . preg_replace('/[^a-zA-Z0-9\-]/', '', $repairCaseId);
+        $directory = 'repair-recognition-images/' . preg_replace('/[^a-zA-Z0-9\-]/', '', $repairCaseId);
         $absoluteDirectory = rtrim($this->rootPath, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $directory);
 
         if (!is_dir($absoluteDirectory)) {

@@ -37,3 +37,13 @@ debug-db.php
 fix-demo-passwords.php
 login.json
 /storage/backups/
+
+.env
+.env.*
+!*.example
+
+storage/model_library/
+storage/model_library/**
+storage/uploads/
+storage/database/
+storage/logs/

@@ -8,6 +8,7 @@ use Reborn\AI\Application\RecognitionEngine;
 use Reborn\AI\Application\RequestRecognitionJobService;
 use Reborn\AI\Application\GeminiGooglePhotoRecognitionGateway;
 use Reborn\AI\Application\MultiProviderPhotoRecognitionGateway;
+use Reborn\AI\Application\ModelLibraryMatchService;
 use Reborn\AI\Application\OpenAIPhotoRecognitionGateway;
 use Reborn\AI\Application\OcrSpacePhotoRecognitionGateway;
 use Reborn\AI\Application\GroqVisionPhotoRecognitionGateway;
@@ -50,6 +51,9 @@ use Reborn\Identity\Infrastructure\SqliteAuthSessionRepository;
 use Reborn\Identity\Infrastructure\SqliteUserRepository;
 use Reborn\Identity\Presentation\AuthController;
 use Reborn\Knowledge\Application\KnowledgeEngine;
+use Reborn\Marketplace\Application\SearchReplacementModelService;
+use Reborn\Marketplace\Infrastructure\MarketplaceWebSearchAdapter;
+use Reborn\Marketplace\Infrastructure\SqliteMarketplaceModelSearchRepository;
 use Reborn\Marketplace\Application\GetRepairPathDecisionService;
 use Reborn\Marketplace\Application\ListRepairPathDecisionsService;
 use Reborn\Marketplace\Application\RepairPathDecisionEngine;
@@ -150,6 +154,7 @@ $config = [
     'auth' => require dirname(__DIR__) . '/config/auth.php',
     'security' => require dirname(__DIR__) . '/config/security.php',
     'ai' => require dirname(__DIR__) . '/config/ai.php',
+    'marketplace_search' => require dirname(__DIR__) . '/config/marketplace_search.php',
 ];
 
 $connection = new Connection($config['database']);
@@ -175,6 +180,7 @@ $dashboardController = new DashboardController(
 $repairRepository = new SqliteRepairCaseRepository($pdo);
 $attachmentRepository = new SqliteRepairAttachmentRepository($pdo);
 $recognitionJobRepository = new SqliteRecognitionJobRepository($pdo);
+$marketplaceModelSearchRepository = new SqliteMarketplaceModelSearchRepository($pdo);
 $repairPathDecisionRepository = new SqliteRepairPathDecisionRepository($pdo);
 $providerMatchRepository = new SqliteProviderMatchRepository($pdo);
 $providerQuoteRequestRepository = new SqliteProviderQuoteRequestRepository($pdo);
@@ -208,6 +214,14 @@ $photoRecognitionGateway = new MultiProviderPhotoRecognitionGateway($aiPhotoReco
     'openai' => $openAiPhotoRecognitionGateway,
 ]);
 
+$marketplaceModelSearchService = new SearchReplacementModelService(
+    $marketplaceModelSearchRepository,
+    new MarketplaceWebSearchAdapter($config['marketplace_search'] ?? []),
+    $config['marketplace_search'] ?? []
+);
+
+$modelLibraryMatchService = new ModelLibraryMatchService(dirname(__DIR__) . '/storage/model_library');
+
 $repairController = new RepairController(
     new ListRepairCasesService($repairRepository),
     new GetRepairCaseService($repairRepository),
@@ -227,7 +241,7 @@ $repairController = new RepairController(
 
 
 $recognitionJobController = new RecognitionJobController(
-    new RequestRecognitionJobService($repairRepository, $attachmentRepository, $recognitionJobRepository, $eventBus, $photoRecognitionGateway),
+    new RequestRecognitionJobService($repairRepository, $attachmentRepository, $recognitionJobRepository, $eventBus, $photoRecognitionGateway, $marketplaceModelSearchService, $modelLibraryMatchService),
     new ListRecognitionJobsService($repairRepository, $recognitionJobRepository),
     new GetRecognitionJobService($recognitionJobRepository),
     new GetRepairCaseService($repairRepository),

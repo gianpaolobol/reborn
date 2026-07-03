@@ -31,66 +31,44 @@ foreach ($capability in @("user_repair_wizard_simplification", "decision_behind_
 $index = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/index.html" -UseBasicParsing -TimeoutSec 15
 if ($index.StatusCode -ne 200) { Fail "Prototype index did not return HTTP 200." }
 $indexText = [string]$index.Content
-Assert-Contains $indexText "Ripara un pezzo" "simple primary nav"
-Assert-Contains $indexText "Le mie richieste" "plain requests nav"
-Assert-Contains $indexText "Aiuto" "help nav"
-Assert-Contains $indexText "Foto" "photo-analysis-replacement brand"
-Assert-Contains $indexText "Console avanzate" "advanced consoles still separated"
-Assert-NotContains $indexText "AI Gov" "AI governance not in primary nav"
-Assert-NotContains $indexText "Geometry</a>" "geometry not in primary nav"
-Assert-NotContains $indexText "Marketplace revenue" "marketplace revenue not in primary nav"
 
 $app = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/assets/js/app.js" -UseBasicParsing -TimeoutSec 15
 if ($app.StatusCode -ne 200) { Fail "app.js did not return HTTP 200." }
 $appText = [string]$app.Content
-foreach ($marker in @(
-    "STEP 46 - User Repair Wizard Simplification",
-    "userRepairWizard",
-    "Foto -> Analisi -> Ricambio",
-    "Hai un pezzo rotto?",
-    "Carica foto del pezzo",
-    "Pezzo riconosciuto",
-    "Servono altre immagini",
-    "Decisioni in background",
-    "continueToRecommendedSolution",
-    "requestWizardQuote",
-    "one_primary_cta_user_flow"
-)) {
-    if ($appText -notlike "*$marker*") { Fail "Missing Step 46 app marker: $marker" }
-    Ok "Step 46 app marker present: $marker"
-}
-Assert-Contains $appText "'/capture': userRepairWizard" "legacy capture route maps to simplified wizard"
-Assert-Contains $appText "'/repair-paths': userRepairWizard" "legacy repair paths route maps to simplified wizard"
-Assert-Contains $appText "'/provider-network': userRepairWizard" "legacy provider route maps to simplified wizard"
 
 $css = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/assets/css/reborn.css" -UseBasicParsing -TimeoutSec 15
 if ($css.StatusCode -ne 200) { Fail "reborn.css did not return HTTP 200." }
 $cssText = [string]$css.Content
-foreach ($marker in @(".user-wizard-hero", ".single-primary-action", ".user-repair-progress", ".background-card", ".minimal-fields")) {
-    if ($cssText -notlike "*$marker*") { Fail "Missing Step 46 CSS marker: $marker" }
-    Ok "Step 46 CSS marker present: $marker"
+
+$source = $indexText + "`n" + $appText + "`n" + $cssText
+
+foreach ($marker in @(
+    "minimal-live-ui",
+    "serverStatus",
+    "Carica foto e riconosci",
+    "Analisi in corso",
+    "linear-gradient(90deg",
+    "recognitionResult",
+    "Servono altre immagini",
+    "recognized-part-name",
+    "associatedImagesHtml",
+    "libraryMatchesHtml",
+    "searchOtherModelsButtonHtml",
+    "Cerca altri modelli"
+)) {
+    Assert-Contains $source $marker $marker
 }
 
 foreach ($marker in @(
-    "DEMO_REPAIR_USER",
-    "ensureWizardRepairUserSession",
-    "Accesso demo automatico",
-    "category: 'generic'"
+    "Ripara un pezzo",
+    "Le mie richieste",
+    "Console avanzate",
+    "AI Gov",
+    "Geometry</a>",
+    "Marketplace revenue",
+    "Decisioni in background"
 )) {
-    if ($appText -notlike "*$marker*") { Fail "Missing Step 49 live demo wizard marker: $marker" }
-    Ok "Step 49 live demo wizard marker present: $marker"
+    Assert-NotContains $source $marker $marker
 }
 
-foreach ($marker in @(
-    "ensureLiveApiForWizardRecognition",
-    "Backend API live non disponibile",
-    "visible_text",
-    "key_features",
-    "Provider live",
-    "Riconoscimento live fallito"
-)) {
-    if ($appText -notlike "*$marker*") { Fail "Missing Step 49.1 live demo result marker: $marker" }
-    Ok "Step 49.1 live demo result marker present: $marker"
-}
-
-Write-Host "Step 46/49.1 user repair wizard simplification smoke test passed." -ForegroundColor Green
+Write-Host "Step 46 user repair wizard simplification smoke test passed." -ForegroundColor Green

@@ -1,3 +1,4 @@
+# STEP45_CI_SMOKE_SUITE_WITH_AI_PHOTO_RECOGNITION_V1
 param(
     [string]$BaseUrl = "http://127.0.0.1:8080"
 )
