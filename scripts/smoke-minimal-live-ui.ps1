@@ -53,7 +53,7 @@ $requiredMarkers = @(
   "Carica il modello 3D corrispondente alla tua ricerca",
   "Link al modello 3D<input",
   "File modello 3D<input",
-  "data-action=\"save-library\"",
+  'data-action="save-library"',
   "recognized-part-name",
   "confidence-chip",
   "Marca/Codice",

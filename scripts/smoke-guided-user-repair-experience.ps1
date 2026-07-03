@@ -49,7 +49,7 @@ foreach ($marker in @(
     "searchOtherModelsButtonHtml",
     "Cerca altri modelli",
     "criteriaSearchQuery(result)",
-    "data-action=\"save-library\""
+    'data-action="save-library"'
 )) {
     Assert-Contains $source $marker $marker
 }
