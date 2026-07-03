@@ -18,16 +18,23 @@ if ($health.status -ne "ok") {
 }
 Ok "/api/health ok"
 
+$rootPage = Invoke-WebRequest -Method GET -Uri "$BaseUrl/" -TimeoutSec 15
+if ($rootPage.StatusCode -ne 200) {
+  Fail "root product UI did not return HTTP 200"
+}
+Ok "root product UI 200"
+
 $page = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/index.html" -TimeoutSec 15
 if ($page.StatusCode -ne 200) {
   Fail "prototype index did not return HTTP 200"
 }
-Ok "index.html 200"
+Ok "prototype index 200"
 
 $content = [string]$page.Content
 $appJs = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/assets/js/app.js" -TimeoutSec 15
 $css = Invoke-WebRequest -Method GET -Uri "$BaseUrl/prototype/assets/css/reborn.css" -TimeoutSec 15
-$source = $content + "`n" + [string]$appJs.Content + "`n" + [string]$css.Content
+$rootContent = [string]$rootPage.Content
+$source = $rootContent + "`n" + $content + "`n" + [string]$appJs.Content + "`n" + [string]$css.Content
 $requiredMarkers = @(
   "minimal-live-ui",
   "serverStatus",
@@ -35,7 +42,28 @@ $requiredMarkers = @(
   "uploadProgress",
   "previewGrid",
   "recognitionResult",
-  "marketplace-panel"
+  "criteria-panel",
+  "Criteri di ricerca",
+  "Identificazione",
+  "Richiesta di identificazione assistita",
+  "Carica il modello 3D corrispondente alla tua ricerca",
+  "Link al modello 3D<input",
+  "File modello 3D<input",
+  "data-action=\"save-library\"",
+  "recognized-part-name",
+  "confidence-chip",
+  "Marca/Codice",
+  "Dimensioni",
+  "Scegli i criteri di ricerca per trovare il tuo ricambio",
+  "Ricerca composta",
+  "composedQueryInput",
+  "criteriaSearchQuery(result)",
+  "updateMarketplaceLinkTargets",
+  "data-marketplace-source",
+  "ti aiuteremo a trovare il tuo ricambio",
+  "Email<input",
+  "Nome<input",
+  "significantWords(value, 3"
 )
 
 foreach ($marker in $requiredMarkers) {
@@ -54,12 +82,33 @@ $forbiddenMarkers = @(
   "Console avanzate",
   "governance",
   "readiness",
-  "job_id"
+  "job_id",
+  "Controllare .env",
+  "Verifica avanzata non completata",
+  "slicer configurato",
+  "Richiedi stampa",
+  "Apri migliore ricerca",
+  "Ricerche generate",
+  "STL 3MF ricambio stampa 3D",
+  "Scegli quali informazioni usare",
+  "La ricerca composta resta pulita",
+  "Pezzo riconosciuto",
+  "Pezzo probabilmente riconosciuto",
+  "Per procedere con la riproduzione",
+  "Invia a Re-born una richiesta",
+  "Email per risposta",
+  "Nome facoltativo",
+  "significantWords(value, 4",
+  "Fonte del modello",
+  "Parametri di ricerca",
+  "Ricerca usata",
+  "Link al modello 3D opzionale",
+  "Il file viene salvato nella libreria Re-born"
 )
 
 foreach ($marker in $forbiddenMarkers) {
-  if ($content -like "*$marker*") {
-    Fail "Forbidden visible marker found in index.html: $marker"
+  if ($source -like "*$marker*") {
+    Fail "Forbidden visible marker found in UI source: $marker"
   }
 }
 Ok "forbidden index markers absent"

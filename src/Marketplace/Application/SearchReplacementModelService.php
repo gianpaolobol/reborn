@@ -85,7 +85,7 @@ final class SearchReplacementModelService
             'best_candidate' => $best,
             'candidates' => array_slice($candidates, 0, 8),
             'summary' => $summary,
-            'next_step' => $hasDownloadCandidate ? 'manual_verify_before_download_or_print' : 'continue_to_meshy_if_no_manual_match',
+            'next_step' => $hasDownloadCandidate ? 'manual_verify_before_download_or_print' : 'assisted_request_if_no_model_match',
             'safety_note' => 'I link sono candidati da verificare manualmente: licenza, compatibilita dimensionale, materiale e scaricabilita non sono garantiti.',
         ];
     }

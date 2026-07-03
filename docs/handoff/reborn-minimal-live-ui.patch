@@ -1,0 +1,529 @@
+--- public/prototype/index.html	2026-07-01 00:58:03.000000000 +0000
++++ /mnt/data/reborn_minimal_live/public/prototype/index.html	2026-07-01 21:58:03.369960585 +0000
+@@ -3,47 +3,16 @@
+ <head>
+   <meta charset="utf-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1" />
+-  <title>Re-born Prototype — Piattaforma intelligente per ricambi e riparazioni</title>
+-  <meta name="description" content="Prototipo MVP di Re-born, piattaforma intelligente per generare e ottenere ricambi." />
+-  <link rel="stylesheet" href="assets/css/reborn.css?v=step49-11" />
++  <title>Re-born Prototype - Riconoscimento ricambi da immagine</title>
++  <meta name="description" content="Prototipo Re-born per riconoscere un ricambio da immagini caricate." />
++  <link rel="stylesheet" href="assets/css/reborn.css?v=minimal-live-ui-v1" />
+ </head>
+-<body>
+-  <a class="skip-link" href="#app">Vai al prototipo</a>
+-  <header class="topbar" data-component="topbar">
+-    <div class="brand-lockup" aria-label="Re-born">
+-      <span class="brand-mark" aria-hidden="true">R</span>
+-      <span class="brand-name">Re-born</span>
+-      <span class="brand-tag">Foto → Analisi → Ricambio</span>
+-    </div>
+-    <nav class="topnav" aria-label="Navigazione principale">
+-      <a href="#/repair-guide" data-nav="repair-guide">Ripara un pezzo</a>
+-      <a href="#/account" data-nav="account">Le mie richieste</a>
+-      <a href="#/help" data-nav="help">Aiuto</a>
+-      <a href="#/login" data-nav="login">Accedi</a>
+-      <a href="#/advanced" data-nav="advanced" class="advanced-link">Console avanzate</a>
+-    </nav>
+-    <button class="menu-button" id="menuButton" type="button" aria-label="Apri menu" aria-expanded="false">Menu</button>
+-  </header>
+-  <!-- Smoke compatibility markers, not rendered as primary UX: Repair my object · Ripara il mio oggetto · 1. Problem · 1. Problema · 2. Photos & files · 2. Foto · 3. Generate part · 3. Genera ricambio · 4. Quote · 4. Preventivo · Advanced consoles · Console avanzate -->
+-
++<body class="minimal-live-ui">
+   <main id="app" class="app-shell" tabindex="-1"></main>
+ 
+-  <footer class="footer">
+-    <div>
+-      <strong>Re-born prototype</strong><br />
+-      Percorso guidato: carichi una foto, Re-born legge ciò che può e ti porta alla strada più veloce per ottenere un ricambio funzionante.
+-    </div>
+-    <div class="footer-links">
+-      <a href="#/repair-guide">Ripara un pezzo</a>
+-      <a href="#/help">Aiuto</a>
+-      <a href="#/advanced">Console avanzate</a>
+-      <a href="../../PRODUCT.md">PRODUCT.md</a>
+-    </div>
+-  </footer>
+-
+   <script src="assets/js/prototype-data.js"></script>
+-  <script src="assets/js/state.js?v=step49-11"></script>
+-  <script src="assets/js/api-client.js?v=step49-11"></script>
+-  <script src="assets/js/app.js?v=step49-11"></script>
++  <script src="assets/js/state.js?v=minimal-live-ui-v1"></script>
++  <script src="assets/js/api-client.js?v=minimal-live-ui-v1"></script>
++  <script src="assets/js/app.js?v=minimal-live-ui-v1"></script>
+ </body>
+ </html>
+--- public/prototype/assets/js/app.js	2026-07-01 00:58:03.000000000 +0000
++++ /mnt/data/reborn_minimal_live/public/prototype/assets/js/app.js	2026-07-01 21:58:34.451847677 +0000
+@@ -9,6 +9,35 @@
+ // It signs in the safe demo repair user in the background, then uses the configured live vision provider.
+ const DEMO_REPAIR_USER = { email: 'repair.user@reborn.local', password: 'password' };
+ 
++const REBORN_MINIMAL_PREVIEWS = [];
++let REBORN_MINIMAL_PROGRESS = { phase: 'idle', percent: 0, message: 'In attesa di immagini.' };
++
++function setEssentialProgress(phase, percent, message) {
++  REBORN_MINIMAL_PROGRESS = {
++    phase: phase || 'idle',
++    percent: Math.max(0, Math.min(100, Number(percent || 0))),
++    message: message || ''
++  };
++}
++
++function rememberSelectedFilePreviews(files) {
++  while (REBORN_MINIMAL_PREVIEWS.length) {
++    const old = REBORN_MINIMAL_PREVIEWS.pop();
++    if (old && old.url) URL.revokeObjectURL(old.url);
++  }
++
++  Array.from(files || []).forEach((file, index) => {
++    if (!file || !String(file.type || '').startsWith('image/')) return;
++    REBORN_MINIMAL_PREVIEWS.push({
++      id: `${Date.now()}-${index}`,
++      name: file.name || `immagine-${index + 1}.jpg`,
++      size: file.size || 0,
++      url: URL.createObjectURL(file)
++    });
++  });
++}
++
++
+ const REBORN_I18N = {
+   it: {
+     liveApi: 'API attiva', mockMode: 'Modalità demo', apiError: 'Errore API', checkingApi: 'Controllo API', noSyncYet: 'Nessuna sincronizzazione', lastSync: 'Ultima sincronizzazione', guest: 'Ospite', savedToken: 'Token salvato', logout: 'Esci', login: 'Accedi', refreshApi: 'Aggiorna API',
+@@ -455,41 +484,107 @@
+   </aside>`;
+ }
+ 
++
++function essentialServerStatus() {
++  const status = String(S.api.status || 'checking');
++  const isLive = status === 'live';
++  const isError = status === 'error';
++  const label = isLive ? 'Server collegato' : isError ? 'Server non disponibile' : 'Connessione al server';
++  const detail = isLive ? 'API e riconoscimento immagini pronti.' : isError ? (S.api.lastError || S.api.message || 'Verifica il server locale.') : 'Verifica connessione in corso.';
++  return html`<section class="essential-status ${isLive ? 'ready' : isError ? 'error' : 'checking'}" aria-live="polite">
++    <strong>${safe(label)}</strong>
++    <span>${safe(detail)}</span>
++  </section>`;
++}
++
++function essentialProgressPercent() {
++  if (S.busy) return Math.max(REBORN_MINIMAL_PROGRESS.percent || 0, 65);
++  if (activeRecognitionJob()) return 100;
++  if (REBORN_MINIMAL_PREVIEWS.length || activeAttachments().length) return Math.max(REBORN_MINIMAL_PROGRESS.percent || 0, 25);
++  return REBORN_MINIMAL_PROGRESS.percent || 0;
++}
++
++function essentialUploadProgress() {
++  const percent = essentialProgressPercent();
++  const message = S.busy ? (S.api.message || REBORN_MINIMAL_PROGRESS.message || 'Caricamento e riconoscimento in corso.') : (REBORN_MINIMAL_PROGRESS.message || 'Nessun caricamento in corso.');
++  return html`<section class="essential-progress" aria-label="Barra di caricamento">
++    <div class="essential-progress-head"><strong>Caricamento immagini</strong><span>${safe(String(percent))}%</span></div>
++    <div class="essential-progress-bar"><span style="width:${safe(String(percent))}%"></span></div>
++    <p>${safe(message)}</p>
++  </section>`;
++}
++
++function essentialImagePreviews() {
++  const previews = REBORN_MINIMAL_PREVIEWS.slice();
++  const attachments = activeAttachments();
++
++  if (!previews.length && !attachments.length) {
++    return html`<section class="essential-previews empty"><strong>Immagini caricate</strong><p>Nessuna immagine caricata.</p></section>`;
++  }
++
++  const localCards = previews.map(item => html`<figure class="essential-preview-card">
++    <img src="${safe(item.url)}" alt="Anteprima immagine caricata" />
++    <figcaption>${safe(item.name)}</figcaption>
++  </figure>`).join('');
++
++  const uploadedCards = !previews.length ? attachments.map((attachment, index) => html`<figure class="essential-preview-card uploaded-placeholder">
++    <div class="essential-uploaded-icon">IMG</div>
++    <figcaption>${safe(attachment.original_filename || `immagine-${index + 1}`)}</figcaption>
++  </figure>`).join('') : '';
++
++  return html`<section class="essential-previews"><strong>Preview immagini</strong><div class="essential-preview-grid">${localCards}${uploadedCards}</div></section>`;
++}
++
++function essentialRecognitionPanel(normalized = normalizedRecognitionResult()) {
++  const job = activeRecognitionJob();
++
++  if (S.busy) {
++    return html`<section class="essential-result analyzing" aria-live="polite"><strong>Risposta riconoscimento</strong><h2>Analisi in corso</h2><p>Attendi: il server sta caricando le immagini e chiedendo il riconoscimento al provider AI configurato.</p></section>`;
++  }
++
++  if (!job) {
++    return html`<section class="essential-result empty" aria-live="polite"><strong>Risposta riconoscimento</strong><h2>In attesa della prima immagine</h2><p>Carica una o piu immagini per avviare il riconoscimento.</p></section>`;
++  }
++
++  if (normalized.status === 'failed') {
++    return html`<section class="essential-result error" aria-live="polite"><strong>Risposta riconoscimento</strong><h2>Riconoscimento non completato</h2><p>${safe(S.api.lastError || normalized.plain_summary || 'Il server non ha restituito un risultato utilizzabile.')}</p></section>`;
++  }
++
++  const title = normalized.status === 'recognized' ? 'Immagine riconosciuta' : 'Servono altre immagini';
++  const details = [];
++  if (normalized.part_name) details.push(['Pezzo', normalized.part_name]);
++  if (normalized.commercial_name) details.push(['Nome commerciale', normalized.commercial_name]);
++  if (normalized.part_number) details.push(['Codice letto', normalized.part_number]);
++  if (Array.isArray(normalized.known_dimensions) && normalized.known_dimensions.length) details.push(['Misure lette', normalized.known_dimensions.slice(0, 4).join(', ')]);
++  if (Array.isArray(normalized.visible_text) && normalized.visible_text.length) details.push(['Testo letto', normalized.visible_text.slice(0, 3).join(' | ')]);
++  if (Array.isArray(normalized.key_features) && normalized.key_features.length) details.push(['Dettagli visibili', normalized.key_features.slice(0, 4).join(', ')]);
++  if (normalized.recommended_next_action) details.push(['Prossimo passo', normalized.recommended_next_action]);
++
++  return html`<section class="essential-result ${normalized.status === 'recognized' ? 'ready' : 'needs-more'}" aria-live="polite">
++    <strong>Risposta riconoscimento</strong>
++    <h2>${safe(title)}</h2>
++    <p>${safe(normalized.plain_summary || 'Risultato ricevuto dal server.')}</p>
++    ${details.length ? `<dl>${details.map(([k, v]) => `<div><dt>${safe(k)}</dt><dd>${safe(v)}</dd></div>`).join('')}</dl>` : ''}
++  </section>`;
++}
++
+ function userRepairWizard() {
+   setActiveNav('repair-guide');
+-  const c = wizardCopy();
+   const normalized = normalizedRecognitionResult();
+-  const active = userRepairCurrentStep(normalized);
+-  const primaryLabel = userRepairPrimaryLabel(normalized);
+-  const primaryAction = userRepairPrimaryActionName(normalized);
++  const buttonLabel = S.busy ? 'Caricamento e riconoscimento...' : activeRecognitionJob() ? 'Carica altre immagini' : 'Carica immagini';
+ 
+-  return userRepairLayout(html`
++  return html`
+     <input id="repairFileInput" class="hidden-upload-input" type="file" multiple accept="image/jpeg,image/png,image/webp" onchange="handleRepairFilesSelectedAndIdentify(event)" />
+-    <section class="user-wizard-hero repair-first-hero" data-smoke="${safe(c.dataMarkers)}">
+-      <div class="user-wizard-copy">
+-        <p class="eyebrow">${safe(c.heroEyebrow)}</p>
+-        <h1>${safe(c.heroTitle)}</h1>
+-        <p class="lead">${safe(c.heroLead)}</p>
+-        <p class="muted">${safe(c.heroHint)}</p>
+-        <div class="single-primary-action"><button class="btn green large-cta" type="button" onclick="${primaryAction}" ${S.busy ? 'disabled' : ''}>${safe(primaryLabel)}</button></div>
+-        <p class="muted small">Foto -> Analisi -> Ricambio. ${safe(c.unknownOk)}</p>
+-      </div>
+-      <div class="user-wizard-panel">
+-        ${userRepairProgress(active)}
+-        ${wizardEvidenceSummary()}
+-      </div>
+-    </section>
+-    <section class="user-wizard-grid">
+-      <div class="stack">
+-        ${userRepairResultCard(normalized)}
+-        ${userRepairMinimalInputs(normalized)}
+-        ${activeRepairPathDecision() ? userRepairSolutionCard() : ''}
+-      </div>
+-      ${decisionBehindScenesCard()}
+-    </section>
+-  `);
++    <section class="essential-recognition-app">
++      ${essentialServerStatus()}
++      <button class="btn green essential-upload-button" type="button" onclick="openRepairPhotoPicker()" ${S.busy ? 'disabled' : ''}>${safe(buttonLabel)}</button>
++      ${essentialUploadProgress()}
++      ${essentialImagePreviews()}
++      ${essentialRecognitionPanel(normalized)}
++    </section>`;
+ }
+ 
++
+ function help() {
+   setActiveNav('help');
+   const c = wizardCopy();
+@@ -4850,6 +4945,8 @@
+ 
+ function handleRepairFilesSelected(event) {
+   const files = Array.from(event.currentTarget.files || []);
++  rememberSelectedFilePreviews(files);
++  setEssentialProgress(files.length ? 'selected' : 'idle', files.length ? 10 : 0, files.length ? 'Immagini selezionate.' : 'Nessuna immagine selezionata.');
+   S.set('selectedUploadFiles', files);
+   toast(files.length ? `${files.length} ${t('filesSelected')}` : t('noFilesSelected'));
+   render();
+@@ -4866,6 +4963,8 @@
+ 
+ async function handleRepairFilesSelectedAndIdentify(event) {
+   const files = Array.from(event.currentTarget.files || []);
++  rememberSelectedFilePreviews(files);
++  setEssentialProgress(files.length ? 'selected' : 'idle', files.length ? 10 : 0, files.length ? 'Immagini selezionate.' : 'Nessuna immagine selezionata.');
+   S.set('selectedUploadFiles', files);
+   if (!files.length) {
+     toast(t('noPhotoSelected'));
+@@ -4997,6 +5096,7 @@
+     });
+   }
+ 
++  setEssentialProgress('uploading', 20, 'Connessione al server e preparazione upload.');
+   setBusy(true);
+   S.setApi({
+     status: 'live',
+@@ -5015,6 +5115,7 @@
+         description: 'Richiesta guidata creata automaticamente dal wizard foto -> analisi -> ricambio. L’utente non conosce necessariamente il nome del pezzo.'
+       });
+       repairCase = created.repair_case;
++      setEssentialProgress('case_created', 35, 'Richiesta creata. Caricamento immagini.');
+       S.setApi({
+         repairCase,
+         repairCases: [repairCase, ...S.api.repairCases],
+@@ -5028,7 +5129,11 @@
+ 
+     let attachments = activeAttachments();
+     if (files.length) {
++      let uploadIndex = 0;
+       for (const file of files) {
++        uploadIndex += 1;
++        setEssentialProgress('uploading', Math.min(70, 35 + Math.round((uploadIndex / Math.max(files.length, 1)) * 35)), `Caricamento immagine ${uploadIndex} di ${files.length}.`);
++        render();
+         await window.REBORN_API.uploadRepairAttachment(repairCase.id, file, String(file.type || '').startsWith('image/') ? 'diagnostic_photo' : 'repair_asset');
+       }
+       const payload = await window.REBORN_API.getRepairAttachments(repairCase.id);
+@@ -5040,7 +5145,10 @@
+     recognitionAttachmentIds = (attachments || []).filter(attachment => attachment?.id).map(attachment => String(attachment.id));
+ 
+     if (autoIdentify) {
++      setEssentialProgress('recognizing', 82, 'Immagini caricate. Riconoscimento in corso.');
++      render();
+       await requestAIRecognitionForAttachments(repairCase, attachments, recognitionAttachmentIds);
++      setEssentialProgress('done', 100, 'Riconoscimento completato.');
+     } else {
+       toast(t('evidenceUploaded'));
+       S.setApi({ status: 'live', message: t('evidenceUploaded'), lastError: null, lastSyncAt: new Date().toISOString() });
+@@ -5050,6 +5158,7 @@
+       const recovered = await recoverRecognitionResultAfterClientError(repairCase, error, recognitionAttachmentIds).catch(() => false);
+       if (recovered) return;
+     }
++    setEssentialProgress('error', 100, 'Riconoscimento non completato.');
+     S.setApi({ status: 'error', message: `${t('uploadRecognitionFailed')}: ${error.message}`, lastError: error.message });
+     toast(`${t('uploadRecognitionFailed')}: ${error.message}`);
+   } finally {
+--- public/prototype/assets/css/reborn.css	2026-07-01 00:58:03.000000000 +0000
++++ /mnt/data/reborn_minimal_live/public/prototype/assets/css/reborn.css	2026-07-01 21:58:54.544539737 +0000
+@@ -869,3 +869,230 @@
+   .single-primary-action .large-cta { width: 100%; justify-content: center; }
+   .user-status { align-items: flex-start; border-radius: 20px; flex-direction: column; }
+ }
++
++/* Minimal live recognition UI: only server status, upload/progress, previews and recognition result. */
++body.minimal-live-ui {
++  min-height: 100vh;
++  margin: 0;
++  background: #f7f3ea;
++  color: #161a1f;
++  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
++}
++
++body.minimal-live-ui .app-shell {
++  width: min(980px, calc(100% - 32px));
++  margin: 0 auto;
++  padding: clamp(24px, 6vw, 72px) 0;
++}
++
++.essential-recognition-app {
++  display: grid;
++  gap: 18px;
++  width: 100%;
++}
++
++.essential-status,
++.essential-progress,
++.essential-previews,
++.essential-result {
++  border: 1px solid rgba(16, 24, 40, 0.12);
++  border-radius: 24px;
++  background: #fffdf8;
++  box-shadow: 0 18px 42px rgba(16, 24, 40, 0.08);
++  padding: clamp(20px, 4vw, 32px);
++}
++
++.essential-status {
++  display: grid;
++  gap: 8px;
++  border-left: 8px solid #d5a515;
++}
++
++.essential-status.ready {
++  border-left-color: #2fbf71;
++}
++
++.essential-status.error {
++  border-left-color: #d64545;
++}
++
++.essential-status strong,
++.essential-previews strong,
++.essential-result strong,
++.essential-progress strong {
++  display: block;
++  font-size: 14px;
++  font-weight: 800;
++  letter-spacing: 0.08em;
++  text-transform: uppercase;
++  color: #4b5563;
++}
++
++.essential-status span,
++.essential-progress p,
++.essential-previews p,
++.essential-result p {
++  margin: 0;
++  color: #263241;
++  font-size: clamp(17px, 2vw, 21px);
++  line-height: 1.45;
++}
++
++.essential-upload-button {
++  min-height: 76px;
++  width: 100%;
++  border-radius: 18px;
++  font-size: clamp(20px, 2.4vw, 30px);
++  font-weight: 900;
++}
++
++.hidden-upload-input {
++  position: absolute;
++  left: -9999px;
++  width: 1px;
++  height: 1px;
++  opacity: 0;
++}
++
++.essential-progress-head {
++  display: flex;
++  justify-content: space-between;
++  gap: 16px;
++  align-items: center;
++  margin-bottom: 14px;
++}
++
++.essential-progress-head span {
++  font-size: 18px;
++  font-weight: 900;
++  color: #111418;
++}
++
++.essential-progress-bar {
++  width: 100%;
++  height: 18px;
++  overflow: hidden;
++  border-radius: 999px;
++  background: #e8e2d6;
++}
++
++.essential-progress-bar span {
++  display: block;
++  height: 100%;
++  min-width: 0;
++  border-radius: inherit;
++  background: linear-gradient(90deg, #2fbf71, #62d889);
++  transition: width 220ms ease;
++}
++
++.essential-progress p {
++  margin-top: 12px;
++  font-size: 16px;
++}
++
++.essential-preview-grid {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 14px;
++  margin-top: 16px;
++}
++
++.essential-preview-card {
++  width: 132px;
++  margin: 0;
++  border: 1px solid rgba(16, 24, 40, 0.1);
++  border-radius: 18px;
++  background: #ffffff;
++  padding: 10px;
++}
++
++.essential-preview-card img,
++.essential-uploaded-icon {
++  display: grid;
++  place-items: center;
++  width: 112px;
++  height: 112px;
++  border-radius: 14px;
++  object-fit: cover;
++  background: #eef0f2;
++  color: #53606f;
++  font-size: 22px;
++  font-weight: 900;
++}
++
++.essential-preview-card figcaption {
++  margin-top: 8px;
++  font-size: 12px;
++  line-height: 1.2;
++  color: #4b5563;
++  white-space: nowrap;
++  overflow: hidden;
++  text-overflow: ellipsis;
++}
++
++.essential-result h2 {
++  margin: 10px 0 10px;
++  font-size: clamp(34px, 5vw, 64px);
++  line-height: 0.98;
++  letter-spacing: -0.04em;
++  color: #111418;
++}
++
++.essential-result.ready {
++  border-left: 8px solid #2fbf71;
++}
++
++.essential-result.needs-more {
++  border-left: 8px solid #d5a515;
++}
++
++.essential-result.error {
++  border-left: 8px solid #d64545;
++}
++
++.essential-result dl {
++  display: grid;
++  gap: 12px;
++  margin: 22px 0 0;
++}
++
++.essential-result dl div {
++  display: grid;
++  gap: 4px;
++  border-top: 1px solid rgba(16, 24, 40, 0.1);
++  padding-top: 12px;
++}
++
++.essential-result dt {
++  font-size: 13px;
++  font-weight: 800;
++  letter-spacing: 0.06em;
++  text-transform: uppercase;
++  color: #6b7280;
++}
++
++.essential-result dd {
++  margin: 0;
++  color: #111418;
++  font-size: 18px;
++  line-height: 1.4;
++}
++
++@media (max-width: 680px) {
++  body.minimal-live-ui .app-shell {
++    width: min(100% - 20px, 980px);
++    padding: 16px 0 32px;
++  }
++
++  .essential-status,
++  .essential-progress,
++  .essential-previews,
++  .essential-result {
++    border-radius: 18px;
++    padding: 18px;
++  }
++
++  .essential-upload-button {
++    min-height: 68px;
++  }
++}

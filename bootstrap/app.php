@@ -8,6 +8,7 @@ use Reborn\AI\Application\RecognitionEngine;
 use Reborn\AI\Application\RequestRecognitionJobService;
 use Reborn\AI\Application\GeminiGooglePhotoRecognitionGateway;
 use Reborn\AI\Application\MultiProviderPhotoRecognitionGateway;
+use Reborn\AI\Application\ModelLibraryMatchService;
 use Reborn\AI\Application\OpenAIPhotoRecognitionGateway;
 use Reborn\AI\Application\OcrSpacePhotoRecognitionGateway;
 use Reborn\AI\Application\GroqVisionPhotoRecognitionGateway;
@@ -219,6 +220,8 @@ $marketplaceModelSearchService = new SearchReplacementModelService(
     $config['marketplace_search'] ?? []
 );
 
+$modelLibraryMatchService = new ModelLibraryMatchService(dirname(__DIR__) . '/storage/model_library');
+
 $repairController = new RepairController(
     new ListRepairCasesService($repairRepository),
     new GetRepairCaseService($repairRepository),
@@ -238,7 +241,7 @@ $repairController = new RepairController(
 
 
 $recognitionJobController = new RecognitionJobController(
-    new RequestRecognitionJobService($repairRepository, $attachmentRepository, $recognitionJobRepository, $eventBus, $photoRecognitionGateway, $marketplaceModelSearchService),
+    new RequestRecognitionJobService($repairRepository, $attachmentRepository, $recognitionJobRepository, $eventBus, $photoRecognitionGateway, $marketplaceModelSearchService, $modelLibraryMatchService),
     new ListRecognitionJobsService($repairRepository, $recognitionJobRepository),
     new GetRecognitionJobService($recognitionJobRepository),
     new GetRepairCaseService($repairRepository),

@@ -8,7 +8,7 @@ return [
     'photo_recognition' => [
         // Step 50+ provider values: auto, ocrspace, groq, openrouter, gemini, openai, awsrekognition, clarifai, roboflow.
         'provider' => Env::get('AI_PHOTO_RECOGNITION_PROVIDER', 'auto'),
-        'provider_order' => Env::csv('AI_VISION_PROVIDER_ORDER', ['ocrspace', 'groq', 'openrouter']),
+        'provider_order' => Env::csv('AI_VISION_PROVIDER_ORDER', ['ocrspace', 'gemini', 'groq']),
         'enabled' => Env::bool('AI_PHOTO_RECOGNITION_ENABLED', true),
 
         // Recognition Quality Gate.
@@ -24,8 +24,8 @@ return [
             'low_trust_max_score' => (int) Env::get('AI_RECOGNITION_LOW_TRUST_MAX_SCORE', 79),
             'require_trusted_verifier_for_final' => Env::bool('AI_RECOGNITION_REQUIRE_TRUSTED_VERIFIER_FOR_FINAL', true),
             'low_trust_providers' => Env::csv('AI_RECOGNITION_LOW_TRUST_PROVIDERS', ['ocrspace', 'groq', 'openrouter']),
-            'verifier_providers' => Env::csv('AI_RECOGNITION_VERIFIER_PROVIDERS', ['gemini', 'openai', 'awsrekognition', 'clarifai', 'roboflow']),
-            'trusted_final_providers' => Env::csv('AI_RECOGNITION_TRUSTED_FINAL_PROVIDERS', ['gemini', 'openai', 'awsrekognition', 'clarifai', 'roboflow']),
+            'verifier_providers' => Env::csv('AI_RECOGNITION_VERIFIER_PROVIDERS', ['gemini']),
+            'trusted_final_providers' => Env::csv('AI_RECOGNITION_TRUSTED_FINAL_PROVIDERS', ['gemini']),
             'verify_when_code_visible' => Env::bool('AI_RECOGNITION_VERIFY_WHEN_CODE_VISIBLE', true),
             'verify_when_generic_part' => Env::bool('AI_RECOGNITION_VERIFY_WHEN_GENERIC_PART', true),
             'verify_when_missing_function' => Env::bool('AI_RECOGNITION_VERIFY_WHEN_MISSING_FUNCTION', true),
@@ -64,7 +64,7 @@ return [
             'temperature' => (float) Env::get('GROQ_TEMPERATURE', 0.1),
         ],
         'openrouter' => [
-            'enabled' => Env::bool('OPENROUTER_ENABLED', true),
+            'enabled' => Env::bool('OPENROUTER_ENABLED', false),
             'api_key' => Env::get('OPENROUTER_API_KEY', ''),
             'base_url' => Env::get('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
             'model' => Env::get('OPENROUTER_VISION_MODEL', 'openrouter/free'),
@@ -75,7 +75,7 @@ return [
 
         // Step 48.1 — Gemini-only Vision provider.
         'gemini' => [
-            'enabled' => Env::bool('GEMINI_ENABLED', false),
+            'enabled' => Env::bool('GEMINI_ENABLED', true),
             'api_key' => Env::get('GEMINI_API_KEY', ''),
             'base_url' => Env::get('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
             'model' => Env::get('GEMINI_VISION_MODEL', 'gemini-2.5-flash'),

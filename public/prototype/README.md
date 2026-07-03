@@ -1,92 +1,28 @@
-# Re-born Prototype
+# Re-born minimal live model finder UI
 
-This is the MVP prototype for Re-born, the Repair Intelligence Platform.
+Questa è la UI consumer minimale del prodotto Re-born.
 
-## Runtime modes
-
-### Live API mode
-
-Run the PHP backend:
-
-```powershell
-cd C:\REBORN\REBORN
-php scripts/doctor.php
-php scripts/setup-dev.php
-php -S 127.0.0.1:8080 -t public public/index.php
-```
-
-Open:
+Percorso principale:
 
 ```text
-http://127.0.0.1:8080/prototype/index.html
+/
 ```
 
-In this mode, the prototype calls the PHP API and SQLite development database.
-
-### Mock mode
-
-Open directly:
+Percorso tecnico diretto ancora disponibile:
 
 ```text
-public/prototype/index.html
+/prototype/index.html
 ```
 
-In this mode, the prototype uses local mock data from:
+Flusso utente supportato:
 
-```text
-public/prototype/assets/js/prototype-data.js
-```
+1. stato connessione server;
+2. caricamento immagini JPG/PNG/WEBP;
+3. barra di caricamento;
+4. preview immagini;
+5. riconoscimento AI normalizzato dal backend;
+6. query STL/3MF generate;
+7. candidati modello 3D;
+8. azioni finali: apri/scarica modello, richiedi stampa, correggi identificazione, richiesta assistita.
 
-## Main integrated flow
-
-```text
-Repair intake
-→ POST /api/v1/repair-cases
-→ Capture placeholder
-→ POST /api/v1/repair-cases/{id}/diagnose
-→ Repair paths
-→ Provider network
-→ Checkout preview
-```
-
-## Files
-
-```text
-index.html
-assets/css/reborn.css
-assets/js/prototype-data.js
-assets/js/state.js
-assets/js/api-client.js
-assets/js/app.js
-```
-
-## Step 10 — Auth UI and role dashboards
-
-Run the backend first:
-
-```powershell
-php scripts/setup-dev.php
-php -S 127.0.0.1:8080 -t public public/index.php
-```
-
-Then open:
-
-```text
-http://127.0.0.1:8080/prototype/index.html#/login
-```
-
-Demo password for every seeded account is:
-
-```text
-password
-```
-
-Available demo accounts:
-
-- `repair.user@reborn.local`
-- `maker@reborn.local`
-- `provider@reborn.local`
-- `enterprise@reborn.local`
-- `admin@reborn.local`
-
-The prototype stores the Step 8 Bearer token in `localStorage` under `reborn_access_token`. Logout calls the backend and clears the token locally.
+La UI non espone provider AI, API key, `.env`, quality gate o messaggi di debug. Queste informazioni restano nel backend e negli script tecnici.

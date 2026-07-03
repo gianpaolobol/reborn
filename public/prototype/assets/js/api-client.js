@@ -112,6 +112,32 @@
         timeoutMs: 180000
       });
     }
+
+
+    async searchLibraryMatches(payload) {
+      return this.request('/api/v1/model-library/matches', {
+        method: 'POST',
+        body: payload || {},
+        timeoutMs: 30000
+      });
+    }
+
+    async saveLibraryContribution(formData) {
+      return this.request('/api/v1/model-library/contributions', {
+        method: 'POST',
+        body: formData,
+        timeoutMs: 120000
+      });
+    }
+
+
+    async preferLibraryModel(modelId, downloadedInPage) {
+      return this.request('/api/v1/model-library/preferences', {
+        method: 'POST',
+        body: { model_id: modelId, downloaded_in_page: downloadedInPage === true },
+        timeoutMs: 30000
+      });
+    }
   }
 
   window.REBORN_API = new RebornApiClient('');

@@ -7,7 +7,7 @@ use Reborn\Shared\Support\Env;
 return [
     'enabled' => Env::bool('MARKETPLACE_SEARCH_ENABLED', true),
     'mode' => Env::get('MARKETPLACE_SEARCH_MODE', 'assisted_web_search'),
-    'fetch_enabled' => Env::bool('MARKETPLACE_SEARCH_FETCH_ENABLED', true),
+    'fetch_enabled' => Env::bool('MARKETPLACE_SEARCH_FETCH_ENABLED', false),
     'timeout_seconds' => (int) Env::get('MARKETPLACE_SEARCH_TIMEOUT_SECONDS', 6),
     'fetch_query_limit' => (int) Env::get('MARKETPLACE_SEARCH_FETCH_QUERY_LIMIT', 1),
     'max_results' => (int) Env::get('MARKETPLACE_SEARCH_MAX_RESULTS', 10),
@@ -28,7 +28,7 @@ return [
         'base_url' => Env::get('MAKERWORLD_BASE_URL', 'https://makerworld.com'),
     ],
     'web_stl' => [
-        'enabled' => Env::bool('WEB_STL_SEARCH_ENABLED', true),
+        'enabled' => Env::bool('WEB_STL_SEARCH_ENABLED', false),
         'mode' => Env::get('WEB_STL_SEARCH_MODE', 'duckduckgo_html'),
     ],
 ];

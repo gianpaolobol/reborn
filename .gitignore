@@ -41,3 +41,9 @@ login.json
 .env
 .env.*
 !*.example
+
+storage/model_library/
+storage/model_library/**
+storage/uploads/
+storage/database/
+storage/logs/
