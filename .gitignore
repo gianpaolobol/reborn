@@ -1,6 +1,8 @@
-# Secrets
+# Segreti e ambiente locale
 .env
-.env.local
+.env.*
+!.env.example
+!.env.ci.example
 *.key
 *.pem
 
@@ -8,42 +10,26 @@
 .DS_Store
 Thumbs.db
 
-# Dependencies
+# Dipendenze e build
 node_modules/
 vendor/
-
-# Build
 /dist
 /build
-
-# Runtime/storage
-/storage/uploads/
-/storage/generated/
-/database/*.sqlite
-/database/*.sqlite3
-
-# Logs
-*.log
-
-# Re-born local runtime
-.env
-/storage/database/*.sqlite
-/storage/database/*.db
-/storage/logs/*.log
-/vendor/
 /.phpunit.cache/
 
-debug-db.php
-fix-demo-passwords.php
-login.json
-/storage/backups/
-
-.env
-.env.*
-!*.example
-
-storage/model_library/
-storage/model_library/**
+# Runtime e storage locali (mai committare)
 storage/uploads/
 storage/database/
 storage/logs/
+storage/backups/
+storage/generated/
+storage/model_library/
+*.log
+
+# Artefatti locali di debug
+debug-db.php
+fix-demo-passwords.php
+login.json
+
+# File spazzatura PowerShell (parametri finiti su disco)
+-BaseUrl

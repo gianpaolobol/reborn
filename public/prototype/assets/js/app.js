@@ -501,7 +501,8 @@
   function libraryContributionHtml(result, query) {
     const saved = state.libraryContribution;
     const saving = state.libraryContributionBusy;
-    const disabled = saving ? ' disabled' : ' disabled';
+    // Il bottone parte disabilitato: viene abilitato da bindEvents quando l'utente sceglie un file.
+    const disabled = ' disabled';
     const buttonText = saving ? 'Caricamento in corso' : 'Verifica modello 3D';
     return '<div class="library-contribution">' +
       '<strong>Carica il modello 3D corrispondente alla tua ricerca</strong>' +
@@ -623,8 +624,8 @@
 
     if (!result) {
       return '<section id="recognitionResult" class="result-panel empty" aria-live="polite">' +
-        '<h2>Risposta del riconoscimento immagini</h2>' +
-        '<p>Carica una o più foto del pezzo rotto. Re-born proverà a riconoscerlo e ti aiuterà a scegliere i criteri migliori per cercare il modello 3D.</p>' +
+        '<h2>Carica una foto del pezzo</h2>' +
+        '<p>Fotografa il pezzo rotto o il ricambio. Reborn lo riconosce e cerca il modello 3D compatibile.</p>' +
         '</section>';
     }
 
@@ -697,18 +698,6 @@
       searchCriteriaHtml(result) +
       actionButtonsHtml(result) +
       '</section>';
-  }
-
-  function previewsHtml() {
-    if (!state.previews.length) {
-      return '<section class="preview-panel"><strong>Preview immagini</strong><div id="previewGrid" class="preview-grid empty"><p>Nessuna immagine caricata.</p></div></section>';
-    }
-
-    const cards = state.previews.map(function (item) {
-      return '<figure class="preview-card"><img src="' + escapeHtml(item.url) + '" alt="Anteprima immagine caricata" /><figcaption>' + escapeHtml(item.name) + '</figcaption></figure>';
-    }).join('');
-
-    return '<section class="preview-panel"><strong>Preview immagini</strong><div id="previewGrid" class="preview-grid">' + cards + '</div></section>';
   }
 
   function imageFingerprints() {
@@ -997,6 +986,22 @@
     }
   }
 
+  function heroHtml() {
+    var camIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="#30A040" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.4"/></svg>';
+    var scanIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="#30A040" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M20 7V5a1 1 0 0 0-1-1h-2M4 17v2a1 1 0 0 0 1 1h2M20 17v2a1 1 0 0 1-1 1h-2"/><path d="M3 12h18"/></svg>';
+    var truckIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="#30A040" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v9H3zM14 9h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>';
+    return '<section class="hero">' +
+      '<p class="hero-kicker">Ripara, non ricomprare</p>' +
+      '<h1 class="hero-title">Da una foto del pezzo rotto<br>al ricambio a casa tua</h1>' +
+      '<p class="hero-lead">Fotografa il componente rotto. Reborn lo riconosce, trova il modello 3D compatibile e te lo fa stampare e spedire.</p>' +
+      '<div class="hero-steps">' +
+        '<div class="hero-step"><div class="hero-ic">' + camIcon + '</div><div class="hero-n">01</div><h3>Fotografa</h3><p>Scatta una foto del pezzo rotto o mancante.</p><span class="hero-arrow">&rarr;</span></div>' +
+        '<div class="hero-step"><div class="hero-ic">' + scanIcon + '</div><div class="hero-n">02</div><h3>Reborn riconosce</h3><p>L\'AI identifica il pezzo e trova il modello 3D.</p><span class="hero-arrow">&rarr;</span></div>' +
+        '<div class="hero-step"><div class="hero-ic">' + truckIcon + '</div><div class="hero-n">03</div><h3>Stampa e ricevi</h3><p>Scaricalo o fallo stampare e spedire a casa.</p></div>' +
+      '</div>' +
+    '</section>';
+  }
+
   function render() {
     const ready = state.server === 'ready';
     const error = state.server === 'error';
@@ -1005,14 +1010,22 @@
     const progress = clampPercent(state.progress);
     const busyClass = state.busy ? ' is-busy' : '';
     const uploadStyle = state.busy
-      ? ' style="background: linear-gradient(90deg, #2fbf71 0%, #2fbf71 ' + String(progress) + '%, #15171a ' + String(progress) + '%, #15171a 100%);"'
+      ? ' style="background: linear-gradient(90deg, var(--reborn-green-dark) 0%, var(--reborn-green-dark) ' + String(progress) + '%, var(--reborn-green-pale) ' + String(progress) + '%, var(--reborn-green-pale) 100%); color: #ffffff;"'
       : '';
 
     app.innerHTML =
-      '<section id="serverStatus" class="server-status ' + (ready ? 'ready' : error ? 'error' : 'checking') + '" aria-live="polite">' + escapeHtml(state.serverText) + '</section>' +
+      '<header class="brand-header">' +
+        '<span class="brand-logo"><img src="/prototype/assets/img/reborn-logo.png" alt="Reborn" height="34" /></span>' +
+        '<nav class="brand-nav" aria-label="Navigazione">' +
+          '<span class="on">Home</span><span>Come si usa</span><span>Contatti</span>' +
+        '</nav>' +
+        '<span id="serverStatus" class="server-status ' + (ready ? 'ready' : error ? 'error' : 'checking') + '" aria-live="polite" hidden>' + escapeHtml(state.serverText) + '</span>' +
+      '</header>' +
+      (state.previews.length || state.busy ? '' : heroHtml()) +
       '<section class="upload-panel">' +
         '<input id="imageUploadInput" class="file-input" type="file" accept="image/jpeg,image/png,image/webp" multiple />' +
         '<button id="uploadButton" class="upload-button' + busyClass + '" type="button"' + disabled + uploadStyle + ' aria-label="' + escapeHtml(buttonText + (state.busy ? ' ' + String(progress) + '%' : '')) + '">' + escapeHtml(buttonText) + '</button>' +
+        '<span class="sr-only" aria-live="polite">' + escapeHtml(state.busy ? state.progressText + ' ' + String(progress) + '%' : '') + '</span>' +
         '<p class="upload-hint">Carica foto nitide del pezzo, possibilmente da più angolazioni e con una misura visibile.</p>' +
       '</section>' +
       resultHtml();
