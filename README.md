@@ -1,5 +1,8 @@
 # Re-born
 
+> **Copyright © 2026 Gian Paolo Franceschini** — Tutti i diritti riservati sui soli contributi originali di sua legittima titolarità, nel rispetto delle licenze e dei diritti di terzi. Vedi la [dichiarazione di tutela](RIGHTS_NOTICE.md).
+
+
 [![Re-born Smoke Tests](https://github.com/gianpaolobol/reborn/actions/workflows/smoke-tests.yml/badge.svg)](https://github.com/gianpaolobol/reborn/actions/workflows/smoke-tests.yml)
 
 **Re-born** is a Repair Intelligence Platform designed to allow anyone to repair anything.
