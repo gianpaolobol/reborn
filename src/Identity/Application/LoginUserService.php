@@ -10,6 +10,7 @@ use Reborn\Identity\Domain\UserRepository;
 use Reborn\Shared\Domain\EventBus;
 use Reborn\Shared\Http\UnauthorizedException;
 use Reborn\Shared\Http\ValidationException;
+use Reborn\Shared\Support\Env;
 
 final class LoginUserService
 {
@@ -50,6 +51,11 @@ final class LoginUserService
         }
 
         if ($user === null || $hash === null || !$passwordIsValid) {
+            throw new UnauthorizedException('Invalid email or password.');
+        }
+
+        // Seeded demo accounts (@reborn.local, public password) must never open a production session.
+        if (str_ends_with($email, '@reborn.local') && strtolower((string) Env::get('APP_ENV', 'development')) === 'production') {
             throw new UnauthorizedException('Invalid email or password.');
         }
 
