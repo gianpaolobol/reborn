@@ -47,6 +47,17 @@ assert(str_starts_with($result->plainTextToken, 'rbn_'));
 
 echo "Admin login: ok\n";
 
+$previousEnv = $_ENV['APP_ENV'] ?? null;
+$_ENV['APP_ENV'] = 'production';
+try {
+    $login->handle(['email' => 'admin@reborn.local', 'password' => 'password'], '127.0.0.1', 'identity-test');
+    throw new RuntimeException('Demo account must not log in when APP_ENV=production.');
+} catch (\Reborn\Shared\Http\UnauthorizedException) {
+    echo "Demo accounts blocked in production: ok\n";
+} finally {
+    if ($previousEnv === null) unset($_ENV['APP_ENV']); else $_ENV['APP_ENV'] = $previousEnv;
+}
+
 $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . $result->plainTextToken;
 $_SERVER['REQUEST_METHOD'] = 'GET';
 $_SERVER['REQUEST_URI'] = '/api/v1/auth/me';
